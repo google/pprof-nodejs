@@ -3,5 +3,11 @@
     "config:base",
     ":preserveSemverRanges",
     ":pinDigestsDisabled"
+  ],
+  "packageRules": [
+    {
+      "extends": "packages:linters",
+      "groupName": "linters"
+    }
   ]
 }
