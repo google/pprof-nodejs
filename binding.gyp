@@ -1,7 +1,7 @@
 {
   "targets": [
     {
-      "target_name": "google_cloud_profiler",
+      "target_name": "pprof",
       "sources": [ 
         "bindings/profiler.cc",
       ],

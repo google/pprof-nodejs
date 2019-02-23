@@ -15,8 +15,8 @@
  */
 
 import * as sinon from 'sinon';
-import * as heapProfiler from '../src/profilers/heap-profiler';
-import * as v8HeapProfiler from '../src/profilers/heap-profiler-bindings';
+import * as heapProfiler from '../src/heap-profiler';
+import * as v8HeapProfiler from '../src/heap-profiler-bindings';
 import {heapProfileExcludePath, heapProfileIncludePath, heapProfileWithExternal, v8HeapProfile, v8HeapWithPathProfile} from './profiles-for-tests';
 
 const copy = require('deep-copy');

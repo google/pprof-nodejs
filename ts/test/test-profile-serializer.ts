@@ -13,23 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import * as fs from 'fs';
-import * as path from 'path';
-import * as pify from 'pify';
 import * as sinon from 'sinon';
 import * as tmp from 'tmp';
 
-import {perftools} from '../../proto/profile';
-import {serializeHeapProfile, serializeTimeProfile} from '../src/profilers/profile-serializer';
+import {serializeHeapProfile, serializeTimeProfile} from '../src/profile-serializer';
 import {create as createSourceMapper, SourceMapper} from '../src/sourcemapper/sourcemapper';
-import {TimeProfile, TimeProfileNode} from '../src/v8-types';
 
 import {anonymousFunctionHeapProfile, anonymousFunctionTimeProfile, heapProfile, heapSourceProfile, mapDirPath, timeProfile, timeSourceProfile, v8AnonymousFunctionHeapProfile, v8AnonymousFunctionTimeProfile, v8HeapGeneratedProfile, v8HeapProfile, v8TimeGeneratedProfile, v8TimeProfile,} from './profiles-for-tests';
 
 const assert = require('assert');
-const tmpFile = pify(tmp.file);
-const tmpDir = pify(tmp.dir);
-const writeFile = pify(fs.writeFile);
 
 describe('profile-serializer', () => {
   let dateStub: sinon.SinonStub;
