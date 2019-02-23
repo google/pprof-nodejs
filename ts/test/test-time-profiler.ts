@@ -16,19 +16,21 @@
 
 import delay from 'delay';
 import * as sinon from 'sinon';
-import {TimeProfiler} from '../src/time-profiler';
+import * as time from '../src/time-profiler';
 import * as v8TimeProfiler from '../src/time-profiler-bindings';
 import {timeProfile, v8TimeProfile} from './profiles-for-tests';
 
 const assert = require('assert');
 
-describe('TimeProfiler', () => {
+const PROFILE_OPTIONS = {
+  durationMillis: 500,
+  intervalMicros: 1000,
+};
+
+describe('Time Profiler', () => {
   describe('profile', () => {
     it('should detect idle time', async () => {
-      const durationMillis = 500;
-      const intervalMicros = 1000;
-      const profiler = new TimeProfiler(intervalMicros);
-      const profile = await profiler.profile(durationMillis);
+      const profile = await time.profile(PROFILE_OPTIONS);
       assert.ok(profile.stringTable);
       assert.notStrictEqual(profile.stringTable!.indexOf('(idle)'), -1);
     });
@@ -52,22 +54,16 @@ describe('TimeProfiler', () => {
 
     it('should profile during duration and finish profiling after duration',
        async () => {
-         const durationMillis = 500;
-         const intervalMicros = 1000;
-         const profiler = new TimeProfiler(intervalMicros);
          let isProfiling = true;
-         const profilePromise = profiler.profile(durationMillis).then(() => {
+         const profilePromise = time.profile(PROFILE_OPTIONS).then(() => {
            isProfiling = false;
          });
-         await delay(2 * durationMillis);
+         await delay(2 * PROFILE_OPTIONS.durationMillis);
          assert.strictEqual(false, isProfiling, 'profiler is still running');
        });
 
     it('should return a profile equal to the expected profile', async () => {
-      const durationMillis = 500;
-      const intervalMicros = 1000;
-      const profiler = new TimeProfiler(intervalMicros);
-      const profile = await profiler.profile(durationMillis);
+      const profile = await time.profile(PROFILE_OPTIONS);
       assert.deepEqual(timeProfile, profile);
     });
   });
