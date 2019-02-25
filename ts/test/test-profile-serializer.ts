@@ -17,7 +17,7 @@ import * as sinon from 'sinon';
 import * as tmp from 'tmp';
 
 import {serializeHeapProfile, serializeTimeProfile} from '../src/profile-serializer';
-import {create as createSourceMapper, SourceMapper} from '../src/sourcemapper/sourcemapper';
+import {SourceMapper} from '../src/sourcemapper/sourcemapper';
 
 import {anonymousFunctionHeapProfile, anonymousFunctionTimeProfile, heapProfile, heapSourceProfile, mapDirPath, timeProfile, timeSourceProfile, v8AnonymousFunctionHeapProfile, v8AnonymousFunctionTimeProfile, v8HeapGeneratedProfile, v8HeapProfile, v8TimeGeneratedProfile, v8TimeProfile,} from './profiles-for-tests';
 
@@ -63,7 +63,7 @@ describe('profile-serializer', () => {
     let sourceMapper: SourceMapper;
     before(async () => {
       const sourceMapFiles = [mapDirPath];
-      sourceMapper = await createSourceMapper(sourceMapFiles);
+      sourceMapper = await SourceMapper.create(sourceMapFiles);
     });
 
     describe('serializeHeapProfile', () => {

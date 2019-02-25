@@ -16,6 +16,8 @@
 import * as heapProfiler from './heap-profiler';
 import * as timeProfiler from './time-profiler';
 
+export {SourceMapper} from './sourcemapper/sourcemapper';
+
 export const time = {
   profile: timeProfiler.profile,
   start: timeProfiler.start,

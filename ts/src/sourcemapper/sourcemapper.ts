@@ -108,6 +108,21 @@ async function processSourceMap(
 export class SourceMapper {
   infoMap: Map<string, MapInfoCompiled>;
 
+  static async create(searchDirs: string[]): Promise<SourceMapper> {
+    const mapFiles: string[] = [];
+    for (const dir of searchDirs) {
+      try {
+        const mf = await getMapFiles(dir);
+        mf.forEach((mapFile) => {
+          mapFiles.push(path.resolve(dir, mapFile));
+        });
+      } catch (e) {
+        throw new Error(`failed to get source maps from ${dir}: ${e}`);
+      }
+    }
+    return createFromMapFiles(mapFiles);
+  }
+
   /**
    * @param {Array.<string>} sourceMapPaths An array of paths to .map source map
    *  files that should be processed.  The paths should be relative to the
@@ -198,21 +213,6 @@ export class SourceMapper {
       column: pos.column,
     };
   }
-}
-
-export async function create(searchDirs: string[]): Promise<SourceMapper> {
-  const mapFiles: string[] = [];
-  for (const dir of searchDirs) {
-    try {
-      const mf = await getMapFiles(dir);
-      mf.forEach((mapFile) => {
-        mapFiles.push(path.resolve(dir, mapFile));
-      });
-    } catch (e) {
-      throw new Error(`failed to get source maps from ${dir}: ${e}`);
-    }
-  }
-  return createFromMapFiles(mapFiles);
 }
 
 async function createFromMapFiles(mapFiles: string[]): Promise<SourceMapper> {
