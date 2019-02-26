@@ -91,5 +91,8 @@
     "host": "https://storage.googleapis.com/cloud-profiler/pprof-nodejs/release",
     "remote_path": "v{version}",
     "package_name": "{node_abi}-{platform}-{arch}-{libc}.tar.gz"
+  },
+  "publishConfig":{
+      "registry":"https://wombat-dressing-room.appspot.com"
   }
 }
