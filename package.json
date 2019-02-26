@@ -1,6 +1,6 @@
 {
   "name": "pprof",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "pprof support for Node.js",
   "repository": "google/pprof-nodejs",
   "main": "out/src/index.js",
@@ -92,7 +92,7 @@
     "remote_path": "v{version}",
     "package_name": "{node_abi}-{platform}-{arch}-{libc}.tar.gz"
   },
-  "publishConfig":{
-      "registry":"https://wombat-dressing-room.appspot.com"
+  "publishConfig": {
+    "registry": "https://wombat-dressing-room.appspot.com"
   }
 }
