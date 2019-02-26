@@ -15,16 +15,19 @@
  */
 import * as heapProfiler from './heap-profiler';
 import * as timeProfiler from './time-profiler';
+import { serializeHeapProfile, serializeTimeProfile } from './profile-serializer';
 
 export {SourceMapper} from './sourcemapper/sourcemapper';
 
 export const time = {
   profile: timeProfiler.profile,
   start: timeProfiler.start,
+  serialize: serializeTimeProfile
 };
 
 export const heap = {
   start: heapProfiler.start,
   stop: heapProfiler.stop,
   profile: heapProfiler.profile,
+  serialize: serializeHeapProfile
 };
