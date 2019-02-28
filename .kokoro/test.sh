@@ -22,24 +22,3 @@ cd $(dirname $0)/..
 
 npm install
 npm test
-./node_modules/nyc/bin/nyc.js report
-
-
-WINDOWS="false"
-
- case $1 in
-  --windows)
-    WINDOWS="true"
-    ;;
-  "")
-    ;;
-  *)
-    echo "Unknown parameter: $1"
-    exit 1
-    ;;
-  esac
-
-if [ "$WINDOWS" -ne "true" ]; then
-  bash $KOKORO_GFILE_DIR/codecov.sh  
-fi
-
