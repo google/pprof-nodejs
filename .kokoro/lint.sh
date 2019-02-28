@@ -22,10 +22,4 @@ cd $(dirname $0)/..
 
 npm install
 
-# Install and link samples
-cd samples/
-npm link ../
-npm install
-cd ..
-
 npm run lint
