@@ -18,7 +18,6 @@ import * as crypto from 'crypto';
 import * as events from 'events';
 import * as fs from 'fs';
 import * as path from 'path';
-import pickBy = require('lodash.pickby');
 
 // TODO: Make this more precise.
 const findit: (dir: string) => events.EventEmitter = require('findit2');
@@ -40,7 +39,6 @@ export interface ScanStats {
 export interface ScanResults {
   errors(): Map<string, Error>;
   all(): ScanStats;
-  selectStats(regex: RegExp): ScanStats;
   selectFiles(regex: RegExp, baseDir: string): string[];
   hash?: string;
 }
@@ -71,18 +69,6 @@ class ScanResultsImpl implements ScanResults {
    */
   all(): ScanStats {
     return this.stats;
-  }
-
-  /**
-   * Used to get the file scan results for only the files
-   * whose filenames match the specified regex.
-   *
-   * @param {regex} regex The regex that tests a filename
-   *  to determine if the scan results for that filename
-   *  should be included in the returned results.
-   */
-  selectStats(regex: RegExp): ScanStats|{} {
-    return pickBy(this.stats, (_, key) => regex.test(key));
   }
 
   /**
