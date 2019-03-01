@@ -22,6 +22,8 @@ import {setSamplingInterval, startProfiling, stopProfiling} from './time-profile
 
 let profiling = false;
 
+const DEFAULT_INTERVAL_MICROS: Microseconds = 1000;
+
 type Microseconds = number;
 type Milliseconds = number;
 
@@ -35,14 +37,16 @@ export interface TimeProfilerOptions {
 }
 
 export async function profile(options: TimeProfilerOptions) {
-  const stop =
-      start(options.intervalMicros || 1000, options.name, options.sourceMapper);
+  const stop = start(
+      options.intervalMicros || DEFAULT_INTERVAL_MICROS, options.name,
+      options.sourceMapper);
   await delay(options.durationMillis);
   return stop();
 }
 
 export function start(
-    intervalMicros: Microseconds, name?: string, sourceMapper?: SourceMapper) {
+    intervalMicros: Microseconds = DEFAULT_INTERVAL_MICROS, name?: string,
+    sourceMapper?: SourceMapper) {
   if (profiling) {
     throw new Error('already profiling');
   }
