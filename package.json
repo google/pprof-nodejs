@@ -35,7 +35,6 @@
     "nan": "^2.12.1",
     "node-pre-gyp": "^0.12.0",
     "p-limit": "^2.0.0",
-    "parse-duration": "^0.1.1",
     "pify": "^4.0.0",
     "protobufjs": "~6.8.6",
     "source-map": "^0.6.1",
