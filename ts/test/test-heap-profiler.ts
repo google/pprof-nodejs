@@ -15,19 +15,22 @@
  */
 
 import * as sinon from 'sinon';
+
 import * as heapProfiler from '../src/heap-profiler';
 import * as v8HeapProfiler from '../src/heap-profiler-bindings';
+import {AllocationProfileNode} from '../src/v8-types';
+
 import {heapProfileExcludePath, heapProfileIncludePath, heapProfileWithExternal, v8HeapProfile, v8HeapWithPathProfile} from './profiles-for-tests';
 
 const copy = require('deep-copy');
 const assert = require('assert');
 
 describe('HeapProfiler', () => {
-  let startStub: sinon.SinonStub;
-  let stopStub: sinon.SinonStub;
-  let profileStub: sinon.SinonStub;
-  let dateStub: sinon.SinonStub;
-  let memoryUsageStub: sinon.SinonStub;
+  let startStub: sinon.SinonStub<[number, number], void>;
+  let stopStub: sinon.SinonStub<[], void>;
+  let profileStub: sinon.SinonStub<[], AllocationProfileNode>;
+  let dateStub: sinon.SinonStub<[], number>;
+  let memoryUsageStub: sinon.SinonStub<[], NodeJS.MemoryUsage>;
   beforeEach(() => {
     startStub = sinon.stub(v8HeapProfiler, 'startSamplingHeapProfiler');
     stopStub = sinon.stub(v8HeapProfiler, 'stopSamplingHeapProfiler');
