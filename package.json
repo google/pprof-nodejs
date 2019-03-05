@@ -37,7 +37,7 @@
     "p-limit": "^2.0.0",
     "pify": "^4.0.0",
     "protobufjs": "~6.8.6",
-    "source-map": "^0.6.1",
+    "source-map": "^0.7.0",
     "split": "^1.0.1"
   },
   "devDependencies": {
