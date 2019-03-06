@@ -24,7 +24,7 @@ import {anonymousFunctionHeapProfile, anonymousFunctionTimeProfile, heapProfile,
 const assert = require('assert');
 
 describe('profile-serializer', () => {
-  let dateStub: sinon.SinonStub;
+  let dateStub: sinon.SinonStub<[], number>;
 
   before(() => {
     dateStub = sinon.stub(Date, 'now').returns(0);
