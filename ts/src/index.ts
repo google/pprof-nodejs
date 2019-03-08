@@ -19,8 +19,10 @@ import {gzipSync} from 'zlib';
 import {perftools} from '../../proto/profile';
 
 import * as heapProfiler from './heap-profiler';
+import {encodeSync} from './profile-encoder';
 import * as timeProfiler from './time-profiler';
 
+export {encode, encodeSync} from './profile-encoder';
 export {SourceMapper} from './sourcemapper/sourcemapper';
 
 export const time = {
@@ -41,8 +43,7 @@ if (module.parent && module.parent.id === 'internal/preload') {
     // The process is going to terminate imminently. All work here needs to
     // be synchronous.
     const profile = stop();
-    const buffer = perftools.profiles.Profile.encode(profile).finish();
-    const compressed = gzipSync(buffer);
-    writeFileSync(`pprof-profile-${process.pid}.pb.gz`, compressed);
+    const buffer = encodeSync(profile);
+    writeFileSync(`pprof-profile-${process.pid}.pb.gz`, buffer);
   });
 }
