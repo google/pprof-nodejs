@@ -22,7 +22,9 @@
     "proto:profile": "mkdir -p proto && pbjs -t static-module -w commonjs -o proto/profile.js third_party/proto/profile.proto && pbts -o proto/profile.d.ts proto/profile.js",
     "license-check": "jsgl --local .",
     "docs-test": "linkinator docs -r --skip www.googleapis.com",
-    "predocs-test": "npm run docs"
+    "predocs-test": "npm run docs",
+    "//": "npm run system-test will fail; run the command for the system test from the command line",
+    "system-test": "sh system-test/system_test.sh"
   },
   "author": {
     "name": "Google Inc."

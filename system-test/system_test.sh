@@ -25,13 +25,14 @@ retry curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.34.0/install.
 export NVM_DIR="$HOME/.nvm" &>/dev/null
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" &>/dev/null
 
-# Move test to go path.
-export GOPATH="$HOME/go"
-mkdir -p "$GOPATH/src"
-
-cp -R "system-test" "$GOPATH/src/pproftest"
+# Move system test to separate directory to run.
+TESTDIR="$BASE_DIR/run-system-test"
+cp -R "system-test" "$TESTDIR"
 
 # Run test.
-cd "$GOPATH/src/pproftest"
+cd "$TESTDIR"
 retry go get -t -d .
 go test -v -timeout=10m -run TestAgentIntegration -pprof_nodejs_path="$BASE_DIR" -run_only_v8_canary_test="$RUN_ONLY_V8_CANARY_TEST"
+
+# Remove directory where test was run.
+rm -r $TESTDIR
