@@ -130,12 +130,14 @@ func (tc *pprofTestCase) generateScript(tmpl *template.Template) (string, error)
 			NVMMirror   string
 			DurationSec int
 			PprofDir    string
+			BinaryHost  string
 		}{
 			Name:        tc.name,
 			NodeVersion: tc.nodeVersion,
 			NVMMirror:   tc.nvmMirror,
 			DurationSec: 10,
 			PprofDir:    *pprofDir,
+			BinaryHost:  *binaryHost,
 		})
 	if err != nil {
 		return "", fmt.Errorf("failed to render benchmark script for %s: %v", tc.name, err)
