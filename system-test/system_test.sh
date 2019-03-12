@@ -32,7 +32,7 @@ cp -R "system-test" "$TESTDIR"
 # Run test.
 cd "$TESTDIR"
 retry go get -t -d .
-go test -v -timeout=10m -run TestAgentIntegration -pprof_nodejs_path="$BASE_DIR" -run_only_v8_canary_test="$RUN_ONLY_V8_CANARY_TEST"
+go test -v -timeout=10m -run TestAgentIntegration -pprof_nodejs_path="$BASE_DIR" -run_only_v8_canary_test="$RUN_ONLY_V8_CANARY_TEST" -binary_host="$BINARY_HOST"
 
 # Remove directory where test was run.
 rm -r $TESTDIR

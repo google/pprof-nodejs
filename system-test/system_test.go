@@ -31,6 +31,7 @@ import (
 )
 
 var (
+	binaryHost          = flag.String("binary_host", "", "host from which to download precompiled binaries; if no value is specified, binaries will be built from source.")
 	runOnlyV8CanaryTest = flag.Bool("run_only_v8_canary_test", false, "if true test will be run only with the v8-canary build, otherwise, no tests will be run with v8 canary build")
 	pprofDir            = flag.String("pprof_nodejs_path", "", "path to directory containing pprof-nodejs module")
 
@@ -72,7 +73,8 @@ cd {{.PprofDir}}
 # with Node's V8 canary build.
 {{if .NVMMirror}} retry npm install https://github.com/nodejs/nan.git {{end}} >/dev/null
 
-retry npm install --nodedir="$NODEDIR" >/dev/null
+retry npm install --nodedir="$NODEDIR" {{if .BinaryHost}}--fallback-to-build=false --pprof_binary_host_mirror={{.BinaryHost}}{{end}} >/dev/null
+
 npm run compile
 npm pack >/dev/null
 VERSION=$(node -e "console.log(require('./package.json').version);")
@@ -85,7 +87,8 @@ cp -r "$BASE_DIR/busybench" "$TESTDIR"
 cd "$TESTDIR/busybench"
 
 retry npm install pify @types/pify typescript gts @types/node >/dev/null
-retry npm install --nodedir="$NODEDIR" --build-from-source=pprof "$PROFILER" >/dev/null
+retry npm install --nodedir="$NODEDIR" {{if .BinaryHost}}--fallback-to-build=false --pprof_binary_host_mirror={{.BinaryHost}}{{end}} "$PROFILER" >/dev/null
+
 npm run compile >/dev/null
 
 # Run benchmark, which will collect and save profiles.
@@ -118,12 +121,14 @@ func (tc *pprofTestCase) generateScript(tmpl *template.Template) (string, error)
 			NVMMirror   string
 			DurationSec int
 			PprofDir    string
+			BinaryHost  string
 		}{
 			Name:        tc.name,
 			NodeVersion: tc.nodeVersion,
 			NVMMirror:   tc.nvmMirror,
 			DurationSec: 10,
 			PprofDir:    *pprofDir,
+			BinaryHost:  *binaryHost,
 		})
 	if err != nil {
 		return "", fmt.Errorf("failed to render benchmark script for %s: %v", tc.name, err)
