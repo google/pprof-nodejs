@@ -73,13 +73,8 @@ cd {{.PprofDir}}
 # with Node's V8 canary build.
 {{if .NVMMirror}} retry npm install https://github.com/nodejs/nan.git {{end}} >/dev/null
 
-{{if .BinaryHost}}
-retry npm install --nodedir="$NODEDIR" --fallback-to-build=false --pprof_binary_host_mirror={{.BinaryHost}} >/dev/null
-{{else}}
-retry npm install --nodedir="$NODEDIR" >/dev/null
-{{end}}
+retry npm install --nodedir="$NODEDIR" {{if .BinaryHost}}--fallback-to-build=false --pprof_binary_host_mirror={{.BinaryHost}}{{end}} >/dev/null
 
-retry npm install --nodedir="$NODEDIR" >/dev/null
 npm run compile
 npm pack >/dev/null
 VERSION=$(node -e "console.log(require('./package.json').version);")
@@ -92,11 +87,7 @@ cp -r "$BASE_DIR/busybench" "$TESTDIR"
 cd "$TESTDIR/busybench"
 
 retry npm install pify @types/pify typescript gts @types/node >/dev/null
-{{if .BinaryHost}}
-retry npm install --nodedir="$NODEDIR" --fallback-to-build=false --pprof_binary_host_mirror={{.BinaryHost}} "$PROFILER" >/dev/null
-{{else}}
-retry npm install --nodedir="$NODEDIR" --build-from-source=pprof "$PROFILER" typescript gts >/dev/null
-{{end}}
+retry npm install --nodedir="$NODEDIR" {{if .BinaryHost}}--fallback-to-build=false --pprof_binary_host_mirror={{.BinaryHost}}{{end}} "$PROFILER" >/dev/null
 
 npm run compile >/dev/null
 
