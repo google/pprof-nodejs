@@ -53,7 +53,7 @@ gsutil cp -r "${BASE_DIR}/artifacts/." "gs://${GCS_LOCATION}/"
 
 # Test the agent
 export BINARY_HOST="https://storage.googleapis.com/${GCS_LOCATION}"
-"${BASE_DIR}/system-test/system_test.sh"
+RUN_SYSTEM_TEST_ON="linux-docker" "${BASE_DIR}/system-test/system_test.sh"
 
 if [ "$BUILD_TYPE" == "release" ]; then
   gsutil cp -r "${BASE_DIR}/artifacts/." "gs://cloud-profiler/nodejs/release"
