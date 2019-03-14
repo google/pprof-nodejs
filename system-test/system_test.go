@@ -41,7 +41,7 @@ import (
 var (
 	binaryHost          = flag.String("binary_host", "", "host from which to download precompiled binaries; if no value is specified, binaries will be built from source.")
 	runOnlyV8CanaryTest = flag.Bool("run_only_v8_canary_test", false, "if true test will be run only with the v8-canary build, otherwise, no tests will be run with v8 canary build")
-	pprofDir            = flag.String("pprof_nodejs_path", "", "path to directory containing pprof-nodejs module")
+	pprofDir            = flag.String("pprof_nodejs_path", "", "the absolute path to directory containing pprof-nodejs module")
 	runOn               = flag.String("run_on", "local", "environment on which to run system test. Either linux-docker, alpine-docker, or local.")
 
 	runID = strings.Replace(time.Now().Format("2006-01-02-15-04-05.000000-0700"), ".", "-", -1)
@@ -169,8 +169,8 @@ func (tc *pprofTestCase) generateScript() (string, error) {
 }
 
 // generateDockerfile creates a dockerfile for running the system test, and
-// returns the base image for the dockerfile, and a buffer containing the
-// dockerfile
+// returns the base image for the dockerfile and a buffer containing the
+// dockerfile.
 func generateDockerfile(runOn string, buildBinary bool) (string, bytes.Buffer, error) {
 	var isAlpine bool
 	var image string
@@ -243,6 +243,8 @@ func TestAgentIntegration(t *testing.T) {
 	// Prevent test cases from running in parallel.
 	runtime.GOMAXPROCS(1)
 
+	// If test should be run on docker image, create client for interacting with
+	// docker API and build the docker image to be used for all test cases.
 	var cli *client.Client
 	imageName := fmt.Sprintf("%s-%s", *runOn, runID)
 	if *runOn != "local" {
@@ -297,9 +299,10 @@ func runLocally(benchScript string) (bytes.Buffer, error) {
 	return out, err
 }
 
-// buildDockerImage creates a docker image running on specified OS (determined
-// by runOn), with necessary dependencies for building binaries if buildBinary
-// indicates binaries will be built on the docker image.
+// buildDockerImage creates a non-alpine or alpine linux docker image
+// (depending on value of runOn), with necessary dependencies for building
+// binaries if buildBinary indicates binaries will be built on the docker
+// image.
 func buildDockerImage(ctx context.Context, cli *client.Client, imageName, runOn string, buildBinary bool) error {
 	baseImage, dockerfile, err := generateDockerfile(runOn, buildBinary)
 	if err != nil {
@@ -311,21 +314,24 @@ func buildDockerImage(ctx context.Context, cli *client.Client, imageName, runOn 
 		return fmt.Errorf("failed to get docker build context: %v", err)
 	}
 
-	_, err = cli.ImagePull(ctx, baseImage, types.ImagePullOptions{})
+	rdr, err := cli.ImagePull(ctx, baseImage, types.ImagePullOptions{})
 	if err != nil {
 		return fmt.Errorf("failed to pull base docker image %s: %v", baseImage, err)
 	}
+	defer rdr.Close()
 
-	_, err = cli.ImageBuild(ctx, dbCtx, types.ImageBuildOptions{
+	resp, err := cli.ImageBuild(ctx, dbCtx, types.ImageBuildOptions{
 		Tags: []string{imageName},
 	})
 	if err != nil {
 		return fmt.Errorf("failed to build docker image: %v", err)
 	}
+	defer resp.Body.Close()
+
 	return nil
 }
 
-// dockerBuildContext takes the text of a dockerfile and returns an io reader
+// dockerBuildContext takes a buffer of the dockerfile and returns an io reader
 // with a tar archive containing the dockerfile.
 func dockerBuildContext(dockerfile bytes.Buffer) (io.Reader, error) {
 	var buf bytes.Buffer
@@ -336,7 +342,7 @@ func dockerBuildContext(dockerfile bytes.Buffer) (io.Reader, error) {
 		return nil, fmt.Errorf("failed to write tar header: %v", err)
 	}
 	if _, err := w.Write(dockerfile.Bytes()); err != nil {
-		return nil, fmt.Errorf("failed to write dockerfile to tar: %v", err)
+		return nil, fmt.Errorf("failed to write dockerfile to tar file: %v", err)
 	}
 
 	return bytes.NewReader(buf.Bytes()), nil
@@ -344,6 +350,8 @@ func dockerBuildContext(dockerfile bytes.Buffer) (io.Reader, error) {
 
 // runOnDocker runs the benchScript on the specified docker image.
 func runOnDocker(ctx context.Context, cli *client.Client, imageName, benchScript string) (bytes.Buffer, error) {
+	// Specify absolute path to bench script, since the docker container will
+	// have different working directory.
 	benchScript, err := filepath.Abs(benchScript)
 	if err != nil {
 		return bytes.Buffer{}, fmt.Errorf("failed to get absolute path of %s: %v", benchScript, err)
@@ -394,7 +402,7 @@ func runOnDocker(ctx context.Context, cli *client.Client, imageName, benchScript
 }
 
 // checkProfile opens the profile at path and confirms that profile contains
-// necessary
+// the desired benchmark location.
 func checkProfile(path string, want profileSummary) error {
 	f, err := os.Open(path)
 	if err != nil {
