@@ -41,7 +41,7 @@ import (
 var (
 	binaryHost          = flag.String("binary_host", "", "host from which to download precompiled binaries; if no value is specified, binaries will be built from source.")
 	runOnlyV8CanaryTest = flag.Bool("run_only_v8_canary_test", false, "if true test will be run only with the v8-canary build, otherwise, no tests will be run with v8 canary build")
-	pprofDir            = flag.String("pprof_nodejs_path", "", "the absolute path to directory containing pprof-nodejs module")
+	pprofNodejsDir      = flag.String("pprof_nodejs_dir", "", "the absolute path to directory containing pprof-nodejs module")
 	runOn               = flag.String("run_on", "local", "environment on which to run system test. Either linux-docker, alpine-docker, or local.")
 
 	runID = strings.Replace(time.Now().Format("2006-01-02-15-04-05.000000-0700"), ".", "-", -1)
@@ -50,18 +50,7 @@ var (
 const alpineImage = "node:10-alpine"
 const linuxImage = "node:10"
 
-var dockerTmpl = template.Must(template.New("dockerTemplate").Parse(`
-	FROM {{.Image}}
-
-	{{if .BuildBinary}}
-		{{if .IsAlpine}}
-		RUN apk add --no-cache python curl bash build-base
-		{{else}}
-		RUN apt-get update
-		RUN apt-get install -y curl build-essential
-		{{end}}
-	{{end}}
-	`))
+var dockerfileFmt = "FROM %s"
 
 var benchTmpl = template.Must(template.New("benchTemplate").Parse(`
 #! /bin/bash
@@ -92,7 +81,7 @@ BASE_DIR=$(pwd)
 NODEDIR=$(dirname $(dirname $(which node)))
 
 # Build and pack pprof module.
-cd {{.PprofDir}}
+cd {{.PprofNodejsDir}}
 
 # TODO: remove this workaround when a new version of nan (current version 
 #       2.12.1) is released.
@@ -106,12 +95,12 @@ retry npm install --nodedir="$NODEDIR" {{if .BinaryHost}}--fallback-to-build=fal
 npm run compile
 npm pack >/dev/null
 VERSION=$(node -e "console.log(require('./package.json').version);")
-PROFILER="{{.PprofDir}}/pprof-$VERSION.tgz"
+PROFILER="{{.PprofNodejsDir}}/pprof-$VERSION.tgz"
 
 # Create and set up directory for running benchmark.
-TESTDIR="{{.PprofDir}}/run-system-test/{{.Name}}"
+TESTDIR="{{.PprofNodejsDir}}/run-system-test/{{.Name}}"
 mkdir -p "$TESTDIR"
-cp -r "{{.PprofDir}}/run-system-test/busybench" "$TESTDIR"
+cp -r "{{.PprofNodejsDir}}/run-system-test/busybench" "$TESTDIR"
 cd "$TESTDIR/busybench"
 
 retry npm install pify @types/pify typescript gts @types/node >/dev/null
@@ -144,19 +133,19 @@ func (tc *pprofTestCase) generateScript() (string, error) {
 	var buf bytes.Buffer
 	err := benchTmpl.Execute(&buf,
 		struct {
-			Name        string
-			NodeVersion string
-			NVMMirror   string
-			DurationSec int
-			PprofDir    string
-			BinaryHost  string
+			Name           string
+			NodeVersion    string
+			NVMMirror      string
+			DurationSec    int
+			PprofNodejsDir string
+			BinaryHost     string
 		}{
-			Name:        tc.name,
-			NodeVersion: tc.nodeVersion,
-			NVMMirror:   tc.nvmMirror,
-			DurationSec: 10,
-			PprofDir:    *pprofDir,
-			BinaryHost:  *binaryHost,
+			Name:           tc.name,
+			NodeVersion:    tc.nodeVersion,
+			NVMMirror:      tc.nvmMirror,
+			DurationSec:    10,
+			PprofNodejsDir: *pprofNodejsDir,
+			BinaryHost:     *binaryHost,
 		})
 	if err != nil {
 		return "", fmt.Errorf("failed to render benchmark script for %s: %v", tc.name, err)
@@ -169,36 +158,21 @@ func (tc *pprofTestCase) generateScript() (string, error) {
 }
 
 // generateDockerfile creates a dockerfile for running the system test, and
-// returns the base image for the dockerfile and a buffer containing the
+// returns the base image for the dockerfile and a string containing the
 // dockerfile.
-func generateDockerfile(runOn string, buildBinary bool) (string, bytes.Buffer, error) {
-	var isAlpine bool
-	var image string
+func generateDockerfile(runOn string, buildBinary bool) (string, string, error) {
+	var dockerfile, image string
 	switch runOn {
 	case "linux-docker":
 		image = linuxImage
 	case "alpine-docker":
 		image = alpineImage
-		isAlpine = true
 	default:
-		return "", bytes.Buffer{}, fmt.Errorf("unrecognized environment to run system test on: %s", runOn)
+		return "", "", fmt.Errorf("unrecognized environment to run system test on: %s", runOn)
 	}
 
-	var buf bytes.Buffer
-	err := dockerTmpl.Execute(&buf,
-		struct {
-			Image       string
-			BuildBinary bool
-			IsAlpine    bool
-		}{
-			Image:       image,
-			BuildBinary: buildBinary,
-			IsAlpine:    isAlpine,
-		})
-	if err != nil {
-		return "", bytes.Buffer{}, fmt.Errorf("failed to render docker file: %v", err)
-	}
-	return image, buf, nil
+	dockerfile = fmt.Sprintf(dockerfileFmt, image)
+	return image, dockerfile, nil
 }
 
 func TestAgentIntegration(t *testing.T) {
@@ -333,15 +307,15 @@ func buildDockerImage(ctx context.Context, cli *client.Client, imageName, runOn 
 
 // dockerBuildContext takes a buffer of the dockerfile and returns an io reader
 // with a tar archive containing the dockerfile.
-func dockerBuildContext(dockerfile bytes.Buffer) (io.Reader, error) {
+func dockerBuildContext(dockerfile string) (io.Reader, error) {
 	var buf bytes.Buffer
 	w := tar.NewWriter(&buf)
 	defer w.Close()
 
-	if err := w.WriteHeader(&tar.Header{Name: "Dockerfile", Size: int64(dockerfile.Len())}); err != nil {
+	if err := w.WriteHeader(&tar.Header{Name: "Dockerfile", Size: int64(len(dockerfile))}); err != nil {
 		return nil, fmt.Errorf("failed to write tar header: %v", err)
 	}
-	if _, err := w.Write(dockerfile.Bytes()); err != nil {
+	if _, err := w.Write([]byte(dockerfile)); err != nil {
 		return nil, fmt.Errorf("failed to write dockerfile to tar file: %v", err)
 	}
 
@@ -362,14 +336,14 @@ func runOnDocker(ctx context.Context, cli *client.Client, imageName, benchScript
 			Image:   imageName,
 			Cmd:     []string{"/bin/bash", benchScript},
 			Tty:     true,
-			Volumes: map[string]struct{}{fmt.Sprintf("%q:%q", *pprofDir, *pprofDir): {}},
+			Volumes: map[string]struct{}{fmt.Sprintf("%q:%q", *pprofNodejsDir, *pprofNodejsDir): {}},
 		},
 		&container.HostConfig{
 			Mounts: []mount.Mount{
 				{
 					Type:   mount.TypeBind,
-					Source: *pprofDir,
-					Target: *pprofDir,
+					Source: *pprofNodejsDir,
+					Target: *pprofNodejsDir,
 				},
 			},
 		}, nil, "")

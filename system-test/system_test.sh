@@ -23,6 +23,11 @@ echo "$RUN_ONLY_V8_CANARY_TEST"
 RUN_SYSTEM_TEST_ON="${RUN_SYSTEM_TEST_ON:-local}"
 echo "$RUN_SYSTEM_TEST_ON"
 
+# Install nvm.
+retry curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.34.0/install.sh | bash &>/dev/null
+export NVM_DIR="$HOME/.nvm" &>/dev/null
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" &>/dev/null
+
 # Move system test to separate directory to run.
 TESTDIR="$BASE_DIR/run-system-test"
 cp -R "system-test" "$TESTDIR"
@@ -37,4 +42,4 @@ docker pull node:10-alpine
 # Run test.
 cd "$TESTDIR"
 retry go get -t -d .
-go test -v -timeout=10m -run TestAgentIntegration -pprof_nodejs_path="$BASE_DIR" -run_only_v8_canary_test="$RUN_ONLY_V8_CANARY_TEST" -binary_host="$BINARY_HOST" -run_on="$RUN_SYSTEM_TEST_ON"
+go test -v -timeout=10m -run TestAgentIntegration -pprof_nodejs_dir="$BASE_DIR" -run_only_v8_canary_test="$RUN_ONLY_V8_CANARY_TEST" -binary_host="$BINARY_HOST" -run_on="$RUN_SYSTEM_TEST_ON"
