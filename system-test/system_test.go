@@ -73,7 +73,7 @@ cd {{.PprofDir}}
 # with Node's V8 canary build.
 {{if .NVMMirror}} retry npm install https://github.com/nodejs/nan.git {{end}} >/dev/null
 
-retry npm install --nodedir="$NODEDIR" {{if .BinaryHost}}--fallback-to-build=false --pprof_binary_host_mirror={{.BinaryHost}}{{end}} >/dev/null
+retry npm install --unsafe-perm=true --nodedir="$NODEDIR" {{if .BinaryHost}}--fallback-to-build=false --pprof_binary_host_mirror={{.BinaryHost}}{{end}} >/dev/null
 
 npm run compile
 npm pack >/dev/null

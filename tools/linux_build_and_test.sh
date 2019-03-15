@@ -19,6 +19,13 @@ set -e pipefail
 # Display commands
 set -x
 
+
+# TODO (nolanmar): Set the environment variables in Kokoro Configs after kokoro
+#                  config clean up.
+# Note environment to be used for building and testing.
+export RUN_ON_ALPINE="true"
+export BUILD_DOCKERFILE="tools/alpine"
+
 if [[ -z "$BUILD_TYPE" ]]; then
   case $KOKORO_JOB_TYPE in
     CONTINUOUS_INTEGRATION)
@@ -40,7 +47,7 @@ fi
 cd $(dirname $0)/..
 BASE_DIR=$(pwd)
 
-docker build -t build-image tools/linux
+docker build -t build-image "$BUILD_DOCKERFILE"
 docker run -v /var/run/docker.sock:/var/run/docker.sock -v \
     "${BASE_DIR}":"${BASE_DIR}" build-image \
     "${BASE_DIR}/tools/build.sh"
