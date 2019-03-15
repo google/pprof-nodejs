@@ -52,19 +52,26 @@ retry() {
 # Display commands being run.
 set -x
 
-# Note directory from which test is being run.
-BASE_DIR=$(pwd)
+
+# Install nvm
+curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.34.0/install.sh | bash
+export NVM_DIR="${XDG_CONFIG_HOME/:-$HOME/.}nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # This loads nvm
 
 # Install desired version of Node.JS.
 # nvm install writes to stderr and stdout on successful install, so both are
 # redirected.
-. ~/.nvm/nvm.sh &>/dev/null # load nvm.
 {{if .NVMMirror}}NVM_NODEJS_ORG_MIRROR={{.NVMMirror}}{{end}} retry nvm install {{.NodeVersion}} &>/dev/null
 
 NODEDIR=$(dirname $(dirname $(which node)))
 
+# Note directory from which test is being run.
+BASE_DIR={{.PprofDir}}
+
+cp -r {{.PprofDir}} ~/test-dir
+
 # Build and pack pprof module.
-cd {{.PprofDir}}
+cd $BASE_DIR
 
 # TODO: remove this workaround when a new version of nan (current version 
 #       2.12.1) is released.
@@ -78,7 +85,7 @@ retry npm install --nodedir="$NODEDIR" {{if .BinaryHost}}--fallback-to-build=fal
 npm run compile
 npm pack >/dev/null
 VERSION=$(node -e "console.log(require('./package.json').version);")
-PROFILER="{{.PprofDir}}/pprof-$VERSION.tgz"
+PROFILER="$BASE_DIR/pprof-$VERSION.tgz"
 
 # Create and set up directory for running benchmark.
 TESTDIR="$BASE_DIR/{{.Name}}"
@@ -152,21 +159,23 @@ func TestAgentIntegration(t *testing.T) {
 			wantProfiles: wantProfiles,
 			nodeVersion:  "6",
 		},
-		{
-			name:         fmt.Sprintf("pprof-node8-%s", runID),
-			wantProfiles: wantProfiles,
-			nodeVersion:  "8",
-		},
-		{
-			name:         fmt.Sprintf("pprof-node10-%s", runID),
-			wantProfiles: wantProfiles,
-			nodeVersion:  "10",
-		},
-		{
-			name:         fmt.Sprintf("pprof-node11-%s", runID),
-			wantProfiles: wantProfiles,
-			nodeVersion:  "11",
-		},
+		/*
+			{
+				name:         fmt.Sprintf("pprof-node8-%s", runID),
+				wantProfiles: wantProfiles,
+				nodeVersion:  "8",
+			},
+			{
+				name:         fmt.Sprintf("pprof-node10-%s", runID),
+				wantProfiles: wantProfiles,
+				nodeVersion:  "10",
+			},
+			{
+				name:         fmt.Sprintf("pprof-node11-%s", runID),
+				wantProfiles: wantProfiles,
+				nodeVersion:  "11",
+			},
+		*/
 	}
 	if *runOnlyV8CanaryTest {
 		testcases = []pprofTestCase{{
