@@ -41,7 +41,7 @@ fi
 cd $(dirname $0)/..
 BASE_DIR=$(pwd)
 
-docker build -t build-image tools/linux
+docker build -t build-image tools/alpine
 docker run -v /var/run/docker.sock:/var/run/docker.sock -v \
     "${BASE_DIR}":"${BASE_DIR}" build-image \
     "${BASE_DIR}/tools/build.sh"
@@ -53,7 +53,7 @@ gsutil cp -r "${BASE_DIR}/artifacts/." "gs://${GCS_LOCATION}/"
 
 # Test the agent
 export BINARY_HOST="https://storage.googleapis.com/${GCS_LOCATION}"
-RUN_SYSTEM_TEST_ON="linux-docker" "${BASE_DIR}/system-test/system_test.sh"
+RUN_SYSTEM_TEST_ON="alpine-docker" "${BASE_DIR}/system-test/system_test.sh"
 
 if [ "$BUILD_TYPE" == "release" ]; then
   gsutil cp -r "${BASE_DIR}/artifacts/." "gs://cloud-profiler/nodejs/release"

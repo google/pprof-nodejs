@@ -35,10 +35,6 @@ cp -R "system-test" "$TESTDIR"
 # Note docker API version for system test.
 export DOCKER_API_VERSION=$(docker version -f '{{.Client.APIVersion}}')
 
-docker pull node:10
-docker pull node:10-alpine
-
-
 # Run test.
 cd "$TESTDIR"
 retry go get -t -d .

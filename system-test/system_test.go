@@ -47,10 +47,15 @@ var (
 	runID = strings.Replace(time.Now().Format("2006-01-02-15-04-05.000000-0700"), ".", "-", -1)
 )
 
-const alpineImage = "node:10-alpine"
-const linuxImage = "node:10"
+const alpineImageFmt = "node:%s-alpine"
+const linuxImageFmt = "node:%s"
 
-var dockerfileFmt = "FROM %s"
+const alpineDockerfileFmt = `
+FROM %s
+RUN apk --no-cache add bash
+`
+
+const linuxDockerfileFmt = "FROM %s"
 
 var benchTmpl = template.Must(template.New("benchTemplate").Parse(`
 #! /bin/bash
@@ -160,18 +165,20 @@ func (tc *pprofTestCase) generateScript() (string, error) {
 // generateDockerfile creates a dockerfile for running the system test, and
 // returns the base image for the dockerfile and a string containing the
 // dockerfile.
-func generateDockerfile(runOn string, buildBinary bool) (string, string, error) {
-	var dockerfile, image string
+func generateDockerfile(runOn string, nodeVersion string) (string, string, error) {
+	var dockerfileFmt, imageFmt string
 	switch runOn {
 	case "linux-docker":
-		image = linuxImage
+		imageFmt = linuxImageFmt
+		dockerfileFmt = linuxDockerfileFmt
 	case "alpine-docker":
-		image = alpineImage
+		imageFmt = alpineImageFmt
+		dockerfileFmt = alpineDockerfileFmt
 	default:
 		return "", "", fmt.Errorf("unrecognized environment to run system test on: %s", runOn)
 	}
-
-	dockerfile = fmt.Sprintf(dockerfileFmt, image)
+	image := fmt.Sprintf(imageFmt, nodeVersion)
+	dockerfile := fmt.Sprintf(dockerfileFmt, image)
 	return image, dockerfile, nil
 }
 
@@ -218,18 +225,13 @@ func TestAgentIntegration(t *testing.T) {
 	runtime.GOMAXPROCS(1)
 
 	// If test should be run on docker image, create client for interacting with
-	// docker API and build the docker image to be used for all test cases.
+	// docker API.
 	var cli *client.Client
-	imageName := fmt.Sprintf("%s-%s", *runOn, runID)
 	if *runOn != "local" {
 		var err error
 		if cli, err = client.NewClientWithOpts(client.FromEnv); err != nil {
 			t.Fatalf("failed to create docker client: %v", err)
 		}
-		if err := buildDockerImage(ctx, cli, imageName, *runOn, *binaryHost == ""); err != nil {
-			t.Fatal(err)
-		}
-
 	}
 
 	for _, tc := range testcases {
@@ -247,6 +249,10 @@ func TestAgentIntegration(t *testing.T) {
 					t.Fatalf("failed to execute benchmark: %v", err)
 				}
 			} else {
+				imageName := fmt.Sprintf("%s-node%s-%s", *runOn, tc.nodeVersion, runID)
+				if err := buildDockerImage(ctx, cli, imageName, *runOn, tc.nodeVersion); err != nil {
+					t.Fatal(err)
+				}
 				out, err := runOnDocker(ctx, cli, imageName, bench)
 				t.Log(out.String())
 				if err != nil {
@@ -277,8 +283,8 @@ func runLocally(benchScript string) (bytes.Buffer, error) {
 // (depending on value of runOn), with necessary dependencies for building
 // binaries if buildBinary indicates binaries will be built on the docker
 // image.
-func buildDockerImage(ctx context.Context, cli *client.Client, imageName, runOn string, buildBinary bool) error {
-	baseImage, dockerfile, err := generateDockerfile(runOn, buildBinary)
+func buildDockerImage(ctx context.Context, cli *client.Client, imageName, runOn, nodeVersion string) error {
+	baseImage, dockerfile, err := generateDockerfile(runOn, nodeVersion)
 	if err != nil {
 		return fmt.Errorf("failed to generate docker file: %v", err)
 	}
@@ -301,6 +307,10 @@ func buildDockerImage(ctx context.Context, cli *client.Client, imageName, runOn 
 		return fmt.Errorf("failed to build docker image: %v", err)
 	}
 	defer resp.Body.Close()
+	// Read respone body to wait for image to be built.
+	if _, err := ioutil.ReadAll(resp.Body); err != nil {
+		return fmt.Errorf("failed to process output produced while building image %s", imageName)
+	}
 
 	return nil
 }
