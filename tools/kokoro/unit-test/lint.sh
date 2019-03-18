@@ -1,10 +1,12 @@
-# Copyright 2019 Google Inc. All Rights Reserved.
+#!/bin/bash
+
+# Copyright 2018 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#      http://www.apache.org/licenses/LICENSE-2.0
+#     https://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -12,15 +14,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Get npm token from Keystore
-before_action {
-  fetch_keystore {
-    keystore_resource {
-      keystore_config_id: 73713
-      keyname: "google_cloud_npm_token"
-      backend_type: FASTCONFIGPUSH
-    }
-  }
-}
+set -xeo pipefail
 
-build_file: "pprof-nodejs/tools/publish.sh"
+export NPM_CONFIG_PREFIX=/home/node/.npm-global
+
+cd $(dirname $0)/..
+
+npm install
+
+npm run lint
