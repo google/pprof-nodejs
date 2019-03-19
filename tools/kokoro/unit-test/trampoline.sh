@@ -1,4 +1,6 @@
-# Copyright 2018 Google Inc. All Rights Reserved.
+#!/bin/bash
+
+# Copyright 2017 Google Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,5 +14,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Location of the build script in this repository.
-build_file: "pprof-nodejs/tools/linux_build_and_test.sh"
+set -xeo pipefail
+
+# Always run the cleanup script, regardless of the success of bouncing into
+# the container.
+function cleanup() {
+    chmod +x ${KOKORO_GFILE_DIR}/trampoline_cleanup.sh
+    ${KOKORO_GFILE_DIR}/trampoline_cleanup.sh
+    echo "cleanup";
+}
+trap cleanup EXIT
+
+python3 "${KOKORO_GFILE_DIR}/trampoline_v1.py"
