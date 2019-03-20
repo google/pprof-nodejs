@@ -52,6 +52,9 @@ retry() {
 # Display commands being run.
 set -x
 
+# Fail on any error.
+set -eo pipefail
+
 # Note directory from which test is being run.
 BASE_DIR=$(pwd)
 
