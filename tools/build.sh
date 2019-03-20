@@ -35,3 +35,8 @@ do
   cp -r build/stage/* "${ARTIFACTS_OUT}/"
   rm -rf build
 done
+
+# Remove node_modules directory. When this script is run in a docker container
+# with  user root, then a system test running after this script cannot run npm
+# install.
+rm -r node_modules
