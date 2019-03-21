@@ -15,12 +15,10 @@
 package testing
 
 import (
-	"archive/tar"
 	"bytes"
 	"context"
 	"flag"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -31,10 +29,6 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/docker/docker/api/types"
-	"github.com/docker/docker/api/types/container"
-	"github.com/docker/docker/api/types/mount"
-	"github.com/docker/docker/client"
 	"github.com/google/pprof/profile"
 )
 
@@ -58,7 +52,7 @@ RUN apk --no-cache add bash
 const linuxDockerfileFmt = "FROM %s"
 
 var benchTmpl = template.Must(template.New("benchTemplate").Parse(`
-#! /bin/bash
+#!/bin/bash
 (
 
 retry() {
@@ -93,7 +87,7 @@ cd {{.PprofNodejsDir}}
 # For v8-canary tests, we need to use the version of NAN on github, which 
 # contains unreleased fixes that allow the native component to be compiled
 # with Node's V8 canary build.
-{{if .NVMMirror}} retry npm install https://github.com/nodejs/nan.git {{end}} >/dev/null
+{{if .NVMMirror}} retry npm install https://github.com/nodejs/nan.git  >/dev/null{{end}}
 
 retry npm install --nodedir="$NODEDIR" {{if .BinaryHost}}--fallback-to-build=false --pprof_binary_host_mirror={{.BinaryHost}}{{end}} >/dev/null
 
@@ -162,24 +156,8 @@ func (tc *pprofTestCase) generateScript() (string, error) {
 	return filename, nil
 }
 
-// generateDockerfile creates a dockerfile for running the system test, and
-// returns the base image for the dockerfile and a string containing the
-// dockerfile.
-func generateDockerfile(runOn string, nodeVersion string) (string, string, error) {
-	var dockerfileFmt, imageFmt string
-	switch runOn {
-	case "linux-docker":
-		imageFmt = linuxImageFmt
-		dockerfileFmt = linuxDockerfileFmt
-	case "alpine-docker":
-		imageFmt = alpineImageFmt
-		dockerfileFmt = alpineDockerfileFmt
-	default:
-		return "", "", fmt.Errorf("unrecognized environment to run system test on: %s", runOn)
-	}
-	image := fmt.Sprintf(imageFmt, nodeVersion)
-	dockerfile := fmt.Sprintf(dockerfileFmt, image)
-	return image, dockerfile, nil
+func getDockerfile(runOn string, nodeVersion string) (string, error) {
+	return fmt.Sprintf("alpine-node%s", nodeVersion), nil
 }
 
 func TestAgentIntegration(t *testing.T) {
@@ -224,16 +202,6 @@ func TestAgentIntegration(t *testing.T) {
 	// Prevent test cases from running in parallel.
 	runtime.GOMAXPROCS(1)
 
-	// If test should be run on docker image, create client for interacting with
-	// docker API.
-	var cli *client.Client
-	if *runOn != "local" {
-		var err error
-		if cli, err = client.NewClientWithOpts(client.FromEnv); err != nil {
-			t.Fatalf("failed to create docker client: %v", err)
-		}
-	}
-
 	for _, tc := range testcases {
 		tc := tc // capture range variable
 		t.Run(tc.name, func(t *testing.T) {
@@ -242,7 +210,7 @@ func TestAgentIntegration(t *testing.T) {
 				t.Fatalf("failed to initialize bench script: %v", err)
 			}
 
-			if cli == nil {
+			if *runOn == "local" {
 				out, err := runLocally(bench)
 				t.Log(out.String())
 				if err != nil {
@@ -250,10 +218,7 @@ func TestAgentIntegration(t *testing.T) {
 				}
 			} else {
 				imageName := fmt.Sprintf("%s-node%s-%s", *runOn, tc.nodeVersion, runID)
-				if err := buildDockerImage(ctx, cli, imageName, *runOn, tc.nodeVersion); err != nil {
-					t.Fatal(err)
-				}
-				out, err := runOnDocker(ctx, cli, imageName, bench)
+				out, err := runOnDocker(ctx, imageName, *runOn, tc.nodeVersion, bench)
 				t.Log(out.String())
 				if err != nil {
 					t.Fatalf("failed to execute benchmark: %v", err)
@@ -272,7 +237,11 @@ func TestAgentIntegration(t *testing.T) {
 
 // runLocally executes the benchScript with bash.
 func runLocally(benchScript string) (bytes.Buffer, error) {
-	cmd := exec.Command("/bin/bash", benchScript)
+	return runCommand("/bin/bash", benchScript)
+}
+
+func runCommand(name string, arg ...string) (bytes.Buffer, error) {
+	cmd := exec.Command(name, arg...)
 	var out bytes.Buffer
 	cmd.Stdout = &out
 	err := cmd.Run()
@@ -283,57 +252,17 @@ func runLocally(benchScript string) (bytes.Buffer, error) {
 // (depending on value of runOn), with necessary dependencies for building
 // binaries if buildBinary indicates binaries will be built on the docker
 // image.
-func buildDockerImage(ctx context.Context, cli *client.Client, imageName, runOn, nodeVersion string) error {
-	baseImage, dockerfile, err := generateDockerfile(runOn, nodeVersion)
+func buildDockerImage(ctx context.Context, imageName, runOn, nodeVersion string) (bytes.Buffer, error) {
+	dockerfilePath, err := getDockerfile(runOn, nodeVersion)
 	if err != nil {
-		return fmt.Errorf("failed to generate docker file: %v", err)
+		return bytes.Buffer{}, fmt.Errorf("failed to generate docker file: %v", err)
 	}
 
-	dbCtx, err := dockerBuildContext(dockerfile)
-	if err != nil {
-		return fmt.Errorf("failed to get docker build context: %v", err)
-	}
-
-	rdr, err := cli.ImagePull(ctx, baseImage, types.ImagePullOptions{})
-	if err != nil {
-		return fmt.Errorf("failed to pull base docker image %s: %v", baseImage, err)
-	}
-	defer rdr.Close()
-
-	resp, err := cli.ImageBuild(ctx, dbCtx, types.ImageBuildOptions{
-		Tags: []string{imageName},
-	})
-	if err != nil {
-		return fmt.Errorf("failed to build docker image: %v", err)
-	}
-	defer resp.Body.Close()
-	// Read respone body to wait for image to be built.
-	if _, err := ioutil.ReadAll(resp.Body); err != nil {
-		return fmt.Errorf("failed to process output produced while building image %s", imageName)
-	}
-
-	return nil
-}
-
-// dockerBuildContext takes a buffer of the dockerfile and returns an io reader
-// with a tar archive containing the dockerfile.
-func dockerBuildContext(dockerfile string) (io.Reader, error) {
-	var buf bytes.Buffer
-	w := tar.NewWriter(&buf)
-	defer w.Close()
-
-	if err := w.WriteHeader(&tar.Header{Name: "Dockerfile", Size: int64(len(dockerfile))}); err != nil {
-		return nil, fmt.Errorf("failed to write tar header: %v", err)
-	}
-	if _, err := w.Write([]byte(dockerfile)); err != nil {
-		return nil, fmt.Errorf("failed to write dockerfile to tar file: %v", err)
-	}
-
-	return bytes.NewReader(buf.Bytes()), nil
+	return runCommand("docker", "build", "-t", imageName, dockerfilePath)
 }
 
 // runOnDocker runs the benchScript on the specified docker image.
-func runOnDocker(ctx context.Context, cli *client.Client, imageName, benchScript string) (bytes.Buffer, error) {
+func runOnDocker(ctx context.Context, imageName, runOn, nodeVersion, benchScript string) (bytes.Buffer, error) {
 	// Specify absolute path to bench script, since the docker container will
 	// have different working directory.
 	benchScript, err := filepath.Abs(benchScript)
@@ -341,48 +270,18 @@ func runOnDocker(ctx context.Context, cli *client.Client, imageName, benchScript
 		return bytes.Buffer{}, fmt.Errorf("failed to get absolute path of %s: %v", benchScript, err)
 	}
 
-	resp, err := cli.ContainerCreate(ctx,
-		&container.Config{
-			Image:   imageName,
-			Cmd:     []string{"/bin/bash", benchScript},
-			Tty:     true,
-			Volumes: map[string]struct{}{fmt.Sprintf("%q:%q", *pprofNodejsDir, *pprofNodejsDir): {}},
-		},
-		&container.HostConfig{
-			Mounts: []mount.Mount{
-				{
-					Type:   mount.TypeBind,
-					Source: *pprofNodejsDir,
-					Target: *pprofNodejsDir,
-				},
-			},
-		}, nil, "")
+	out1, err := buildDockerImage(ctx, imageName, runOn, nodeVersion)
 	if err != nil {
-		return bytes.Buffer{}, fmt.Errorf("failed to created docker container: %v", err)
+		return out1, err
 	}
+	fmt.Printf(out1.String())
 
-	if err := cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
-		return bytes.Buffer{}, fmt.Errorf("failed to start container: %v", err)
-	}
+	out2, err := runCommand(
+		"docker", "run", "-v", fmt.Sprintf("\"%s\":\"%s\"", *pprofNodejsDir, *pprofNodejsDir), imageName, "sh", benchScript,
+	)
+	fmt.Printf(out2.String())
 
-	statusCh, errCh := cli.ContainerWait(ctx, resp.ID, container.WaitConditionNotRunning)
-	select {
-	case err := <-errCh:
-		if err != nil {
-			return bytes.Buffer{}, fmt.Errorf("failed to wait for container: %v", err)
-		}
-	case <-statusCh:
-	}
-
-	out, err := cli.ContainerLogs(ctx, resp.ID, types.ContainerLogsOptions{ShowStdout: true})
-	if err != nil {
-		return bytes.Buffer{}, fmt.Errorf("failed to get container logs: %v", err)
-	}
-	var buf bytes.Buffer
-	if _, err := buf.ReadFrom(out); err != nil {
-		return bytes.Buffer{}, fmt.Errorf("failed to read containder logs: %v", err)
-	}
-	return buf, nil
+	return out2, err
 }
 
 // checkProfile opens the profile at path and confirms that profile contains
