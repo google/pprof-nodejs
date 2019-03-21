@@ -35,4 +35,4 @@ NPM_TOKEN=$(cat $KOKORO_KEYSTORE_DIR/73713_google_cloud_npm_token)
 echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc
 
 retry npm install
-npm publish --access=public
+npm publish --access=public --tag alpha
