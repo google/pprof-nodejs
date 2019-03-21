@@ -17,7 +17,7 @@ NODEDIR=$(dirname $(dirname $(which node)))
 # with Node's V8 canary build.
 [ -z $NVM_NODEJS_ORG_MIRROR ] || retry npm install https://github.com/nodejs/nan.git
 
-retry npm install --nodedir="$NODEDIR" >/dev/null
+retry npm install --nodedir="$NODEDIR" ${BINARY_HOST:+--pprof_binary_host_mirror=$BINARY_HOST} >/dev/null
 
 npm run compile
 npm pack >/dev/null
@@ -29,7 +29,7 @@ cp -r "$PWD/system-test/busybench" "$TESTDIR"
 cd "$TESTDIR/busybench"
 
 retry npm install pify @types/pify typescript gts @types/node >/dev/null
-retry npm install --nodedir="$NODEDIR" "$PROFILER" >/dev/null
+retry npm install --nodedir="$NODEDIR" ${BINARY_HOST:+--pprof_binary_host_mirror=$BINARY_HOST}  "$PROFILER" >/dev/null
 
 npm run compile >/dev/null
 

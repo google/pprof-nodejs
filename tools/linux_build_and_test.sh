@@ -41,9 +41,14 @@ fi
 cd $(dirname $0)/..
 BASE_DIR=$(pwd)
 
-docker build -t build-image tools/linux
+docker build -t build-linux tools/linux
 docker run -v /var/run/docker.sock:/var/run/docker.sock -v \
-    "${BASE_DIR}":"${BASE_DIR}" build-image \
+    "${BASE_DIR}":"${BASE_DIR}" build-linux \
+    "${BASE_DIR}/tools/build.sh"
+
+docker build -t build-alpine tools/alpine
+docker run -v /var/run/docker.sock:/var/run/docker.sock -v \
+    "${BASE_DIR}":"${BASE_DIR}" build-alpine \
     "${BASE_DIR}/tools/build.sh"
 
 GCS_LOCATION="cprof-e2e-nodejs-artifacts/pprof-nodejs/kokoro/${BUILD_TYPE}/${KOKORO_BUILD_NUMBER}"
