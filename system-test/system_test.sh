@@ -13,27 +13,23 @@ retry() {
 cd $(dirname $0)
 
 if [[ -z "$BINARY_HOST" ]]; then
-  BUILD_BINARIES="true"
+  BUILD_BINARIES=true
 fi
 
 for i in 6 8 10 11; do
   # Test Linux support for the given node version.
-  retry docker build \
-  -f Dockerfile.linux \
-  --build-arg NODE_VERSION=$i --build-arg BUILD_BINARIES="$BUILD_BINARIES" \
-  -t node$i-linux .
+  retry docker build -f Dockerfile.linux --build-arg NODE_VERSION=$i \
+      --build-arg BUILD_BINARIES="$BUILD_BINARIES" -t node$i-linux .
 
- docker run -v $PWD/..:/src \
-  -e BINARY_HOST="$BINARY_HOST" \
-  node$i-linux /src/system-test/test.sh
+  docker run  -v $PWD/..:/src -e BINARY_HOST="$BINARY_HOST" node$i-linux \
+      /src/system-test/test.sh
 
   # Test Alpine support for the given node version.
   retry docker build -f Dockerfile.node$i-alpine \
-    --build-arg BUILD_BINARIES="$BUILD_BINARIES" \
-    -t node$i-alpine .
+      --build-arg BUILD_BINARIES="$BUILD_BINARIES" -t node$i-alpine .
 
   docker run -v $PWD/..:/src -e BINARY_HOST="$BINARY_HOST" \
-    node$i-alpine /src/system-test/test.sh
+      node$i-alpine /src/system-test/test.sh
 done
 
 echo '** ALL TESTS PASSED **'

@@ -52,7 +52,8 @@ docker run -v /var/run/docker.sock:/var/run/docker.sock -v \
     "${BASE_DIR}/tools/build.sh"
 
 GCS_LOCATION="cprof-e2e-nodejs-artifacts/pprof-nodejs/kokoro/${BUILD_TYPE}/${KOKORO_BUILD_NUMBER}"
-gcloud auth activate-service-account --key-file="${KOKORO_KEYSTORE_DIR}/72935_cloud-profiler-e2e-service-account-key"
+gcloud auth activate-service-account  \
+    --key-file="${KOKORO_KEYSTORE_DIR}/72935_cloud-profiler-e2e-service-account-key"
 
 gsutil cp -r "${BASE_DIR}/artifacts/." "gs://${GCS_LOCATION}/"
 
