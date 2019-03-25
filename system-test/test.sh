@@ -46,6 +46,3 @@ pprof -filefunctions -top -nodecount=2 time.pb.gz | \
 pprof -filefunctions -top -nodecount=2 heap.pb.gz | \
     grep "busyLoop.*build/src/busybench.js"
 echo '** TEST PASSED **'
-
-rm time.pb.gz
-rm heap.pb.gz

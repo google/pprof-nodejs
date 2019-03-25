@@ -28,8 +28,8 @@ for i in 6 8 10 11; do
   retry docker build -f Dockerfile.node$i-alpine \
       --build-arg BUILD_BINARIES="$BUILD_BINARIES" -t node$i-alpine .
 
-  docker run -v $PWD/..:/src -e BINARY_HOST="$BINARY_HOST" \
-      node$i-alpine /src/system-test/test.sh
+  docker run -v $PWD/..:/src -e BINARY_HOST="$BINARY_HOST" node$i-alpine \
+      /src/system-test/test.sh
 done
 
 echo '** ALL TESTS PASSED **'

@@ -21,7 +21,7 @@ set -e pipefail
 set -x
 
 cd $(dirname $0)/..
-BASE_DIR=$(pwd)
+BASE_DIR=$PWD
 
 ARTIFACTS_OUT="${BASE_DIR}/artifacts"
 mkdir -p "$ARTIFACTS_OUT"
