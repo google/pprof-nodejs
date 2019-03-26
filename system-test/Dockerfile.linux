@@ -9,11 +9,10 @@ FROM debian:stretch
 
 ARG NODE_VERSION
 ARG NVM_NODEJS_ORG_MIRROR
-ARG BUILD_BINARIES
+ARG ADDITIONAL_PACKAGES
 
-RUN apt-get update && apt-get install -y curl
-RUN if [ "$BUILD_BINARIES" = "true" ] ; then apt-get install -y python g++ make ; fi
-RUN rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y curl $ADDITIONAL_PACKAGES \
+    && rm -rf /var/lib/apt/lists/*
 
 ENV NVM_DIR /root/.nvm
 RUN mkdir -p $NVM_DIR

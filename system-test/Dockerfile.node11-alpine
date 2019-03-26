@@ -6,10 +6,9 @@ RUN go get github.com/google/pprof
 
 FROM node:11-alpine
 
-ARG BUILD_BINARIES
+ARG ADDITIONAL_PACKAGES
 
-RUN apk update && apk upgrade && apk add --no-cache bash
-RUN if [ "$BUILD_BINARIES" = "true" ] ; then apk add --no-cache python g++ make ; fi
+RUN apk update && apk upgrade && apk add --no-cache bash $ADDITIONAL_PACKAGES
 WORKDIR /root/
 COPY --from=0 /go/bin/pprof /bin
 RUN chmod a+x /bin/pprof
