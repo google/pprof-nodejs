@@ -38,16 +38,16 @@ if [[ -z "$BUILD_TYPE" ]]; then
   esac
 fi
 
-cd $(dirname $0)/..
+cd $(dirname $0)/../..
 BASE_DIR=$PWD
 
-docker build -t build-linux tools/linux
+docker build -t build-linux -f tools/build/Dockerfile.linux tools/build
 docker run -v "${BASE_DIR}":"${BASE_DIR}" build-linux \
-    "${BASE_DIR}/tools/build.sh"
+    "${BASE_DIR}/tools/build/build.sh"
 
-docker build -t build-alpine tools/alpine
+docker build -t build-alpine -f tools/build/Dockerfile.alpine tools/build
 docker run -v "${BASE_DIR}":"${BASE_DIR}" build-alpine \
-    "${BASE_DIR}/tools/build.sh"
+    "${BASE_DIR}/tools/build/build.sh"
 
 GCS_LOCATION="cprof-e2e-nodejs-artifacts/pprof-nodejs/kokoro/${BUILD_TYPE}/${KOKORO_BUILD_NUMBER}"
 gcloud auth activate-service-account  \
