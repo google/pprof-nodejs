@@ -32,7 +32,8 @@ retry nvm install 10 &>/dev/null
 cd $(dirname $0)/..
 
 NPM_TOKEN=$(cat $KOKORO_KEYSTORE_DIR/72935_pprof-npm-token)
-echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc
+echo "//wombat-dressing-room.appspot.com/:_authToken=${NPM_TOKEN}" > ~/.npmrc
 
 retry npm install
-npm publish --access=public --tag alpha
+npm publish --access=public \
+    --registry=https://wombat-dressing-room.appspot.com --tag alpha
