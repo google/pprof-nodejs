@@ -64,5 +64,5 @@ export BINARY_HOST="https://storage.googleapis.com/${GCS_LOCATION}"
 "${BASE_DIR}/system-test/system_test.sh"
 
 if [ "$BUILD_TYPE" == "release" ]; then
-  retry gsutil cp -r "${BASE_DIR}/artifacts/." "gs://cloud-profiler/nodejs/release"
+  retry gsutil cp -r "${BASE_DIR}/artifacts/." "gs://cloud-profiler/pprof-nodejs/release"
 fi
