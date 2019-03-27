@@ -36,4 +36,4 @@ echo "//wombat-dressing-room.appspot.com/:_authToken=${NPM_TOKEN}" > ~/.npmrc
 
 retry npm install
 npm publish --access=public \
-    --registry=https://wombat-dressing-room.appspot.com --tag alpha
+    --registry=https://wombat-dressing-room.appspot.com

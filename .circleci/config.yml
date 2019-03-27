@@ -1,7 +1,4 @@
 ---
-release_tags: &release_tags
-  tags:
-    only: /^v\d+(\.\d+){2}(-.*)?$/
 
 # "Include" for unit tests definition.
 unit_tests: &unit_tests
@@ -49,30 +46,12 @@ workflows:
   version: 2
   tests:
     jobs:
-      - node6:
-           filters: *release_tags
-      - node8:
-           filters: *release_tags
-      - node10:
-          filters: *release_tags
-      - node11:
-          filters: *release_tags
-      - gocheck:
-          filters: *release_tags
-      - npmaudit:
-          filters: *release_tags
-      - publish_npm:
-          requires:
-            - node6
-            - node8
-            - node10
-            - node11
-            - gocheck
-            - npmaudit
-          filters:
-            branches:
-              ignore: /.*/
-            <<: *release_tags
+      - node6
+      - node8
+      - node10
+      - node11
+      - gocheck
+      - npmaudit
 
 jobs:
   node6:
@@ -107,20 +86,3 @@ jobs:
     docker:
       - image: circleci/golang:1.12
     <<: *gochecks
-
-  publish_npm:
-    docker:
-      - image: node:8
-        user: node
-    steps:
-      - checkout
-      - run:
-          name: Set NPM authentication.
-          command: echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc
-      - run:
-          name: Install modules and dependencies.
-          command: npm install
-      - run:
-          name: Publish the module to npm.
-          command: npm publish
-
