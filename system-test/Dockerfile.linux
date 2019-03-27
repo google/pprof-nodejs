@@ -7,18 +7,16 @@ RUN go get github.com/google/pprof
 
 FROM debian:stretch
 
-RUN apt-get update && apt-get install -y \
-    curl \
-    python \
-    make \
-    g++ \
- && rm -rf /var/lib/apt/lists/*
+ARG NODE_VERSION
+ARG NVM_NODEJS_ORG_MIRROR
+ARG ADDITIONAL_PACKAGES
+
+RUN apt-get update && apt-get install -y curl $ADDITIONAL_PACKAGES \
+    && rm -rf /var/lib/apt/lists/*
 
 ENV NVM_DIR /root/.nvm
 RUN mkdir -p $NVM_DIR
 
-ARG NODE_VERSION
-ARG NVM_NODEJS_ORG_MIRROR
 
 # Install nvm with node and npm
 RUN curl https://raw.githubusercontent.com/creationix/nvm/v0.34.0/install.sh | bash \

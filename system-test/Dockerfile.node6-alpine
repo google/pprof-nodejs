@@ -3,8 +3,12 @@ RUN apk update && apk upgrade && apk add --no-cache git
 WORKDIR /root/
 RUN go get github.com/google/pprof
 
+
 FROM node:6-alpine
-RUN apk update && apk upgrade && apk add --no-cache bash python g++ make
+
+ARG ADDITIONAL_PACKAGES
+
+RUN apk update && apk upgrade && apk add --no-cache bash $ADDITIONAL_PACKAGES
 WORKDIR /root/
 COPY --from=0 /go/bin/pprof /bin
 RUN chmod a+x /bin/pprof

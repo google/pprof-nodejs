@@ -14,6 +14,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+retry() {
+  "${@}" || "${@}" || "${@}" || exit $?
+}
+
 # Fail on any error.
 set -e pipefail
 
@@ -38,23 +42,27 @@ if [[ -z "$BUILD_TYPE" ]]; then
   esac
 fi
 
-cd $(dirname $0)/..
-BASE_DIR=$(pwd)
+cd $(dirname $0)/../..
+BASE_DIR=$PWD
 
-docker build -t build-image tools/linux
-docker run -v /var/run/docker.sock:/var/run/docker.sock -v \
-    "${BASE_DIR}":"${BASE_DIR}" build-image \
-    "${BASE_DIR}/tools/build.sh"
+retry docker build -t build-linux -f tools/build/Dockerfile.linux tools/build
+docker run -v "${BASE_DIR}":"${BASE_DIR}" build-linux \
+    "${BASE_DIR}/tools/build/build.sh"
+
+retry docker build -t build-alpine -f tools/build/Dockerfile.alpine tools/build
+docker run -v "${BASE_DIR}":"${BASE_DIR}" build-alpine \
+    "${BASE_DIR}/tools/build/build.sh"
 
 GCS_LOCATION="cprof-e2e-nodejs-artifacts/pprof-nodejs/kokoro/${BUILD_TYPE}/${KOKORO_BUILD_NUMBER}"
-gcloud auth activate-service-account --key-file="${KOKORO_KEYSTORE_DIR}/72935_cloud-profiler-e2e-service-account-key"
+retry gcloud auth activate-service-account  \
+    --key-file="${KOKORO_KEYSTORE_DIR}/72935_cloud-profiler-e2e-service-account-key"
 
-gsutil cp -r "${BASE_DIR}/artifacts/." "gs://${GCS_LOCATION}/"
+retry gsutil cp -r "${BASE_DIR}/artifacts/." "gs://${GCS_LOCATION}/"
 
 # Test the agent
 export BINARY_HOST="https://storage.googleapis.com/${GCS_LOCATION}"
 "${BASE_DIR}/system-test/system_test.sh"
 
 if [ "$BUILD_TYPE" == "release" ]; then
-  gsutil cp -r "${BASE_DIR}/artifacts/." "gs://cloud-profiler/nodejs/release"
+  retry gsutil cp -r "${BASE_DIR}/artifacts/." "gs://cloud-profiler/nodejs/release"
 fi
