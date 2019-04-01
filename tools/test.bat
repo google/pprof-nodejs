@@ -13,6 +13,6 @@
 @rem limitations under the License.
 
 cd /d %~dp0	
-cd ../../../
+cd ../
 
-"C:\Program Files\Git\bin\bash.exe" tools/kokoro/unit-test/test.sh --windows
+"C:\Program Files\Git\bin\bash.exe" tools/test.sh --windows
