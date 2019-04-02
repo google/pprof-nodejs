@@ -38,8 +38,16 @@ npm pack >/dev/null
 VERSION=$(node -e "console.log(require('./package.json').version);")
 PROFILER="$PWD/pprof-$VERSION.tgz"
 
+if [[ "$VERIFY_TIME_LINE_NUMBERS" == "true" ]]; then
+  BENCHDIR="$PWD/system-test/busybench-js"
+  BENCHPATH="src/busybench.js"
+else
+  BENCHDIR="$PWD/system-test/busybench"
+  BENCHPATH="build/src/busybench.js"
+fi
+
 TESTDIR=$(mktemp -d)
-cp -r "$PWD/system-test/busybench" "$TESTDIR"
+cp -r "$BENCHDIR" "$TESTDIR/busybench"
 cd "$TESTDIR/busybench"
 
 retry npm_install pify @types/pify typescript gts @types/node >/dev/null
@@ -47,14 +55,24 @@ retry npm_install --nodedir="$NODEDIR" \
     ${BINARY_HOST:+--pprof_binary_host_mirror=$BINARY_HOST} \
     "$PROFILER">/dev/null
 
-npm run compile >/dev/null
+if [[ "$VERIFY_TIME_LINE_NUMBERS" != "true" ]]; then
+  npm run compile
+fi
 
 node -v
-node --trace-warnings build/src/busybench.js 10
-ls -l
+node --trace-warnings "$BENCHPATH" 10 $VERIFY_TIME_LINE_NUMBERS
 
-pprof -filefunctions -top -nodecount=2 time.pb.gz | \
-    grep "busyLoop.*src/busybench.ts"
-pprof -filefunctions -top -nodecount=2 heap.pb.gz | \
-    grep "busyLoop.*src/busybench.ts"
+if [[ "$VERIFY_TIME_LINE_NUMBERS" == "true" ]]; then
+  pprof -lines -top -nodecount=2 time.pb.gz | \
+      grep "busyLoop.*src/busybench.js:33"
+  pprof -filefunctions -top -nodecount=2 heap.pb.gz | \
+      grep "busyLoop.*src/busybench.js"
+else
+  pprof -filefunctions -top -nodecount=2 time.pb.gz | \
+      grep "busyLoop.*src/busybench.ts"
+  pprof -filefunctions -top -nodecount=2 heap.pb.gz | \
+      grep "busyLoop.*src/busybench.ts"
+fi
+
+
 echo '** TEST PASSED **'
