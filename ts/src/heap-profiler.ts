@@ -28,14 +28,27 @@ let heapStackDepth = 0;
 /*
  * Collects a heap profile when heapProfiler is enabled. Otherwise throws
  * an error.
+ *
+ * Data is returned in V8 allocation profile format.
  */
-export function profile(ignoreSamplePath?: string, sourceMapper?: SourceMapper):
-    perftools.profiles.IProfile {
+export function v8Profile(): AllocationProfileNode {
   if (!enabled) {
     throw new Error('Heap profiler is not enabled.');
   }
+  return getAllocationProfile();
+}
+
+/**
+ * Collects a profile and returns it serialized in pprof format.
+ * Throws if heap profiler is not enabled.
+ *
+ * @param ignoreSamplePath
+ * @param sourceMapper
+ */
+export function profile(ignoreSamplePath?: string, sourceMapper?: SourceMapper):
+    perftools.profiles.IProfile {
   const startTimeNanos = Date.now() * 1000 * 1000;
-  const result = getAllocationProfile();
+  const result = v8Profile();
   // Add node for external memory usage.
   // Current type definitions do not have external.
   // TODO: remove any once type definition is updated to include external.

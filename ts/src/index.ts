@@ -34,6 +34,7 @@ export const heap = {
   start: heapProfiler.start,
   stop: heapProfiler.stop,
   profile: heapProfiler.profile,
+  v8Profile: heapProfiler.v8Profile,
 };
 
 // If loaded with --require, start profiling.
