@@ -16,7 +16,7 @@ if [[ -z "$BINARY_HOST" ]]; then
   ADDITIONAL_PACKAGES="python g++ make"
 fi
 
-if [[ "$RUN_ONLY_V8_CANARY" == "true" ]]; then
+if [[ "$RUN_ONLY_V8_CANARY_TEST" == "true" ]]; then
   NVM_NODEJS_ORG_MIRROR="https://nodejs.org/download/v8-canary"
   NODE_VERSIONS=(node)
 else
