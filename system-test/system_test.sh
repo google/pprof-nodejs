@@ -34,7 +34,7 @@ for i in ${NODE_VERSIONS[@]}; do
       /src/system-test/test.sh
 
   # Skip running on alpine if NVM_NODEJS_ORG_MIRROR is specified.
-  if [[ -z "$NVM_NODEJS_ORG_MIRROR" ]]; then
+  if [[ ! -z "$NVM_NODEJS_ORG_MIRROR" ]]; then
     continue
   fi
 
