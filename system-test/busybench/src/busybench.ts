@@ -16,7 +16,7 @@
 
 import {writeFile} from 'fs';
 import * as pify from 'pify';
-import {encode, heap, time} from 'pprof';
+import {encode, heap, SourceMapper, time} from 'pprof';
 
 const writeFilePromise = pify(writeFile);
 
@@ -46,22 +46,29 @@ function benchmark(durationSeconds: number) {
   busyLoop(durationSeconds);
 }
 
-async function collectAndSaveTimeProfile(durationSeconds: number):
-    Promise<void> {
-  const profile = await time.profile({durationMillis: 1000 * durationSeconds});
+async function collectAndSaveTimeProfile(
+    durationSeconds: number, sourceMapper: SourceMapper): Promise<void> {
+  const profile = await time.profile(
+      {durationMillis: 1000 * durationSeconds, sourceMapper});
   const buf = await encode(profile);
   await writeFilePromise('time.pb.gz', buf);
 }
 
-async function collectAndSaveHeapProfile(): Promise<void> {
-  const profile = heap.profile();
+async function collectAndSaveHeapProfile(sourceMapper: SourceMapper):
+    Promise<void> {
+  const profile = await heap.profile(undefined, sourceMapper);
   const buf = await encode(profile);
   await writeFilePromise('heap.pb.gz', buf);
 }
 
-const durationSeconds = Number(process.argv.length > 2 ? process.argv[2] : 30);
+async function collectAndSaveProfiles(): Promise<void> {
+  const sourceMapper = await SourceMapper.create([process.cwd()]);
+  collectAndSaveTimeProfile(durationSeconds, sourceMapper);
+  collectAndSaveHeapProfile(sourceMapper);
+}
 
+const durationSeconds = Number(process.argv.length > 2 ? process.argv[2] : 30);
 heap.start(512 * 1024, 64);
 benchmark(durationSeconds);
-collectAndSaveTimeProfile(durationSeconds);
-collectAndSaveHeapProfile();
+
+collectAndSaveProfiles();
