@@ -33,7 +33,7 @@ cd "$TESTDIR/busybench"
 retry npm install pify @types/pify typescript gts @types/node >/dev/null
 retry npm install --nodedir="$NODEDIR" \
     ${BINARY_HOST:+--pprof_binary_host_mirror=$BINARY_HOST} \
-    "$PROFILER" >/dev/null
+    "$PROFILER">/dev/null
 
 npm run compile >/dev/null
 
@@ -42,7 +42,7 @@ node --trace-warnings build/src/busybench.js 10
 ls -l
 
 pprof -filefunctions -top -nodecount=2 time.pb.gz | \
-    grep "busyLoop.*build/src/busybench.js"
+    grep "busyLoop.*src/busybench.ts"
 pprof -filefunctions -top -nodecount=2 heap.pb.gz | \
-    grep "busyLoop.*build/src/busybench.js"
+    grep "busyLoop.*src/busybench.ts"
 echo '** TEST PASSED **'
