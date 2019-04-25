@@ -15,14 +15,15 @@
  */
 
 import * as pify from 'pify';
-import {gzip, gzipSync} from 'zlib';
+import { gzip, gzipSync } from 'zlib';
 
-import {perftools} from '../../proto/profile';
+import { perftools } from '../../proto/profile';
 
 const gzipPromise = pify(gzip);
 
-export async function encode(profile: perftools.profiles.IProfile):
-    Promise<Buffer> {
+export async function encode(
+  profile: perftools.profiles.IProfile
+): Promise<Buffer> {
   const buffer = perftools.profiles.Profile.encode(profile).finish();
   return gzipPromise(buffer);
 }

@@ -18,7 +18,7 @@ import delay from 'delay';
 import * as sinon from 'sinon';
 import * as time from '../src/time-profiler';
 import * as v8TimeProfiler from '../src/time-profiler-bindings';
-import {timeProfile, v8TimeProfile} from './profiles-for-tests';
+import { timeProfile, v8TimeProfile } from './profiles-for-tests';
 
 const assert = require('assert');
 
@@ -42,26 +42,26 @@ describe('Time Profiler', () => {
     before(() => {
       sinonStubs.push(sinon.stub(v8TimeProfiler, 'startProfiling'));
       sinonStubs.push(
-          sinon.stub(v8TimeProfiler, 'stopProfiling').returns(v8TimeProfile));
+        sinon.stub(v8TimeProfiler, 'stopProfiling').returns(v8TimeProfile)
+      );
       sinonStubs.push(sinon.stub(v8TimeProfiler, 'setSamplingInterval'));
       sinonStubs.push(sinon.stub(Date, 'now').returns(0));
     });
 
     after(() => {
-      sinonStubs.forEach((stub) => {
+      sinonStubs.forEach(stub => {
         stub.restore();
       });
     });
 
-    it('should profile during duration and finish profiling after duration',
-       async () => {
-         let isProfiling = true;
-         const profilePromise = time.profile(PROFILE_OPTIONS).then(() => {
-           isProfiling = false;
-         });
-         await delay(2 * PROFILE_OPTIONS.durationMillis);
-         assert.strictEqual(false, isProfiling, 'profiler is still running');
-       });
+    it('should profile during duration and finish profiling after duration', async () => {
+      let isProfiling = true;
+      const profilePromise = time.profile(PROFILE_OPTIONS).then(() => {
+        isProfiling = false;
+      });
+      await delay(2 * PROFILE_OPTIONS.durationMillis);
+      assert.strictEqual(false, isProfiling, 'profiler is still running');
+    });
 
     it('should return a profile equal to the expected profile', async () => {
       const profile = await time.profile(PROFILE_OPTIONS);

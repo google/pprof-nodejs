@@ -16,19 +16,24 @@
 
 import * as path from 'path';
 
-import {AllocationProfileNode} from './v8-types';
+import { AllocationProfileNode } from './v8-types';
 
 const binary = require('node-pre-gyp');
-const bindingPath =
-    binary.find(path.resolve(path.join(__dirname, '../../package.json')));
+const bindingPath = binary.find(
+  path.resolve(path.join(__dirname, '../../package.json'))
+);
 const profiler = require(bindingPath);
 
 // Wrappers around native heap profiler functions.
 
 export function startSamplingHeapProfiler(
-    heapIntervalBytes: number, heapStackDepth: number) {
+  heapIntervalBytes: number,
+  heapStackDepth: number
+) {
   profiler.heapProfiler.startSamplingHeapProfiler(
-      heapIntervalBytes, heapStackDepth);
+    heapIntervalBytes,
+    heapStackDepth
+  );
 }
 
 export function stopSamplingHeapProfiler() {
