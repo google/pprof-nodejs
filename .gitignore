@@ -2,6 +2,7 @@
 .coverage
 .vscode
 /*.build
+/build
 out
 node_modules
 system-test/busybench/package-lock.json
