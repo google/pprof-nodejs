@@ -41,15 +41,36 @@ accept your pull requests.
 1.  [Prepare your environment for Node.js setup][setup].
 
 1.  Install dependencies:
-
-        npm install
+    ```sh
+    npm install
+    ```
 
 1.  Run the tests:
-
-        npm test
+    ```sh
+    npm test
+    ```
 
 1.  Lint (and maybe fix) any changes:
-
-        npm run fix
+    ```sh
+    npm run fix
+    ```
 
 [setup]: https://cloud.google.com/nodejs/docs/setup
+
+# Running the system test
+The system test starts a simple benchmark, uses this module to collect a time
+and a heap profile, and verifies that the profiles contain functions from 
+within the benchmark. 
+
+To run the system test, [golang](https://golang.org/) must be installed.
+
+The following command can be used to run the system test with all supported
+versions of Node.JS:
+```sh
+sh system-test/system_test.sh
+```
+
+To run the system test with the v8 canary build, use:
+```sh
+RUN_ONLY_V8_CANARY_TEST=true sh system-test/system_test.sh
+```
