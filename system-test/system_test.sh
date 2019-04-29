@@ -20,7 +20,7 @@ if [[ "$RUN_ONLY_V8_CANARY_TEST" == "true" ]]; then
   NVM_NODEJS_ORG_MIRROR="https://nodejs.org/download/v8-canary"
   NODE_VERSIONS=(node)
 else
-  NODE_VERSIONS=(6 8 10 11)
+  NODE_VERSIONS=(8 10 11)
 fi
 
 for i in ${NODE_VERSIONS[@]}; do

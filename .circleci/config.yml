@@ -46,7 +46,6 @@ workflows:
   version: 2
   tests:
     jobs:
-      - node6
       - node8
       - node10
       - node11
@@ -54,11 +53,6 @@ workflows:
       - npmaudit
 
 jobs:
-  node6:
-    docker:
-      - image: node:6
-        user: node
-    <<: *unit_tests
   node8:
     docker:
       - image: node:8
