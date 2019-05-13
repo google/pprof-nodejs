@@ -82,7 +82,7 @@ async function processSourceMap(
     // TODO: Resolve the cast of `contents as any` (This is needed because the
     //       type is expected to be of `RawSourceMap` but the existing
     //       working code uses a string.)
-    consumer = new sourceMap.SourceMapConsumer(
+    consumer = await new sourceMap.SourceMapConsumer(
                    contents as {} as sourceMap.RawSourceMap) as {} as
         sourceMap.RawSourceMap;
   } catch (e) {
@@ -210,7 +210,7 @@ export class SourceMapper {
       file: path.resolve(entry.mapFileDir, pos.source),
       line: pos.line || undefined,
       name: pos.name || location.name,
-      column: pos.column,
+      column: pos.column || undefined,
     };
   }
 }
