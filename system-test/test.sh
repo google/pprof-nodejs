@@ -6,8 +6,16 @@ retry() {
   "${@}" || "${@}" || "${@}" || return 1
 }
 
+function timeout_after() {
+  if [ -f /bin/busybox ]; then
+    timeout -t "${@}"
+  else
+    timeout "${@}"
+  fi
+}
+
 npm_install() {
-	timeout 60 npm install "${@}"
+  timeout_after 60 npm install "${@}"
 }
 
 set -eox pipefail
