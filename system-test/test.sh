@@ -6,6 +6,18 @@ retry() {
   "${@}" || "${@}" || "${@}" || return 1
 }
 
+function timeout_after() {
+  if [ -f /bin/busybox ]; then
+    timeout -t "${@}"
+  else
+    timeout "${@}"
+  fi
+}
+
+npm_install() {
+  timeout_after 60 npm install "${@}"
+}
+
 set -eox pipefail
 cd $(dirname $0)/..
 
@@ -16,9 +28,9 @@ NODEDIR=$(dirname $(dirname $(which node)))
 # contains unreleased fixes that allow the native component to be compiled
 # with Node's V8 canary build.
 [ -z $NVM_NODEJS_ORG_MIRROR ] \
-    || retry npm install https://github.com/nodejs/nan.git
+    || retry npm_install https://github.com/nodejs/nan.git
 
-retry npm install --nodedir="$NODEDIR" \
+retry npm_install --nodedir="$NODEDIR" \
     ${BINARY_HOST:+--pprof_binary_host_mirror=$BINARY_HOST} >/dev/null
 
 npm run compile
@@ -30,8 +42,8 @@ TESTDIR=$(mktemp -d)
 cp -r "$PWD/system-test/busybench" "$TESTDIR"
 cd "$TESTDIR/busybench"
 
-retry npm install pify @types/pify typescript gts @types/node >/dev/null
-retry npm install --nodedir="$NODEDIR" \
+retry npm_install pify @types/pify typescript gts @types/node >/dev/null
+retry npm_install --nodedir="$NODEDIR" \
     ${BINARY_HOST:+--pprof_binary_host_mirror=$BINARY_HOST} \
     "$PROFILER">/dev/null
 
