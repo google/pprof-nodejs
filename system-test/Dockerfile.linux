@@ -26,4 +26,4 @@ RUN curl https://raw.githubusercontent.com/creationix/nvm/v0.34.0/install.sh | b
 ENV BASH_ENV /root/.bashrc
 
 WORKDIR /root/
-COPY --from=0 /go/bin/pprof /bin
+COPY --from=builder /go/bin/pprof /bin
