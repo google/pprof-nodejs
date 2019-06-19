@@ -79,10 +79,14 @@ NAN_METHOD(StartSamplingHeapProfiler) {
   }
 }
 
+// Signature:
+// stopSamplingHeapProfiler()
 NAN_METHOD(StopSamplingHeapProfiler) {
   info.GetIsolate()->GetHeapProfiler()->StopSamplingHeapProfiler();
 }
 
+// Signature:
+// getAllocationProfile(): AllocationProfileNode
 NAN_METHOD(GetAllocationProfile) {
   std::unique_ptr<v8::AllocationProfile> profile(
     info.GetIsolate()->GetHeapProfiler()->GetAllocationProfile());
@@ -130,7 +134,7 @@ Local<Array> GetLineNumberTimeProfileChildren(const CpuProfileNode* parent,
   unsigned int hitLineCount = node->GetHitLineCount();
   unsigned int hitCount = node->GetHitCount();
   if (hitLineCount > 0) {
-    std::vector<CpuProfileNode::LineTick> entries(hitLineCount);
+    CpuProfileNode::LineTick entries[hitLineCount];
     node->GetLineTicks(&entries[0], hitLineCount);
     children = Nan::New<Array>(count + entries.size());
     for (const CpuProfileNode::LineTick entry : entries) {
@@ -260,6 +264,8 @@ Local<Value> TranslateTimeProfile(const CpuProfile* profile, bool hasDetailedLin
   return js_profile;
 }
 
+// Signature:
+// startProfiling(runName: string, includeLineInfo?: boolean)
 NAN_METHOD(StartProfiling) {
   if (info.Length() != 2) {
     return Nan::ThrowTypeError("StartProfling must have two arguments.");
@@ -274,23 +280,26 @@ NAN_METHOD(StartProfiling) {
   Local<String> name =
       Nan::MaybeLocal<String>(info[0].As<String>()).ToLocalChecked();
 
+// Sample counts and timestamps are not used, so we do not need to record
+// samples.
+bool recordSamples = false;
+
 // Line-level accurate line information is not available in Node 11 or earlier.
 #if NODE_MODULE_VERSION > NODE_11_0_MODULE_VERSION
   bool includeLineInfo =
       Nan::MaybeLocal<Boolean>(info[1].As<Boolean>()).ToLocalChecked()->Value();
   if (includeLineInfo) {
-    // Sample counts and timestamps are not used, so we do not need to record
-    // samples.
     cpuProfiler->StartProfiling(name, CpuProfilingMode::kCallerLineNumbers,
-                                false);
+                                recordSamples);
   } else {
-    cpuProfiler->StartProfiling(name, false);
+    cpuProfiler->StartProfiling(name, recordSamples);
   }
 #else
-  cpuProfiler->StartProfiling(name, false);
+  cpuProfiler->StartProfiling(name, recordSamples);
 #endif
 }
 
+// Signature:
 // stopProfiling(runName: string, includedLineInfo?: boolean): TimeProfile
 NAN_METHOD(StopProfiling) {
   if (info.Length() != 2) {
@@ -314,6 +323,8 @@ NAN_METHOD(StopProfiling) {
   info.GetReturnValue().Set(translated_profile);
 }
 
+// Signature:
+// setSamplingInterval(intervalMicros: number)
 NAN_METHOD(SetSamplingInterval) {
 #if NODE_MODULE_VERSION > NODE_8_0_MODULE_VERSION
   int us = info[0].As<Integer>()->Value();
