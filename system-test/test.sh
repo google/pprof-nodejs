@@ -52,7 +52,8 @@ cd "$TESTDIR/busybench"
 
 retry npm_install pify @types/pify typescript gts @types/node >/dev/null
 retry npm_install --nodedir="$NODEDIR" \
-    ${BINARY_HOST:+--pprof_binary_host_mirror=$BINARY_HOST} \
+    $([ -z "$BINARY_HOST" ] && echo "--build-from-source=pprof" \
+        || echo "--pprof_binary_host_mirror=$BINARY_HOST")\
     "$PROFILER">/dev/null
 
 if [[ "$VERIFY_TIME_LINE_NUMBERS" != "true" ]]; then

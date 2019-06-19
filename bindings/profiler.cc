@@ -105,7 +105,7 @@ CpuProfiler* cpuProfiler = CpuProfiler::New(v8::Isolate::GetCurrent());
 CpuProfiler* cpuProfiler = v8::Isolate::GetCurrent()->GetCpuProfiler();
 #endif
 
-Local<Object> CreateTimeNode(Local<String> name, Local<String> scriptName, 
+Local<Object> CreateTimeNode(Local<String> name, Local<String> scriptName,
                          Local<Integer> scriptId, Local<Integer> lineNumber,
                          Local<Integer> columnNumber, Local<Integer> hitCount,
                          Local<Array> children) {
@@ -136,7 +136,7 @@ Local<Array> GetLineNumberTimeProfileChildren(const CpuProfileNode* parent,
   if (hitLineCount > 0) {
     CpuProfileNode::LineTick entries[hitLineCount];
     node->GetLineTicks(&entries[0], hitLineCount);
-    children = Nan::New<Array>(count + entries.size());
+    children = Nan::New<Array>(count + hitLineCount);
     for (const CpuProfileNode::LineTick entry : entries) {
       children->Set(index++, CreateTimeNode(
         node->GetFunctionName(),
@@ -265,7 +265,7 @@ Local<Value> TranslateTimeProfile(const CpuProfile* profile, bool hasDetailedLin
 }
 
 // Signature:
-// startProfiling(runName: string, includeLineInfo?: boolean)
+// startProfiling(runName: string, includeLineInfo: boolean)
 NAN_METHOD(StartProfiling) {
   if (info.Length() != 2) {
     return Nan::ThrowTypeError("StartProfling must have two arguments.");
@@ -300,7 +300,7 @@ bool recordSamples = false;
 }
 
 // Signature:
-// stopProfiling(runName: string, includedLineInfo?: boolean): TimeProfile
+// stopProfiling(runName: string, includedLineInfo: boolean): TimeProfile
 NAN_METHOD(StopProfiling) {
   if (info.Length() != 2) {
     return Nan::ThrowTypeError("StopProfling must have two arguments.");
