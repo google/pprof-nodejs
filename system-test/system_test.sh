@@ -33,6 +33,14 @@ for i in ${NODE_VERSIONS[@]}; do
   docker run  -v $PWD/..:/src -e BINARY_HOST="$BINARY_HOST" node$i-linux \
       /src/system-test/test.sh
 
+  # Test support for accurate line numbers with node versions supporting this
+  # feature.
+  if [ "$i" != "8" ] && [ "$i" != "10" ] && [ "$i" != "11" ]; then
+    docker run  -v $PWD/..:/src -e BINARY_HOST="$BINARY_HOST" \
+        -e VERIFY_TIME_LINE_NUMBERS="true" node$i-linux \
+        /src/system-test/test.sh
+  fi
+
   # Skip running on alpine if NVM_NODEJS_ORG_MIRROR is specified.
   if [[ ! -z "$NVM_NODEJS_ORG_MIRROR" ]]; then
     continue

@@ -34,19 +34,27 @@ export interface TimeProfilerOptions {
   intervalMicros?: Microseconds;
   sourceMapper?: SourceMapper;
   name?: string;
+
+  /**
+   * This configuration option is experimental.
+   * When set to true, functions will be aggregated at the line-level, rather
+   * than at the function level.
+   * This defaults to false.
+   */
+  lineNumbers?: boolean;
 }
 
 export async function profile(options: TimeProfilerOptions) {
   const stop = start(
       options.intervalMicros || DEFAULT_INTERVAL_MICROS, options.name,
-      options.sourceMapper);
+      options.sourceMapper, options.lineNumbers);
   await delay(options.durationMillis);
   return stop();
 }
 
 export function start(
     intervalMicros: Microseconds = DEFAULT_INTERVAL_MICROS, name?: string,
-    sourceMapper?: SourceMapper) {
+    sourceMapper?: SourceMapper, lineNumbers?: boolean) {
   if (profiling) {
     throw new Error('already profiling');
   }
@@ -61,10 +69,10 @@ export function start(
   // See https://github.com/nodejs/node/issues/19009#issuecomment-403161559.
   // tslint:disable-next-line no-any
   (process as any)._startProfilerIdleNotifier();
-  startProfiling(runName);
+  startProfiling(runName, lineNumbers);
   return function stop() {
     profiling = false;
-    const result = stopProfiling(runName);
+    const result = stopProfiling(runName, lineNumbers);
     // tslint:disable-next-line no-any
     (process as any)._stopProfilerIdleNotifier();
     const profile = serializeTimeProfile(result, intervalMicros, sourceMapper);

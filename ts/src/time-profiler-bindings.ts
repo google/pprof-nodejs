@@ -23,13 +23,13 @@ const profiler = require(bindingPath);
 
 
 // Wrappers around native time profiler functions.
-
-export function startProfiling(runName: string) {
-  profiler.timeProfiler.startProfiling(runName);
+export function startProfiling(runName: string, includeLineInfo?: boolean) {
+  profiler.timeProfiler.startProfiling(runName, includeLineInfo || false);
 }
 
-export function stopProfiling(runName: string): TimeProfile {
-  return profiler.timeProfiler.stopProfiling(runName);
+export function stopProfiling(
+    runName: string, includeLineInfo?: boolean): TimeProfile {
+  return profiler.timeProfiler.stopProfiling(runName, includeLineInfo || false);
 }
 
 export function setSamplingInterval(intervalMicros: number) {
