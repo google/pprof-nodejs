@@ -37,7 +37,7 @@ export interface TimeProfilerOptions {
 
   /**
    * This configuration option is experimental.
-   * When set to true, functions will be aggregated at the line-level, rather
+   * When set to true, functions will be aggregated at the line level, rather
    * than at the function level.
    * This defaults to false.
    */
