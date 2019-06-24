@@ -46,11 +46,11 @@ cd $(dirname $0)/../..
 BASE_DIR=$PWD
 
 retry docker build -t build-linux -f tools/build/Dockerfile.linux tools/build
-docker run -v "${BASE_DIR}":"${BASE_DIR}" build-linux \
+retry docker run -v "${BASE_DIR}":"${BASE_DIR}" build-linux \
     "${BASE_DIR}/tools/build/build.sh"
 
 retry docker build -t build-alpine -f tools/build/Dockerfile.alpine tools/build
-docker run -v "${BASE_DIR}":"${BASE_DIR}" build-alpine \
+retry docker run -v "${BASE_DIR}":"${BASE_DIR}" build-alpine \
     "${BASE_DIR}/tools/build/build.sh"
 
 GCS_LOCATION="cprof-e2e-nodejs-artifacts/pprof-nodejs/kokoro/${BUILD_TYPE}/${KOKORO_BUILD_NUMBER}"
