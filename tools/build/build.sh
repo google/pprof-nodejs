@@ -20,21 +20,17 @@ set -e pipefail
 # Display commands
 set -x
 
-retry() {
-  "${@}" || "${@}" || "${@}" || exit $?
-}
-
 cd $(dirname $0)/../..
 BASE_DIR=$PWD
 
 ARTIFACTS_OUT="${BASE_DIR}/artifacts"
 mkdir -p "$ARTIFACTS_OUT"
 
-retry npm install
+npm install
 
 for version in 6.0.0 8.0.0 10.0.0 11.0.0 12.0.0
 do
-  retry ./node_modules/.bin/node-pre-gyp configure rebuild package \
+  ./node_modules/.bin/node-pre-gyp configure rebuild package \
       --target=$version --target_arch="x64"
   cp -r build/stage/* "${ARTIFACTS_OUT}/"
   rm -rf build
