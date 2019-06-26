@@ -25,31 +25,34 @@ using namespace v8;
 
 Local<Value> TranslateAllocationProfile(AllocationProfile::Node* node) {
   Local<Object> js_node = Nan::New<Object>();
-  js_node->Set(Nan::New<String>("name").ToLocalChecked(), node->name);
-  js_node->Set(Nan::New<String>("scriptName").ToLocalChecked(),
-               node->script_name);
-  js_node->Set(Nan::New<String>("scriptId").ToLocalChecked(),
-               Nan::New<Integer>(node->script_id));
-  js_node->Set(Nan::New<String>("lineNumber").ToLocalChecked(),
-               Nan::New<Integer>(node->line_number));
-  js_node->Set(Nan::New<String>("columnNumber").ToLocalChecked(),
-               Nan::New<Integer>(node->column_number));
+
+  Nan::Set(js_node, Nan::New<String>("name").ToLocalChecked(), node->name);
+  Nan::Set(js_node, Nan::New<String>("scriptName").ToLocalChecked(),
+           node->script_name);
+  Nan::Set(js_node, Nan::New<String>("scriptId").ToLocalChecked(),
+           Nan::New<Integer>(node->script_id));
+  Nan::Set(js_node, Nan::New<String>("lineNumber").ToLocalChecked(),
+           Nan::New<Integer>(node->line_number));
+  Nan::Set(js_node, Nan::New<String>("columnNumber").ToLocalChecked(),
+           Nan::New<Integer>(node->column_number));
+
   Local<Array> children = Nan::New<Array>(node->children.size());
   for (size_t i = 0; i < node->children.size(); i++) {
-    children->Set(i, TranslateAllocationProfile(node->children[i]));
+    Nan::Set(children, i, TranslateAllocationProfile(node->children[i]));
   }
-  js_node->Set(Nan::New<String>("children").ToLocalChecked(), children);
+  Nan::Set(js_node, Nan::New<String>("children").ToLocalChecked(), children);
   Local<Array> allocations = Nan::New<Array>(node->allocations.size());
   for (size_t i = 0; i < node->allocations.size(); i++) {
     AllocationProfile::Allocation alloc = node->allocations[i];
     Local<Object> js_alloc = Nan::New<Object>();
-    js_alloc->Set(Nan::New<String>("sizeBytes").ToLocalChecked(),
-                  Nan::New<Number>(alloc.size));
-    js_alloc->Set(Nan::New<String>("count").ToLocalChecked(),
-                  Nan::New<Number>(alloc.count));
-    allocations->Set(i, js_alloc);
+    Nan::Set(js_alloc, Nan::New<String>("sizeBytes").ToLocalChecked(),
+             Nan::New<Number>(alloc.size));
+    Nan::Set(js_alloc, Nan::New<String>("count").ToLocalChecked(),
+             Nan::New<Number>(alloc.count));
+    Nan::Set(allocations, i, js_alloc);
   }
-  js_node->Set(Nan::New<String>("allocations").ToLocalChecked(), allocations);
+  Nan::Set(js_node, Nan::New<String>("allocations").ToLocalChecked(),
+           allocations);
   return js_node;
 }
 
@@ -107,13 +110,17 @@ Local<Object> CreateTimeNode(Local<String> name, Local<String> scriptName,
                              Local<Integer> columnNumber,
                              Local<Integer> hitCount, Local<Array> children) {
   Local<Object> js_node = Nan::New<Object>();
-  js_node->Set(Nan::New<String>("name").ToLocalChecked(), name);
-  js_node->Set(Nan::New<String>("scriptName").ToLocalChecked(), scriptName);
-  js_node->Set(Nan::New<String>("scriptId").ToLocalChecked(), scriptId);
-  js_node->Set(Nan::New<String>("lineNumber").ToLocalChecked(), lineNumber);
-  js_node->Set(Nan::New<String>("columnNumber").ToLocalChecked(), columnNumber);
-  js_node->Set(Nan::New<String>("hitCount").ToLocalChecked(), hitCount);
-  js_node->Set(Nan::New<String>("children").ToLocalChecked(), children);
+  Nan::Set(js_node, Nan::New<String>("name").ToLocalChecked(), name);
+  Nan::Set(js_node, Nan::New<String>("scriptName").ToLocalChecked(),
+           scriptName);
+  Nan::Set(js_node, Nan::New<String>("scriptId").ToLocalChecked(), scriptId);
+  Nan::Set(js_node, Nan::New<String>("lineNumber").ToLocalChecked(),
+           lineNumber);
+  Nan::Set(js_node, Nan::New<String>("columnNumber").ToLocalChecked(),
+           columnNumber);
+  Nan::Set(js_node, Nan::New<String>("hitCount").ToLocalChecked(), hitCount);
+  Nan::Set(js_node, Nan::New<String>("children").ToLocalChecked(), children);
+
   return js_node;
 }
 
@@ -134,19 +141,19 @@ Local<Array> GetLineNumberTimeProfileChildren(const CpuProfileNode* parent,
     node->GetLineTicks(&entries[0], hitLineCount);
     children = Nan::New<Array>(count + hitLineCount);
     for (const CpuProfileNode::LineTick entry : entries) {
-      children->Set(
-          index++, CreateTimeNode(
-                       node->GetFunctionName(), node->GetScriptResourceName(),
-                       Nan::New<Integer>(node->GetScriptId()),
-                       Nan::New<Integer>(entry.line), Nan::New<Integer>(0),
-                       Nan::New<Integer>(entry.hit_count), Nan::New<Array>(0)));
+      Nan::Set(children, index++,
+               CreateTimeNode(
+                   node->GetFunctionName(), node->GetScriptResourceName(),
+                   Nan::New<Integer>(node->GetScriptId()),
+                   Nan::New<Integer>(entry.line), Nan::New<Integer>(0),
+                   Nan::New<Integer>(entry.hit_count), Nan::New<Array>(0)));
     }
   } else if (hitCount > 0) {
     // Handle nodes for pseudo-functions like "process" and "garbage collection"
     // which do not have hit line counts.
     children = Nan::New<Array>(count + 1);
-    children->Set(
-        index++,
+    Nan::Set(
+        children, index++,
         CreateTimeNode(node->GetFunctionName(), node->GetScriptResourceName(),
                        Nan::New<Integer>(node->GetScriptId()),
                        Nan::New<Integer>(node->GetLineNumber()),
@@ -157,8 +164,8 @@ Local<Array> GetLineNumberTimeProfileChildren(const CpuProfileNode* parent,
   }
 
   for (int32_t i = 0; i < count; i++) {
-    children->Set(index++,
-                  TranslateLineNumbersTimeProfileNode(node, node->GetChild(i)));
+    Nan::Set(children, index++,
+             TranslateLineNumbersTimeProfileNode(node, node->GetChild(i)));
   };
 
   return children;
@@ -191,8 +198,8 @@ Local<Value> TranslateLineNumbersTimeProfileRoot(const CpuProfileNode* node) {
   int32_t idx = 0;
   for (int32_t i = 0; i < count; i++) {
     Local<Array> arr = childrenArrs[i];
-    for (int32_t j = 0; j < arr->Length(); j++) {
-      children->Set(idx, arr->Get(j));
+    for (uint32_t j = 0; j < arr->Length(); j++) {
+      Nan::Set(children, idx, Nan::Get(arr, j).ToLocalChecked());
       idx++;
     }
   }
@@ -209,7 +216,7 @@ Local<Value> TranslateTimeProfileNode(const CpuProfileNode* node) {
   int32_t count = node->GetChildrenCount();
   Local<Array> children = Nan::New<Array>(count);
   for (int32_t i = 0; i < count; i++) {
-    children->Set(i, TranslateTimeProfileNode(node->GetChild(i)));
+    Nan::Set(children, i, TranslateTimeProfileNode(node->GetChild(i)));
   }
 
   return CreateTimeNode(node->GetFunctionName(), node->GetScriptResourceName(),
@@ -222,26 +229,25 @@ Local<Value> TranslateTimeProfileNode(const CpuProfileNode* node) {
 Local<Value> TranslateTimeProfile(const CpuProfile* profile,
                                   bool includeLineInfo) {
   Local<Object> js_profile = Nan::New<Object>();
-  js_profile->Set(Nan::New<String>("title").ToLocalChecked(),
-                  profile->GetTitle());
+  Nan::Set(js_profile, Nan::New<String>("title").ToLocalChecked(),
+           profile->GetTitle());
 
 #if NODE_MODULE_VERSION > NODE_11_0_MODULE_VERSION
   if (includeLineInfo) {
-    js_profile->Set(
-        Nan::New<String>("topDownRoot").ToLocalChecked(),
-        TranslateLineNumbersTimeProfileRoot(profile->GetTopDownRoot()));
+    Nan::Set(js_profile, Nan::New<String>("topDownRoot").ToLocalChecked(),
+             TranslateLineNumbersTimeProfileRoot(profile->GetTopDownRoot()));
   } else {
-    js_profile->Set(Nan::New<String>("topDownRoot").ToLocalChecked(),
-                    TranslateTimeProfileNode(profile->GetTopDownRoot()));
+    Nan::Set(js_profile, Nan::New<String>("topDownRoot").ToLocalChecked(),
+             TranslateTimeProfileNode(profile->GetTopDownRoot()));
   }
 #else
-  js_profile->Set(Nan::New<String>("topDownRoot").ToLocalChecked(),
-                  TranslateTimeProfileNode(profile->GetTopDownRoot()));
+  Nan::Set(js_profile, Nan::New<String>("topDownRoot").ToLocalChecked(),
+           TranslateTimeProfileNode(profile->GetTopDownRoot()));
 #endif
-  js_profile->Set(Nan::New<String>("startTime").ToLocalChecked(),
-                  Nan::New<Number>(profile->GetStartTime()));
-  js_profile->Set(Nan::New<String>("endTime").ToLocalChecked(),
-                  Nan::New<Number>(profile->GetEndTime()));
+  Nan::Set(js_profile, Nan::New<String>("startTime").ToLocalChecked(),
+           Nan::New<Number>(profile->GetStartTime()));
+  Nan::Set(js_profile, Nan::New<String>("endTime").ToLocalChecked(),
+           Nan::New<Number>(profile->GetEndTime()));
   return js_profile;
 }
 
@@ -326,7 +332,8 @@ NAN_MODULE_INIT(InitAll) {
   Nan::Set(timeProfiler, Nan::New("setSamplingInterval").ToLocalChecked(),
            Nan::GetFunction(Nan::New<FunctionTemplate>(SetSamplingInterval))
                .ToLocalChecked());
-  target->Set(Nan::New<String>("timeProfiler").ToLocalChecked(), timeProfiler);
+  Nan::Set(target, Nan::New<String>("timeProfiler").ToLocalChecked(),
+           timeProfiler);
 
   Local<Object> heapProfiler = Nan::New<Object>();
   Nan::Set(
@@ -340,7 +347,8 @@ NAN_MODULE_INIT(InitAll) {
   Nan::Set(heapProfiler, Nan::New("getAllocationProfile").ToLocalChecked(),
            Nan::GetFunction(Nan::New<FunctionTemplate>(GetAllocationProfile))
                .ToLocalChecked());
-  target->Set(Nan::New<String>("heapProfiler").ToLocalChecked(), heapProfiler);
+  Nan::Set(target, Nan::New<String>("heapProfiler").ToLocalChecked(),
+           heapProfiler);
 }
 
 NODE_MODULE(google_cloud_profiler, InitAll);
