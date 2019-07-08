@@ -59,7 +59,9 @@ export interface SourceLocation {
  * @private
  */
 async function processSourceMap(
-    infoMap: Map<string, MapInfoCompiled>, mapPath: string): Promise<void> {
+  infoMap: Map<string, MapInfoCompiled>,
+  mapPath: string
+): Promise<void> {
   // this handles the case when the path is undefined, null, or
   // the empty string
   if (!mapPath || !mapPath.endsWith(MAP_EXT)) {
@@ -82,13 +84,17 @@ async function processSourceMap(
     // TODO: Resolve the cast of `contents as any` (This is needed because the
     //       type is expected to be of `RawSourceMap` but the existing
     //       working code uses a string.)
-    consumer = await new sourceMap.SourceMapConsumer(
-                   contents as {} as sourceMap.RawSourceMap) as {} as
-        sourceMap.RawSourceMap;
+    consumer = ((await new sourceMap.SourceMapConsumer(
+      (contents as {}) as sourceMap.RawSourceMap
+    )) as {}) as sourceMap.RawSourceMap;
   } catch (e) {
     throw new Error(
-        'An error occurred while reading the ' +
-        'sourceMap file ' + mapPath + ': ' + e);
+      'An error occurred while reading the ' +
+        'sourceMap file ' +
+        mapPath +
+        ': ' +
+        e
+    );
   }
 
   /*
@@ -98,11 +104,12 @@ async function processSourceMap(
    * file (with the .map extension removed) as the output file.
    */
   const dir = path.dirname(mapPath);
-  const generatedBase =
-      consumer.file ? consumer.file : path.basename(mapPath, MAP_EXT);
+  const generatedBase = consumer.file
+    ? consumer.file
+    : path.basename(mapPath, MAP_EXT);
   const generatedPath = path.resolve(dir, generatedBase);
 
-  infoMap.set(generatedPath, {mapFileDir: dir, mapConsumer: consumer});
+  infoMap.set(generatedPath, { mapFileDir: dir, mapConsumer: consumer });
 }
 
 export class SourceMapper {
@@ -113,7 +120,7 @@ export class SourceMapper {
     for (const dir of searchDirs) {
       try {
         const mf = await getMapFiles(dir);
-        mf.forEach((mapFile) => {
+        mf.forEach(mapFile => {
           mapFiles.push(path.resolve(dir, mapFile));
         });
       } catch (e) {
@@ -146,7 +153,7 @@ export class SourceMapper {
    *  zero files are associated with the input path or if more than one file
    *  could possibly be associated with the given input path.
    */
-  private getMappingInfo(inputPath: string): MapInfoCompiled|null {
+  private getMappingInfo(inputPath: string): MapInfoCompiled | null {
     if (this.infoMap.has(path.normalize(inputPath))) {
       return this.infoMap.get(inputPath) as MapInfoCompiled;
     }
@@ -196,11 +203,10 @@ export class SourceMapper {
       return location;
     }
 
-    const generatedPos = {line: location.line, column: location.column};
+    const generatedPos = { line: location.line, column: location.column };
 
     // TODO: Determine how to remove the explicit cast here.
-    const consumer: sourceMap.SourceMapConsumer =
-        entry.mapConsumer as {} as sourceMap.SourceMapConsumer;
+    const consumer: sourceMap.SourceMapConsumer = (entry.mapConsumer as {}) as sourceMap.SourceMapConsumer;
 
     const pos = consumer.originalPositionFor(generatedPos);
     if (pos.source === null) {
@@ -218,13 +224,15 @@ export class SourceMapper {
 async function createFromMapFiles(mapFiles: string[]): Promise<SourceMapper> {
   const limit = pLimit(CONCURRENCY);
   const mapper = new SourceMapper();
-  const promises: Array<Promise<void>> = mapFiles.map(
-      mapPath => limit(() => processSourceMap(mapper.infoMap, mapPath)));
+  const promises: Array<Promise<void>> = mapFiles.map(mapPath =>
+    limit(() => processSourceMap(mapper.infoMap, mapPath))
+  );
   try {
     await Promise.all(promises);
   } catch (err) {
     throw new Error(
-        'An error occurred while processing the source map files' + err);
+      'An error occurred while processing the source map files' + err
+    );
   }
   return mapper;
 }

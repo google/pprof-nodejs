@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 import * as path from 'path';
-import {TimeProfile} from './v8-types';
+import { TimeProfile } from './v8-types';
 
 const binary = require('node-pre-gyp');
-const bindingPath =
-    binary.find(path.resolve(path.join(__dirname, '../../package.json')));
+const bindingPath = binary.find(
+  path.resolve(path.join(__dirname, '../../package.json'))
+);
 const profiler = require(bindingPath);
-
 
 // Wrappers around native time profiler functions.
 export function startProfiling(runName: string, includeLineInfo?: boolean) {
@@ -28,7 +28,9 @@ export function startProfiling(runName: string, includeLineInfo?: boolean) {
 }
 
 export function stopProfiling(
-    runName: string, includeLineInfo?: boolean): TimeProfile {
+  runName: string,
+  includeLineInfo?: boolean
+): TimeProfile {
   return profiler.timeProfiler.stopProfiling(runName, includeLineInfo || false);
 }
 

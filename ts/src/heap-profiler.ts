@@ -14,12 +14,16 @@
  * limitations under the License.
  */
 
-import {perftools} from '../../proto/profile';
+import { perftools } from '../../proto/profile';
 
-import {getAllocationProfile, startSamplingHeapProfiler, stopSamplingHeapProfiler} from './heap-profiler-bindings';
-import {serializeHeapProfile} from './profile-serializer';
-import {SourceMapper} from './sourcemapper/sourcemapper';
-import {AllocationProfileNode} from './v8-types';
+import {
+  getAllocationProfile,
+  startSamplingHeapProfiler,
+  stopSamplingHeapProfiler,
+} from './heap-profiler-bindings';
+import { serializeHeapProfile } from './profile-serializer';
+import { SourceMapper } from './sourcemapper/sourcemapper';
+import { AllocationProfileNode } from './v8-types';
 
 let enabled = false;
 let heapIntervalBytes = 0;
@@ -45,27 +49,33 @@ export function v8Profile(): AllocationProfileNode {
  * @param ignoreSamplePath
  * @param sourceMapper
  */
-export function profile(ignoreSamplePath?: string, sourceMapper?: SourceMapper):
-    perftools.profiles.IProfile {
+export function profile(
+  ignoreSamplePath?: string,
+  sourceMapper?: SourceMapper
+): perftools.profiles.IProfile {
   const startTimeNanos = Date.now() * 1000 * 1000;
   const result = v8Profile();
   // Add node for external memory usage.
   // Current type definitions do not have external.
   // TODO: remove any once type definition is updated to include external.
   // tslint:disable-next-line: no-any
-  const {external}: {external: number} = process.memoryUsage() as any;
+  const { external }: { external: number } = process.memoryUsage() as any;
   if (external > 0) {
     const externalNode: AllocationProfileNode = {
       name: '(external)',
       scriptName: '',
       children: [],
-      allocations: [{sizeBytes: external, count: 1}],
+      allocations: [{ sizeBytes: external, count: 1 }],
     };
     result.children.push(externalNode);
   }
   return serializeHeapProfile(
-      result, startTimeNanos, heapIntervalBytes, ignoreSamplePath,
-      sourceMapper);
+    result,
+    startTimeNanos,
+    heapIntervalBytes,
+    ignoreSamplePath,
+    sourceMapper
+  );
 }
 
 /**
@@ -78,8 +88,9 @@ export function profile(ignoreSamplePath?: string, sourceMapper?: SourceMapper):
  */
 export function start(intervalBytes: number, stackDepth: number) {
   if (enabled) {
-    throw new Error(`Heap profiler is already started  with intervalBytes ${
-        heapIntervalBytes} and stackDepth ${stackDepth}`);
+    throw new Error(
+      `Heap profiler is already started  with intervalBytes ${heapIntervalBytes} and stackDepth ${stackDepth}`
+    );
   }
   heapIntervalBytes = intervalBytes;
   heapStackDepth = stackDepth;

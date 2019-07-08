@@ -15,33 +15,31 @@
  */
 
 import * as pify from 'pify';
-import {gunzip as gunzipPromise, gunzipSync} from 'zlib';
+import { gunzip as gunzipPromise, gunzipSync } from 'zlib';
 
-import {perftools} from '../../proto/profile';
-import {encode, encodeSync} from '../src/profile-encoder';
+import { perftools } from '../../proto/profile';
+import { encode, encodeSync } from '../src/profile-encoder';
 
-import {decodedTimeProfile, timeProfile} from './profiles-for-tests';
+import { decodedTimeProfile, timeProfile } from './profiles-for-tests';
 
 const assert = require('assert');
 const gunzip = pify(gunzipPromise);
 
 describe('profile-encoded', () => {
   describe('encode', () => {
-    it('should encode profile such that the encoded profile can be decoded',
-       async () => {
-         const encoded = await encode(timeProfile);
-         const unzipped = await gunzip(encoded);
-         const decoded = perftools.profiles.Profile.decode(unzipped);
-         assert.deepEqual(decoded, decodedTimeProfile);
-       });
+    it('should encode profile such that the encoded profile can be decoded', async () => {
+      const encoded = await encode(timeProfile);
+      const unzipped = await gunzip(encoded);
+      const decoded = perftools.profiles.Profile.decode(unzipped);
+      assert.deepEqual(decoded, decodedTimeProfile);
+    });
   });
   describe('encodeSync', () => {
-    it('should encode profile such that the encoded profile can be decoded',
-       () => {
-         const encoded = encodeSync(timeProfile);
-         const unzipped = gunzipSync(encoded);
-         const decoded = perftools.profiles.Profile.decode(unzipped);
-         assert.deepEqual(decoded, decodedTimeProfile);
-       });
+    it('should encode profile such that the encoded profile can be decoded', () => {
+      const encoded = encodeSync(timeProfile);
+      const unzipped = gunzipSync(encoded);
+      const decoded = perftools.profiles.Profile.decode(unzipped);
+      assert.deepEqual(decoded, decodedTimeProfile);
+    });
   });
 });

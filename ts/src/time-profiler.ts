@@ -16,9 +16,13 @@
 
 import delay from 'delay';
 
-import {serializeTimeProfile} from './profile-serializer';
-import {SourceMapper} from './sourcemapper/sourcemapper';
-import {setSamplingInterval, startProfiling, stopProfiling} from './time-profiler-bindings';
+import { serializeTimeProfile } from './profile-serializer';
+import { SourceMapper } from './sourcemapper/sourcemapper';
+import {
+  setSamplingInterval,
+  startProfiling,
+  stopProfiling,
+} from './time-profiler-bindings';
 
 let profiling = false;
 
@@ -46,15 +50,21 @@ export interface TimeProfilerOptions {
 
 export async function profile(options: TimeProfilerOptions) {
   const stop = start(
-      options.intervalMicros || DEFAULT_INTERVAL_MICROS, options.name,
-      options.sourceMapper, options.lineNumbers);
+    options.intervalMicros || DEFAULT_INTERVAL_MICROS,
+    options.name,
+    options.sourceMapper,
+    options.lineNumbers
+  );
   await delay(options.durationMillis);
   return stop();
 }
 
 export function start(
-    intervalMicros: Microseconds = DEFAULT_INTERVAL_MICROS, name?: string,
-    sourceMapper?: SourceMapper, lineNumbers?: boolean) {
+  intervalMicros: Microseconds = DEFAULT_INTERVAL_MICROS,
+  name?: string,
+  sourceMapper?: SourceMapper,
+  lineNumbers?: boolean
+) {
   if (profiling) {
     throw new Error('already profiling');
   }

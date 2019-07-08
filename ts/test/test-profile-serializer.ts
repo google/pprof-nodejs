@@ -16,10 +16,27 @@
 import * as sinon from 'sinon';
 import * as tmp from 'tmp';
 
-import {serializeHeapProfile, serializeTimeProfile} from '../src/profile-serializer';
-import {SourceMapper} from '../src/sourcemapper/sourcemapper';
+import {
+  serializeHeapProfile,
+  serializeTimeProfile,
+} from '../src/profile-serializer';
+import { SourceMapper } from '../src/sourcemapper/sourcemapper';
 
-import {anonymousFunctionHeapProfile, anonymousFunctionTimeProfile, heapProfile, heapSourceProfile, mapDirPath, timeProfile, timeSourceProfile, v8AnonymousFunctionHeapProfile, v8AnonymousFunctionTimeProfile, v8HeapGeneratedProfile, v8HeapProfile, v8TimeGeneratedProfile, v8TimeProfile,} from './profiles-for-tests';
+import {
+  anonymousFunctionHeapProfile,
+  anonymousFunctionTimeProfile,
+  heapProfile,
+  heapSourceProfile,
+  mapDirPath,
+  timeProfile,
+  timeSourceProfile,
+  v8AnonymousFunctionHeapProfile,
+  v8AnonymousFunctionTimeProfile,
+  v8HeapGeneratedProfile,
+  v8HeapProfile,
+  v8TimeGeneratedProfile,
+  v8TimeProfile,
+} from './profiles-for-tests';
 
 const assert = require('assert');
 
@@ -38,12 +55,13 @@ describe('profile-serializer', () => {
       const timeProfileOut = serializeTimeProfile(v8TimeProfile, 1000);
       assert.deepEqual(timeProfileOut, timeProfile);
     });
-    it('should produce expected profile when there is anyonmous function',
-       () => {
-         const timeProfileOut =
-             serializeTimeProfile(v8AnonymousFunctionTimeProfile, 1000);
-         assert.deepEqual(timeProfileOut, anonymousFunctionTimeProfile);
-       });
+    it('should produce expected profile when there is anyonmous function', () => {
+      const timeProfileOut = serializeTimeProfile(
+        v8AnonymousFunctionTimeProfile,
+        1000
+      );
+      assert.deepEqual(timeProfileOut, anonymousFunctionTimeProfile);
+    });
   });
 
   describe('serializeHeapProfile', () => {
@@ -51,12 +69,14 @@ describe('profile-serializer', () => {
       const heapProfileOut = serializeHeapProfile(v8HeapProfile, 0, 512 * 1024);
       assert.deepEqual(heapProfileOut, heapProfile);
     });
-    it('should produce expected profile when there is anyonmous function',
-       () => {
-         const heapProfileOut = serializeHeapProfile(
-             v8AnonymousFunctionHeapProfile, 0, 512 * 1024);
-         assert.deepEqual(heapProfileOut, anonymousFunctionHeapProfile);
-       });
+    it('should produce expected profile when there is anyonmous function', () => {
+      const heapProfileOut = serializeHeapProfile(
+        v8AnonymousFunctionHeapProfile,
+        0,
+        512 * 1024
+      );
+      assert.deepEqual(heapProfileOut, anonymousFunctionHeapProfile);
+    });
   });
 
   describe('source map specified', () => {
@@ -69,15 +89,23 @@ describe('profile-serializer', () => {
     describe('serializeHeapProfile', () => {
       it('should produce expected profile', () => {
         const heapProfileOut = serializeHeapProfile(
-            v8HeapGeneratedProfile, 0, 512 * 1024, undefined, sourceMapper);
+          v8HeapGeneratedProfile,
+          0,
+          512 * 1024,
+          undefined,
+          sourceMapper
+        );
         assert.deepEqual(heapProfileOut, heapSourceProfile);
       });
     });
 
     describe('serializeTimeProfile', () => {
       it('should produce expected profile', () => {
-        const timeProfileOut =
-            serializeTimeProfile(v8TimeGeneratedProfile, 1000, sourceMapper);
+        const timeProfileOut = serializeTimeProfile(
+          v8TimeGeneratedProfile,
+          1000,
+          sourceMapper
+        );
         assert.deepEqual(timeProfileOut, timeSourceProfile);
       });
     });
