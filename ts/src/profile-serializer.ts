@@ -156,9 +156,7 @@ function serialize<T extends ProfileNode>(
         profLoc = sourceMapper.mappingInfo(profLoc);
       }
     }
-    const keyStr = `${node.scriptId}:${profLoc.line}:${profLoc.column}:${
-      profLoc.name
-    }`;
+    const keyStr = `${node.scriptId}:${profLoc.line}:${profLoc.column}:${profLoc.name}`;
     let id = locationIdMap.get(keyStr);
     if (id !== undefined) {
       // id is index+1, since 0 is not valid id.
