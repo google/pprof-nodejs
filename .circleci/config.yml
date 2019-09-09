@@ -78,5 +78,5 @@ jobs:
     <<: *npmaudit
   gocheck:
     docker:
-      - image: circleci/golang:1.12
+      - image: circleci/golang:1.13
     <<: *gochecks
