@@ -18,6 +18,7 @@ Node.js.
     [this](https://bugs.chromium.org/p/chromium/issues/detail?id=847863) issue,
     which can cause garbage collection to take several minutes when heap
     profiling is enabled.
+    * Node.js 12.
 
 2. The `pprof` module has a native component that is used to collect profiles 
 with v8's CPU and Heap profilers. You may need to install additional
