@@ -1,4 +1,4 @@
-FROM golang:1.12-stretch as builder
+FROM golang:1.13-stretch as builder
 RUN apt-get update && apt-get install -y \
     git \
  && rm -rf /var/lib/apt/lists/*
