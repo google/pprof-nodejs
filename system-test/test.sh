@@ -7,7 +7,8 @@ retry() {
 }
 
 function timeout_after() {
-  if [ -f /bin/busybox ]; then
+  # timeout on Node 11 alpine image requires -t to specify time.
+  if [ -f /bin/busybox ] &&  [[ $(node -v) =~ ^v11.* ]]; then
     timeout -t "${@}"
   else
     timeout "${@}"
