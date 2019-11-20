@@ -206,7 +206,10 @@ const heapLeaf2 = {
   scriptId: 1,
   lineNumber: 10,
   columnNumber: 5,
-  allocations: [{ count: 8, sizeBytes: 10 }, { count: 15, sizeBytes: 72 }],
+  allocations: [
+    { count: 8, sizeBytes: 10 },
+    { count: 15, sizeBytes: 72 },
+  ],
   children: [],
 };
 
@@ -226,7 +229,10 @@ const heapNode1 = {
   scriptId: 0,
   lineNumber: 1,
   columnNumber: 5,
-  allocations: [{ count: 1, sizeBytes: 5 }, { count: 3, sizeBytes: 7 }],
+  allocations: [
+    { count: 1, sizeBytes: 5 },
+    { count: 3, sizeBytes: 7 },
+  ],
   children: [heapNode2],
 };
 
