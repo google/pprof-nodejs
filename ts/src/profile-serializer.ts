@@ -328,9 +328,7 @@ export function serializeHeapProfile(
   ignoreSamplesPath?: string,
   sourceMapper?: SourceMapper
 ): perftools.profiles.IProfile {
-  const appendHeapEntryToSamples: AppendEntryToSamples<
-    AllocationProfileNode
-  > = (
+  const appendHeapEntryToSamples: AppendEntryToSamples<AllocationProfileNode> = (
     entry: Entry<AllocationProfileNode>,
     samples: perftools.profiles.Sample[]
   ) => {
