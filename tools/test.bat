@@ -12,7 +12,21 @@
 @rem See the License for the specific language governing permissions and
 @rem limitations under the License.
 
+@echo "Starting Windows build"
+
 cd /d %~dp0	
 cd ../
 
-"C:\Program Files\Git\bin\bash.exe" tools/test.sh --windows
+@rem npm path is not currently set in image.
+SET PATH=%PATH%;/cygdrive/c/Program Files/nodejs/npm
+
+call nvm use v12
+call which node
+
+call npm install || goto :error
+call npm run test || goto :error
+
+goto :EOF
+
+:error
+exit /b 1
