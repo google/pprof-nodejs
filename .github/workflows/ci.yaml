@@ -1,11 +1,11 @@
+name: ci
 on:
   push:
     branches:
       - master
   pull_request:
-name: ci
 jobs:
-  test:
+  test-linux:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -18,7 +18,7 @@ jobs:
       - run: node --version
       - run: npm install
       - run: npm test
-  windows:
+  test-windows:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v2
