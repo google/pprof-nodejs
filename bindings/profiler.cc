@@ -137,7 +137,7 @@ Local<Array> GetLineNumberTimeProfileChildren(const CpuProfileNode* parent,
   unsigned int hitLineCount = node->GetHitLineCount();
   unsigned int hitCount = node->GetHitCount();
   if (hitLineCount > 0) {
-    CpuProfileNode::LineTick entries[hitLineCount];
+    std::vector<CpuProfileNode::LineTick> entries(hitLineCount);
     node->GetLineTicks(&entries[0], hitLineCount);
     children = Nan::New<Array>(count + hitLineCount);
     for (const CpuProfileNode::LineTick entry : entries) {
@@ -186,7 +186,7 @@ Local<Object> TranslateLineNumbersTimeProfileNode(const CpuProfileNode* parent,
 // called.
 Local<Value> TranslateLineNumbersTimeProfileRoot(const CpuProfileNode* node) {
   int32_t count = node->GetChildrenCount();
-  Local<Array> childrenArrs[count];
+  std::vector<Local<Array>> childrenArrs(count);
   int32_t childCount = 0;
   for (int32_t i = 0; i < count; i++) {
     Local<Array> c = GetLineNumberTimeProfileChildren(node, node->GetChild(i));
