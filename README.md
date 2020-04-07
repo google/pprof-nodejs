@@ -7,23 +7,20 @@
 [pprof][pprof-url] support for Node.js.
 
 ## Prerequisites
-1. Your application will need to be using Node.js 8.9.4 or greater, Node.js 
-10.4.1 or greater, or any version of Node 12. The profiler should not be
-enabled when using earlier versions of Node 8 and 10 because the profiler is
-not stable with those versions of Node.js.
-    * Versions of Node.js 8 prior to 8.9.4 are impacted by
-    [this](https://bugs.chromium.org/p/v8/issues/detail?id=6623) issue, which
-    causes a memory leak when time profiling is enabled.
-    * Versions of Node.js 10 prior to 10.4.1 are impacted by
-    [this](https://bugs.chromium.org/p/chromium/issues/detail?id=847863) issue,
-    which can cause garbage collection to take several minutes when heap
-    profiling is enabled.
+1. Your application will need to be using Node.js 10.4.1 or greater, or any
+version of Node 12. 
+
+The profiler should not be enabled when using earlier versions of Node 10, 
+since versions of Node.js 10 prior to 10.4.1 are impacted by 
+[this](https://bugs.chromium.org/p/chromium/issues/detail?id=847863) issue, 
+which can cause garbage collection to take several minutes when heap profiling
+is enabled.
 
 2. The `pprof` module has a native component that is used to collect profiles 
 with v8's CPU and Heap profilers. You may need to install additional
 dependencies to build this module.
     * For Linux: `pprof` has prebuilt binaries available for Linux and Alpine
-    Linux for Node 8, 10, 11 and 12. No additional dependencies are required.
+    Linux for Node 10, 11 and 12. No additional dependencies are required.
     * For other environments: when using `@google-cloud/profiler` on environments
     that `pprof` does not have prebuilt binaries for, the module
     [`node-gyp`](https://www.npmjs.com/package/node-gyp) will be used to
