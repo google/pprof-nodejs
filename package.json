@@ -48,7 +48,7 @@
     "@types/pretty-ms": "^4.0.0",
     "@types/request": "^2.47.1",
     "@types/sinon": "^9.0.0",
-    "@types/tmp": "0.1.0",
+    "@types/tmp": "0.2.0",
     "codecov": "^3.0.0",
     "deep-copy": "^1.4.2",
     "gts": "^1.0.0",
@@ -58,7 +58,7 @@
     "nyc": "^15.0.0",
     "sinon": "^9.0.0",
     "source-map-support": "^0.5.12",
-    "tmp": "0.1.0",
+    "tmp": "0.2.1",
     "ts-mockito": "^2.2.5",
     "typescript": "~3.8.0"
   },
