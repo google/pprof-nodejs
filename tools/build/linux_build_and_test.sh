@@ -15,7 +15,11 @@
 # limitations under the License.
 
 retry() {
-  "${@}" || "${@}" || "${@}" || exit $?
+  for i in {1..3}; do
+    [ $i == 1 ] || sleep 10  # Backing off after a failed attempt.
+    "${@}" && return 0
+  done
+  return 1
 }
 
 # Fail on any error.

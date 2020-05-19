@@ -7,7 +7,11 @@ trap "echo '** AT LEAST ONE OF TESTS FAILED **'" ERR
 set -eox pipefail
 
 retry() {
-  "${@}" || "${@}" || "${@}" || exit $?
+  for i in {1..3}; do
+    [ $i == 1 ] || sleep 10  # Backing off after a failed attempt.
+    "${@}" && return 0
+  done
+  return 1
 }
 
 cd $(dirname $0)

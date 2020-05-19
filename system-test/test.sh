@@ -3,7 +3,11 @@
 trap "echo '** TEST FAILED **'" ERR
 
 retry() {
-  "${@}" || "${@}" || "${@}" || return 1
+  for i in {1..3}; do
+    [ $i == 1 ] || sleep 10  # Backing off after a failed attempt.
+    "${@}" && return 0
+  done
+  return 1
 }
 
 function timeout_after() {
