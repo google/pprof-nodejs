@@ -14,13 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-retry() {
-  for i in {1..3}; do
-    [ $i == 1 ] || sleep 10  # Backing off after a failed attempt.
-    "${@}" && return 0
-  done
-  return 1
-}
+. $(dirname $0)/../retry.sh
 
 # Fail on any error.
 set -e pipefail

@@ -6,13 +6,7 @@ trap "echo '** AT LEAST ONE OF TESTS FAILED **'" ERR
 # Fail on any error, show commands run.
 set -eox pipefail
 
-retry() {
-  for i in {1..3}; do
-    [ $i == 1 ] || sleep 10  # Backing off after a failed attempt.
-    "${@}" && return 0
-  done
-  return 1
-}
+. $(dirname $0)/../tools/retry.sh
 
 cd $(dirname $0)
 
