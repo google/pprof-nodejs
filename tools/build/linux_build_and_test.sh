@@ -14,9 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-retry() {
-  "${@}" || "${@}" || "${@}" || exit $?
-}
+. $(dirname $0)/../retry.sh
 
 # Fail on any error.
 set -e pipefail
