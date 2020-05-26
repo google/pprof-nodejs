@@ -52,7 +52,7 @@
     "codecov": "^3.0.0",
     "deep-copy": "^1.4.2",
     "gts": "^1.0.0",
-    "js-green-licenses": "^1.0.0",
+    "js-green-licenses": "^2.0.0",
     "linkinator": "^2.0.0",
     "mocha": "^7.0.0",
     "nyc": "^15.0.0",
@@ -60,7 +60,7 @@
     "source-map-support": "^0.5.12",
     "tmp": "0.2.1",
     "ts-mockito": "^2.2.5",
-    "typescript": "~3.8.0"
+    "typescript": "~3.9.0"
   },
   "files": [
     "out/src",
