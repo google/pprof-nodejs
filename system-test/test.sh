@@ -2,9 +2,7 @@
 
 trap "echo '** TEST FAILED **'" ERR
 
-retry() {
-  "${@}" || "${@}" || "${@}" || return 1
-}
+. $(dirname $0)/../tools/retry.sh
 
 function timeout_after() {
   # timeout on Node 11 alpine image requires -t to specify time.

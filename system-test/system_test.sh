@@ -6,9 +6,7 @@ trap "echo '** AT LEAST ONE OF TESTS FAILED **'" ERR
 # Fail on any error, show commands run.
 set -eox pipefail
 
-retry() {
-  "${@}" || "${@}" || "${@}" || exit $?
-}
+. $(dirname $0)/../tools/retry.sh
 
 cd $(dirname $0)
 
