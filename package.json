@@ -36,7 +36,7 @@
     "node-pre-gyp": "^0.15.0",
     "p-limit": "^2.0.0",
     "pify": "^5.0.0",
-    "protobufjs": "~6.8.6",
+    "protobufjs": "~6.9.0",
     "source-map": "^0.7.3",
     "split": "^1.0.1"
   },
