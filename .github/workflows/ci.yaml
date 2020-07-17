@@ -21,8 +21,7 @@ jobs:
       - name: coverage
         uses: codecov/codecov-action@v1
         with:
-          name: actions ${{ matrix.node }}
-          fail_ci_if_error: false
+          name: actions linux ${{ matrix.node }}
   test-windows:
     runs-on: windows-latest
     steps:
@@ -36,7 +35,6 @@ jobs:
         uses: codecov/codecov-action@v1
         with:
           name: actions windows
-          fail_ci_if_error: false
   lint:
     runs-on: ubuntu-latest
     steps:
