@@ -54,7 +54,7 @@
     "gts": "^1.0.0",
     "js-green-licenses": "^2.0.0",
     "linkinator": "^2.0.0",
-    "mocha": "^7.0.0",
+    "mocha": "^8.0.0",
     "nyc": "^15.0.0",
     "sinon": "^9.0.0",
     "source-map-support": "^0.5.12",
