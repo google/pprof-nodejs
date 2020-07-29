@@ -41,7 +41,7 @@
     "split": "^1.0.1"
   },
   "devDependencies": {
-    "@types/mocha": "^7.0.0",
+    "@types/mocha": "^8.0.0",
     "@types/node": "^10.0.3",
     "@types/p-limit": "^2.0.0",
     "@types/pify": "^3.0.0",
