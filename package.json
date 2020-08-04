@@ -34,7 +34,7 @@
     "findit2": "^2.2.3",
     "nan": "^2.14.0",
     "node-pre-gyp": "^0.15.0",
-    "p-limit": "^2.0.0",
+    "p-limit": "^3.0.0",
     "pify": "^5.0.0",
     "protobufjs": "~6.9.0",
     "source-map": "^0.7.3",
