@@ -30,6 +30,6 @@ cd $(dirname $0)/..
 NPM_TOKEN=$(cat $KOKORO_KEYSTORE_DIR/72935_pprof-npm-token)
 echo "//wombat-dressing-room.appspot.com/:_authToken=${NPM_TOKEN}" > ~/.npmrc
 
-retry npm install
+retry npm install --quiet
 npm publish --access=public \
     --registry=https://wombat-dressing-room.appspot.com
