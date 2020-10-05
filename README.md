@@ -8,7 +8,7 @@
 
 ## Prerequisites
 1. Your application will need to be using Node.js 10.4.1 or greater, or any
-version of Node 12. 
+version of Node 12 or 14. 
 
 The profiler should not be enabled when using earlier versions of Node 10, 
 since versions of Node.js 10 prior to 10.4.1 are impacted by 
@@ -20,7 +20,7 @@ is enabled.
 with v8's CPU and Heap profilers. You may need to install additional
 dependencies to build this module.
     * For Linux: `pprof` has prebuilt binaries available for Linux and Alpine
-    Linux for Node 10, 11 and 12. No additional dependencies are required.
+    Linux for Node 10, 11, 12 and 14. No additional dependencies are required.
     * For other environments: when using `@google-cloud/profiler` on environments
     that `pprof` does not have prebuilt binaries for, the module
     [`node-gyp`](https://www.npmjs.com/package/node-gyp) will be used to
