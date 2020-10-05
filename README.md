@@ -20,7 +20,7 @@ is enabled.
 with v8's CPU and Heap profilers. You may need to install additional
 dependencies to build this module.
     * For Linux: `pprof` has prebuilt binaries available for Linux and Alpine
-    Linux for Node 10, 11, 12 and 14. No additional dependencies are required.
+    Linux for Node 10, 12 and 14. No additional dependencies are required.
     * For other environments: when using `@google-cloud/profiler` on environments
     that `pprof` does not have prebuilt binaries for, the module
     [`node-gyp`](https://www.npmjs.com/package/node-gyp) will be used to
