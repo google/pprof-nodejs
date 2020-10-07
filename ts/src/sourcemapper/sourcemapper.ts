@@ -120,7 +120,7 @@ export class SourceMapper {
     for (const dir of searchDirs) {
       try {
         const mf = await getMapFiles(dir);
-        mf.forEach(mapFile => {
+        mf.forEach((mapFile) => {
           mapFiles.push(path.resolve(dir, mapFile));
         });
       } catch (e) {
@@ -224,7 +224,7 @@ export class SourceMapper {
 async function createFromMapFiles(mapFiles: string[]): Promise<SourceMapper> {
   const limit = pLimit(CONCURRENCY);
   const mapper = new SourceMapper();
-  const promises: Array<Promise<void>> = mapFiles.map(mapPath =>
+  const promises: Array<Promise<void>> = mapFiles.map((mapPath) =>
     limit(() => processSourceMap(mapper.infoMap, mapPath))
   );
   try {

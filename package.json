@@ -51,7 +51,7 @@
     "@types/tmp": "0.2.0",
     "codecov": "^3.0.0",
     "deep-copy": "^1.4.2",
-    "gts": "^1.0.0",
+    "gts": "^2.0.0",
     "js-green-licenses": "^2.0.0",
     "linkinator": "^2.0.0",
     "mocha": "^8.0.0",

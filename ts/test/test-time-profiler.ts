@@ -44,7 +44,7 @@ describe('Time Profiler', () => {
 
   describe('profile (w/ stubs)', () => {
     // tslint:disable-next-line: no-any
-    const sinonStubs: Array<sinon.SinonStub<any, any>> = new Array();
+    const sinonStubs: Array<sinon.SinonStub<any, any>> = [];
     before(() => {
       sinonStubs.push(sinon.stub(v8TimeProfiler, 'startProfiling'));
       sinonStubs.push(
@@ -55,7 +55,7 @@ describe('Time Profiler', () => {
     });
 
     after(() => {
-      sinonStubs.forEach(stub => {
+      sinonStubs.forEach((stub) => {
         stub.restore();
       });
     });

@@ -90,10 +90,10 @@ class ScanResultsImpl implements ScanResults {
     // ensure the base directory has only a single trailing path separator
     baseDir = path.normalize(baseDir + path.sep);
     return Object.keys(this.stats)
-      .filter(file => {
+      .filter((file) => {
         return file && regex.test(file);
       })
-      .map(file => {
+      .map((file) => {
         return path.normalize(file).replace(baseDir, '');
       });
   }
@@ -152,10 +152,7 @@ function computeStats(
       // Sort the hashes to get a deterministic order as the files may
       // not be in the same order each time we scan the disk.
       const buffer = hashes.sort().join();
-      const sha1 = crypto
-        .createHash('sha1')
-        .update(buffer)
-        .digest('hex');
+      const sha1 = crypto.createHash('sha1').update(buffer).digest('hex');
       hash = 'SHA1-' + sha1;
     }
     resolve(new ScanResultsImpl(statistics, errors, hash));
@@ -224,7 +221,7 @@ function statsForFile(
 ): Promise<FileStats> {
   return new Promise<FileStats>((resolve, reject) => {
     const reader = fs.createReadStream(filename);
-    reader.on('error', err => {
+    reader.on('error', (err) => {
       reject(err);
     });
     reader.on('open', () => {
