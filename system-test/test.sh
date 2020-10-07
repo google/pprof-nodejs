@@ -14,7 +14,7 @@ function timeout_after() {
 }
 
 npm_install() {
-  timeout_after 60 npm install "${@}"
+  timeout_after 60 npm install --quiet "${@}"
 }
 
 set -eox pipefail
@@ -33,7 +33,7 @@ retry npm_install --nodedir="$NODEDIR" \
     ${BINARY_HOST:+--pprof_binary_host_mirror=$BINARY_HOST} >/dev/null
 
 npm run compile
-npm pack >/dev/null
+npm pack --quiet
 VERSION=$(node -e "console.log(require('./package.json').version);")
 PROFILER="$PWD/pprof-$VERSION.tgz"
 
