@@ -26,9 +26,9 @@ BASE_DIR=$PWD
 ARTIFACTS_OUT="${BASE_DIR}/artifacts"
 mkdir -p "$ARTIFACTS_OUT"
 
-npm install
+npm install --quiet
 
-for version in 8.0.0 10.0.0 11.0.0 12.0.0
+for version in 10.0.0 12.0.0 14.0.0
 do
   ./node_modules/.bin/node-pre-gyp configure rebuild package \
       --target=$version --target_arch="x64"
