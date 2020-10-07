@@ -60,7 +60,7 @@
     "source-map-support": "^0.5.12",
     "tmp": "0.2.1",
     "ts-mockito": "^2.2.5",
-    "typescript": "~3.9.0"
+    "typescript": "~4.0.0"
   },
   "files": [
     "out/src",
