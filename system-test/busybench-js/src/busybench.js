@@ -48,8 +48,11 @@ function benchmark(durationSeconds) {
   busyLoop(durationSeconds);
 }
 
-async function collectAndSaveTimeProfile(durationSeconds, sourceMapper,
-    lineNumbers) {
+async function collectAndSaveTimeProfile(
+  durationSeconds,
+  sourceMapper,
+  lineNumbers
+) {
   const profile = await pprof.time.profile({
     durationMillis: 1000 * durationSeconds,
     lineNumbers: lineNumbers,
@@ -66,13 +69,19 @@ async function collectAndSaveHeapProfile(sourceMapper) {
 }
 
 async function collectAndSaveProfiles(collectLineNumberTimeProfile) {
-  const sourceMapper =  await pprof.SourceMapper.create([process.cwd()]);
+  const sourceMapper = await pprof.SourceMapper.create([process.cwd()]);
   collectAndSaveHeapProfile(sourceMapper);
-  collectAndSaveTimeProfile(durationSeconds/2, sourceMapper, collectLineNumberTimeProfile);
+  collectAndSaveTimeProfile(
+    durationSeconds / 2,
+    sourceMapper,
+    collectLineNumberTimeProfile
+  );
 }
 
 const durationSeconds = Number(process.argv.length > 2 ? process.argv[2] : 30);
-const collectLineNumberTimeProfile = Boolean(process.argv.length > 3 ? process.argv[3] : false);
+const collectLineNumberTimeProfile = Boolean(
+  process.argv.length > 3 ? process.argv[3] : false
+);
 
 pprof.heap.start(512 * 1024, 64);
 benchmark(durationSeconds);

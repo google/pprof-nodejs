@@ -16,8 +16,8 @@
 
 import delay from 'delay';
 
-import { serializeTimeProfile } from './profile-serializer';
-import { SourceMapper } from './sourcemapper/sourcemapper';
+import {serializeTimeProfile} from './profile-serializer';
+import {SourceMapper} from './sourcemapper/sourcemapper';
 import {
   setSamplingInterval,
   startProfiling,

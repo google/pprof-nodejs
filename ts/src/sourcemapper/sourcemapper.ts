@@ -109,7 +109,7 @@ async function processSourceMap(
     : path.basename(mapPath, MAP_EXT);
   const generatedPath = path.resolve(dir, generatedBase);
 
-  infoMap.set(generatedPath, { mapFileDir: dir, mapConsumer: consumer });
+  infoMap.set(generatedPath, {mapFileDir: dir, mapConsumer: consumer});
 }
 
 export class SourceMapper {
@@ -203,7 +203,7 @@ export class SourceMapper {
       return location;
     }
 
-    const generatedPos = { line: location.line, column: location.column };
+    const generatedPos = {line: location.line, column: location.column};
 
     // TODO: Determine how to remove the explicit cast here.
     const consumer: sourceMap.SourceMapConsumer = (entry.mapConsumer as {}) as sourceMap.SourceMapConsumer;

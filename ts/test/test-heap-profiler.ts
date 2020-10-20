@@ -18,7 +18,7 @@ import * as sinon from 'sinon';
 
 import * as heapProfiler from '../src/heap-profiler';
 import * as v8HeapProfiler from '../src/heap-profiler-bindings';
-import { AllocationProfileNode } from '../src/v8-types';
+import {AllocationProfileNode} from '../src/v8-types';
 
 import {
   heapProfileExcludePath,
