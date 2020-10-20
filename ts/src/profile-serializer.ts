@@ -111,8 +111,6 @@ function serialize<T extends ProfileNode>(
   const samples: perftools.profiles.Sample[] = [];
   const locations: perftools.profiles.Location[] = [];
   const functions: perftools.profiles.Function[] = [];
-  const locationMap: Map<number, perftools.profiles.Location> = new Map();
-  const functionMap: Map<number, perftools.profiles.Function> = new Map();
   const functionIdMap = new Map<string, number>();
   const locationIdMap = new Map<string, number>();
 

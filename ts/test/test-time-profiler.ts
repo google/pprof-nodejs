@@ -43,7 +43,7 @@ describe('Time Profiler', () => {
   });
 
   describe('profile (w/ stubs)', () => {
-    // tslint:disable-next-line: no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const sinonStubs: Array<sinon.SinonStub<any, any>> = new Array();
     before(() => {
       sinonStubs.push(sinon.stub(v8TimeProfiler, 'startProfiling'));
@@ -62,7 +62,7 @@ describe('Time Profiler', () => {
 
     it('should profile during duration and finish profiling after duration', async () => {
       let isProfiling = true;
-      const profilePromise = time.profile(PROFILE_OPTIONS).then(() => {
+      time.profile(PROFILE_OPTIONS).then(() => {
         isProfiling = false;
       });
       await delay(2 * PROFILE_OPTIONS.durationMillis);

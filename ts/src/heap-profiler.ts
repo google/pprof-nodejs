@@ -58,7 +58,7 @@ export function profile(
   // Add node for external memory usage.
   // Current type definitions do not have external.
   // TODO: remove any once type definition is updated to include external.
-  // tslint:disable-next-line: no-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { external }: { external: number } = process.memoryUsage() as any;
   if (external > 0) {
     const externalNode: AllocationProfileNode = {

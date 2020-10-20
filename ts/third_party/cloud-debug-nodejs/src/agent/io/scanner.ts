@@ -123,7 +123,8 @@ function computeStats(
   fileList: string[],
   shouldHash: boolean
 ): Promise<ScanResults> {
-  return new Promise<ScanResults>(async (resolve, reject) => {
+  // eslint-disable-next-line no-async-promise-executor
+  return new Promise<ScanResults>(async (resolve) => {
     // return a valid, if fake, result when there are no js files to hash.
     if (fileList.length === 0) {
       resolve(new ScanResultsImpl({}, new Map(), 'EMPTY-no-js-files'));

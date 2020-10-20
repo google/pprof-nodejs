@@ -15,7 +15,9 @@
  */
 
 import {writeFile} from 'fs';
+// eslint-disable-next-line node/no-extraneous-import
 import * as pify from 'pify';
+// eslint-disable-next-line node/no-missing-import
 import {encode, heap, SourceMapper, time} from 'pprof';
 
 const writeFilePromise = pify(writeFile);

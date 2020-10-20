@@ -15,7 +15,9 @@
  */
 
 const fs = require('fs');
+// eslint-disable-next-line node/no-extraneous-require
 const pify = require('pify');
+// eslint-disable-next-line node/no-missing-require
 const pprof = require('pprof');
 
 const writeFilePromise = pify(fs.writeFile);
