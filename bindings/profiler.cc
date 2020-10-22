@@ -96,8 +96,14 @@ NAN_METHOD(GetAllocationProfile) {
 }
 
 // Time profiler
-
-#if NODE_MODULE_VERSION > NODE_8_0_MODULE_VERSION
+#if NODE_MODULE_VERSION >= NODE_12_0_MODULE_VERSION
+// For Node 12 and Node 14, a new CPU profiler object will be created each
+// time profiling is started to work around
+// https://bugs.chromium.org/p/v8/issues/detail?id=11051.
+CpuProfiler* cpuProfiler;
+// Default sampling interval is 1000us.
+int samplingIntervalUS = 1000;
+#elif NODE_MODULE_VERSION > NODE_8_0_MODULE_VERSION
 // This profiler exists for the lifetime of the program. Not calling
 // CpuProfiler::Dispose() is intentional.
 CpuProfiler* cpuProfiler = CpuProfiler::New(v8::Isolate::GetCurrent());
@@ -264,6 +270,21 @@ NAN_METHOD(StartProfiling) {
     return Nan::ThrowTypeError("Second argument must be a boolean.");
   }
 
+#if NODE_MODULE_VERSION >= NODE_12_0_MODULE_VERSION
+  // Since the CPU profiler is created and destroyed each time a CPU
+  // profile is collected, there cannot be multiple CPU profiling requests
+  // inflight in parallel.
+  if (cpuProfiler) {
+    return Nan::ThrowError("CPU profiler is already started.");
+  }
+  cpuProfiler = CpuProfiler::New(v8::Isolate::GetCurrent());
+  // The default sampling interval is 1000us. If the sampling interval is
+  // different, set the sampling interval.
+  if (samplingIntervalUS != 1000) {
+    cpuProfiler->SetSamplingInterval(samplingIntervalUS);
+  }
+#endif
+
   Local<String> name =
       Nan::MaybeLocal<String>(info[0].As<String>()).ToLocalChecked();
 
@@ -289,6 +310,11 @@ NAN_METHOD(StartProfiling) {
 // Signature:
 // stopProfiling(runName: string, includeLineInfo: boolean): TimeProfile
 NAN_METHOD(StopProfiling) {
+#if NODE_MODULE_VERSION >= NODE_12_0_MODULE_VERSION
+  if (!cpuProfiler) {
+    return Nan::ThrowError("CPU profiler is not started.");
+  }
+#endif
   if (info.Length() != 2) {
     return Nan::ThrowTypeError("StopProfling must have two arguments.");
   }
@@ -307,6 +333,11 @@ NAN_METHOD(StopProfiling) {
   Local<Value> translated_profile =
       TranslateTimeProfile(profile, includeLineInfo);
   profile->Delete();
+#if NODE_MODULE_VERSION >= NODE_12_0_MODULE_VERSION
+  // Dispose of CPU profiler to work around memory leak.
+  cpuProfiler->Dispose();
+  cpuProfiler = NULL;
+#endif
   info.GetReturnValue().Set(translated_profile);
 }
 
@@ -318,7 +349,11 @@ NAN_METHOD(SetSamplingInterval) {
 #else
   int us = info[0].As<Integer>()->IntegerValue();
 #endif
+#if NODE_MODULE_VERSION >= NODE_12_0_MODULE_VERSION
+  samplingIntervalUS = us;
+#else
   cpuProfiler->SetSamplingInterval(us);
+#endif
 }
 
 NAN_MODULE_INIT(InitAll) {
