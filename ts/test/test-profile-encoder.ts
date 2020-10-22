@@ -15,12 +15,12 @@
  */
 
 import * as pify from 'pify';
-import { gunzip as gunzipPromise, gunzipSync } from 'zlib';
+import {gunzip as gunzipPromise, gunzipSync} from 'zlib';
 
-import { perftools } from '../../proto/profile';
-import { encode, encodeSync } from '../src/profile-encoder';
+import {perftools} from '../../proto/profile';
+import {encode, encodeSync} from '../src/profile-encoder';
 
-import { decodedTimeProfile, timeProfile } from './profiles-for-tests';
+import {decodedTimeProfile, timeProfile} from './profiles-for-tests';
 
 const assert = require('assert');
 const gunzip = pify(gunzipPromise);

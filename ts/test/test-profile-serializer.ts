@@ -20,7 +20,7 @@ import {
   serializeHeapProfile,
   serializeTimeProfile,
 } from '../src/profile-serializer';
-import { SourceMapper } from '../src/sourcemapper/sourcemapper';
+import {SourceMapper} from '../src/sourcemapper/sourcemapper';
 
 import {
   anonymousFunctionHeapProfile,

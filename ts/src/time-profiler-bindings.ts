@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 import * as path from 'path';
-import { TimeProfile } from './v8-types';
+import {TimeProfile} from './v8-types';
 
 const binary = require('node-pre-gyp');
 const bindingPath = binary.find(

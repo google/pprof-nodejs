@@ -16,11 +16,11 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
-import { SourceMapGenerator } from 'source-map';
+import {SourceMapGenerator} from 'source-map';
 import * as tmp from 'tmp';
 
-import { perftools } from '../../proto/profile';
-import { TimeProfile } from '../src/v8-types';
+import {perftools} from '../../proto/profile';
+import {TimeProfile} from '../src/v8-types';
 
 const timeLeaf1 = {
   name: 'function1',
@@ -89,10 +89,10 @@ export const v8TimeProfile: TimeProfile = Object.freeze({
 });
 
 const timeLines = [
-  { functionId: 1, line: 1 },
-  { functionId: 2, line: 5 },
-  { functionId: 3, line: 15 },
-  { functionId: 2, line: 10 },
+  {functionId: 1, line: 1},
+  {functionId: 2, line: 5},
+  {functionId: 3, line: 15},
+  {functionId: 2, line: 10},
 ];
 
 const timeFunctions = [
@@ -137,8 +137,8 @@ const timeLocations = [
 
 export const timeProfile: perftools.profiles.IProfile = Object.freeze({
   sampleType: [
-    new perftools.profiles.ValueType({ type: 1, unit: 2 }),
-    new perftools.profiles.ValueType({ type: 3, unit: 4 }),
+    new perftools.profiles.ValueType({type: 1, unit: 2}),
+    new perftools.profiles.ValueType({type: 3, unit: 4}),
   ],
   sample: [
     new perftools.profiles.Sample({
@@ -177,7 +177,7 @@ export const timeProfile: perftools.profiles.IProfile = Object.freeze({
   ],
   timeNanos: 0,
   durationNanos: 10 * 1000 * 1000 * 1000,
-  periodType: new perftools.profiles.ValueType({ type: 3, unit: 4 }),
+  periodType: new perftools.profiles.ValueType({type: 3, unit: 4}),
   period: 1000,
 });
 
@@ -196,7 +196,7 @@ const heapLeaf1 = {
   scriptId: 1,
   lineNumber: 8,
   columnNumber: 5,
-  allocations: [{ count: 5, sizeBytes: 1024 }],
+  allocations: [{count: 5, sizeBytes: 1024}],
   children: [],
 };
 
@@ -207,8 +207,8 @@ const heapLeaf2 = {
   lineNumber: 10,
   columnNumber: 5,
   allocations: [
-    { count: 8, sizeBytes: 10 },
-    { count: 15, sizeBytes: 72 },
+    {count: 8, sizeBytes: 10},
+    {count: 15, sizeBytes: 72},
   ],
   children: [],
 };
@@ -230,8 +230,8 @@ const heapNode1 = {
   lineNumber: 1,
   columnNumber: 5,
   allocations: [
-    { count: 1, sizeBytes: 5 },
-    { count: 3, sizeBytes: 7 },
+    {count: 1, sizeBytes: 5},
+    {count: 3, sizeBytes: 7},
   ],
   children: [heapNode2],
 };
@@ -247,10 +247,10 @@ export const v8HeapProfile = Object.freeze({
 });
 
 const heapLines = [
-  { functionId: 1, line: 1 },
-  { functionId: 2, line: 5 },
-  { functionId: 3, line: 10 },
-  { functionId: 4, line: 8 },
+  {functionId: 1, line: 1},
+  {functionId: 2, line: 5},
+  {functionId: 3, line: 10},
+  {functionId: 4, line: 8},
 ];
 
 const heapFunctions = [
@@ -281,16 +281,16 @@ const heapFunctions = [
 ];
 
 const heapLocations = [
-  new perftools.profiles.Location({ line: [heapLines[0]], id: 1 }),
-  new perftools.profiles.Location({ line: [heapLines[1]], id: 2 }),
-  new perftools.profiles.Location({ line: [heapLines[2]], id: 3 }),
-  new perftools.profiles.Location({ line: [heapLines[3]], id: 4 }),
+  new perftools.profiles.Location({line: [heapLines[0]], id: 1}),
+  new perftools.profiles.Location({line: [heapLines[1]], id: 2}),
+  new perftools.profiles.Location({line: [heapLines[2]], id: 3}),
+  new perftools.profiles.Location({line: [heapLines[3]], id: 4}),
 ];
 
 export const heapProfile: perftools.profiles.IProfile = Object.freeze({
   sampleType: [
-    new perftools.profiles.ValueType({ type: 1, unit: 2 }),
-    new perftools.profiles.ValueType({ type: 3, unit: 4 }),
+    new perftools.profiles.ValueType({type: 1, unit: 2}),
+    new perftools.profiles.ValueType({type: 3, unit: 4}),
   ],
   sample: [
     new perftools.profiles.Sample({
@@ -334,7 +334,7 @@ export const heapProfile: perftools.profiles.IProfile = Object.freeze({
     'function2',
   ],
   timeNanos: 0,
-  periodType: new perftools.profiles.ValueType({ type: 3, unit: 4 }),
+  periodType: new perftools.profiles.ValueType({type: 3, unit: 4}),
   period: 524288,
 });
 
@@ -348,11 +348,11 @@ export const decodedHeapProfile = Object.freeze(
 );
 
 const heapLinesWithExternal = [
-  { functionId: 1 },
-  { functionId: 2, line: 1 },
-  { functionId: 3, line: 5 },
-  { functionId: 4, line: 10 },
-  { functionId: 5, line: 8 },
+  {functionId: 1},
+  {functionId: 2, line: 1},
+  {functionId: 3, line: 5},
+  {functionId: 4, line: 10},
+  {functionId: 5, line: 8},
 ];
 
 const heapFunctionsWithExternal = [
@@ -389,18 +389,18 @@ const heapFunctionsWithExternal = [
 ];
 
 const heapLocationsWithExternal = [
-  new perftools.profiles.Location({ line: [heapLinesWithExternal[0]], id: 1 }),
-  new perftools.profiles.Location({ line: [heapLinesWithExternal[1]], id: 2 }),
-  new perftools.profiles.Location({ line: [heapLinesWithExternal[2]], id: 3 }),
-  new perftools.profiles.Location({ line: [heapLinesWithExternal[3]], id: 4 }),
-  new perftools.profiles.Location({ line: [heapLinesWithExternal[4]], id: 5 }),
+  new perftools.profiles.Location({line: [heapLinesWithExternal[0]], id: 1}),
+  new perftools.profiles.Location({line: [heapLinesWithExternal[1]], id: 2}),
+  new perftools.profiles.Location({line: [heapLinesWithExternal[2]], id: 3}),
+  new perftools.profiles.Location({line: [heapLinesWithExternal[3]], id: 4}),
+  new perftools.profiles.Location({line: [heapLinesWithExternal[4]], id: 5}),
 ];
 
 export const heapProfileWithExternal: perftools.profiles.IProfile = Object.freeze(
   {
     sampleType: [
-      new perftools.profiles.ValueType({ type: 1, unit: 2 }),
-      new perftools.profiles.ValueType({ type: 3, unit: 4 }),
+      new perftools.profiles.ValueType({type: 1, unit: 2}),
+      new perftools.profiles.ValueType({type: 3, unit: 4}),
     ],
     sample: [
       new perftools.profiles.Sample({
@@ -450,7 +450,7 @@ export const heapProfileWithExternal: perftools.profiles.IProfile = Object.freez
       'function2',
     ],
     timeNanos: 0,
-    periodType: new perftools.profiles.ValueType({ type: 3, unit: 4 }),
+    periodType: new perftools.profiles.ValueType({type: 3, unit: 4}),
     period: 524288,
   }
 );
@@ -461,7 +461,7 @@ const encodedHeapProfileWithExternal = perftools.profiles.Profile.encode(
   heapProfile
 ).finish();
 export const decodedHeapProfileWithExternal = Object.freeze(
-  perftools.profiles.Profile.decode(encodedHeapProfile)
+  perftools.profiles.Profile.decode(encodedHeapProfileWithExternal)
 );
 
 const anonymousHeapNode = {
@@ -469,7 +469,7 @@ const anonymousHeapNode = {
   scriptId: 0,
   lineNumber: 1,
   columnNumber: 5,
-  allocations: [{ count: 1, sizeBytes: 5 }],
+  allocations: [{count: 1, sizeBytes: 5}],
   children: [],
 };
 
@@ -483,7 +483,7 @@ export const v8AnonymousFunctionHeapProfile = Object.freeze({
   children: [anonymousHeapNode],
 });
 
-const anonymousFunctionHeapLines = [{ functionId: 1, line: 1 }];
+const anonymousFunctionHeapLines = [{functionId: 1, line: 1}];
 
 const anonymousFunctionHeapFunctions = [
   new perftools.profiles.Function({
@@ -495,14 +495,17 @@ const anonymousFunctionHeapFunctions = [
 ];
 
 const anonymousFunctionHeapLocations = [
-  new perftools.profiles.Location({ line: [heapLines[0]], id: 1 }),
+  new perftools.profiles.Location({
+    line: [anonymousFunctionHeapLines[0]],
+    id: 1,
+  }),
 ];
 
 export const anonymousFunctionHeapProfile: perftools.profiles.IProfile = Object.freeze(
   {
     sampleType: [
-      new perftools.profiles.ValueType({ type: 1, unit: 2 }),
-      new perftools.profiles.ValueType({ type: 3, unit: 4 }),
+      new perftools.profiles.ValueType({type: 1, unit: 2}),
+      new perftools.profiles.ValueType({type: 3, unit: 4}),
     ],
     sample: [
       new perftools.profiles.Sample({
@@ -523,7 +526,7 @@ export const anonymousFunctionHeapProfile: perftools.profiles.IProfile = Object.
       'main',
     ],
     timeNanos: 0,
-    periodType: new perftools.profiles.ValueType({ type: 3, unit: 4 }),
+    periodType: new perftools.profiles.ValueType({type: 3, unit: 4}),
     period: 524288,
   }
 );
@@ -553,7 +556,7 @@ export const v8AnonymousFunctionTimeProfile: TimeProfile = Object.freeze({
   topDownRoot: anonymousFunctionTimeRoot,
 });
 
-const anonymousFunctionTimeLines = [{ functionId: 1, line: 1 }];
+const anonymousFunctionTimeLines = [{functionId: 1, line: 1}];
 
 const anonymousFunctionTimeFunctions = [
   new perftools.profiles.Function({
@@ -566,7 +569,7 @@ const anonymousFunctionTimeFunctions = [
 
 const anonymousFunctionTimeLocations = [
   new perftools.profiles.Location({
-    line: [timeLines[0]],
+    line: [anonymousFunctionTimeLines[0]],
     id: 1,
   }),
 ];
@@ -574,8 +577,8 @@ const anonymousFunctionTimeLocations = [
 export const anonymousFunctionTimeProfile: perftools.profiles.IProfile = Object.freeze(
   {
     sampleType: [
-      new perftools.profiles.ValueType({ type: 1, unit: 2 }),
-      new perftools.profiles.ValueType({ type: 3, unit: 4 }),
+      new perftools.profiles.ValueType({type: 1, unit: 2}),
+      new perftools.profiles.ValueType({type: 3, unit: 4}),
     ],
     sample: [
       new perftools.profiles.Sample({
@@ -597,7 +600,7 @@ export const anonymousFunctionTimeProfile: perftools.profiles.IProfile = Object.
     ],
     timeNanos: 0,
     durationNanos: 10 * 1000 * 1000 * 1000,
-    periodType: new perftools.profiles.ValueType({ type: 3, unit: 4 }),
+    periodType: new perftools.profiles.ValueType({type: 3, unit: 4}),
     period: 1000,
   }
 );
@@ -608,7 +611,7 @@ const heapWithPathLeaf1 = {
   scriptId: 0,
   lineNumber: 3,
   columnNumber: 3,
-  allocations: [{ count: 1, sizeBytes: 2 }],
+  allocations: [{count: 1, sizeBytes: 2}],
   children: [],
 };
 
@@ -618,7 +621,7 @@ const heapWithPathLeaf2 = {
   scriptId: 1,
   lineNumber: 10,
   columnNumber: 5,
-  allocations: [{ count: 2, sizeBytes: 2 }],
+  allocations: [{count: 2, sizeBytes: 2}],
   children: [],
 };
 
@@ -628,7 +631,7 @@ const heapWithPathLeaf3 = {
   scriptId: 2,
   lineNumber: 3,
   columnNumber: 3,
-  allocations: [{ count: 3, sizeBytes: 2 }],
+  allocations: [{count: 3, sizeBytes: 2}],
   children: [],
 };
 
@@ -697,23 +700,23 @@ const heapIncludePathFunctions = [
 
 const heapIncludePathLocations = [
   new perftools.profiles.Location({
-    line: [{ functionId: 1, line: 1 }],
+    line: [{functionId: 1, line: 1}],
     id: 1,
   }),
   new perftools.profiles.Location({
-    line: [{ functionId: 2, line: 10 }],
+    line: [{functionId: 2, line: 10}],
     id: 2,
   }),
   new perftools.profiles.Location({
-    line: [{ functionId: 3, line: 3 }],
+    line: [{functionId: 3, line: 3}],
     id: 3,
   }),
   new perftools.profiles.Location({
-    line: [{ functionId: 4, line: 2 }],
+    line: [{functionId: 4, line: 2}],
     id: 4,
   }),
   new perftools.profiles.Location({
-    line: [{ functionId: 5, line: 3 }],
+    line: [{functionId: 5, line: 3}],
     id: 5,
   }),
 ];
@@ -721,8 +724,8 @@ const heapIncludePathLocations = [
 export const heapProfileIncludePath: perftools.profiles.IProfile = Object.freeze(
   {
     sampleType: [
-      new perftools.profiles.ValueType({ type: 1, unit: 2 }),
-      new perftools.profiles.ValueType({ type: 3, unit: 4 }),
+      new perftools.profiles.ValueType({type: 1, unit: 2}),
+      new perftools.profiles.ValueType({type: 3, unit: 4}),
     ],
     sample: [
       new perftools.profiles.Sample({
@@ -759,7 +762,7 @@ export const heapProfileIncludePath: perftools.profiles.IProfile = Object.freeze
       'bar.ts',
     ],
     timeNanos: 0,
-    periodType: new perftools.profiles.ValueType({ type: 3, unit: 4 }),
+    periodType: new perftools.profiles.ValueType({type: 3, unit: 4}),
     period: 524288,
   }
 );
@@ -790,11 +793,11 @@ const heapExcludePathFunctions = [
 
 const heapExcludePathLocations = [
   new perftools.profiles.Location({
-    line: [{ functionId: 1, line: 1 }],
+    line: [{functionId: 1, line: 1}],
     id: 1,
   }),
   new perftools.profiles.Location({
-    line: [{ functionId: 2, line: 3 }],
+    line: [{functionId: 2, line: 3}],
     id: 2,
   }),
 ];
@@ -802,8 +805,8 @@ const heapExcludePathLocations = [
 export const heapProfileExcludePath: perftools.profiles.IProfile = Object.freeze(
   {
     sampleType: [
-      new perftools.profiles.ValueType({ type: 1, unit: 2 }),
-      new perftools.profiles.ValueType({ type: 3, unit: 4 }),
+      new perftools.profiles.ValueType({type: 1, unit: 2}),
+      new perftools.profiles.ValueType({type: 3, unit: 4}),
     ],
     sample: [
       new perftools.profiles.Sample({
@@ -825,7 +828,7 @@ export const heapProfileExcludePath: perftools.profiles.IProfile = Object.freeze
       'foo2',
     ],
     timeNanos: 0,
-    periodType: new perftools.profiles.ValueType({ type: 3, unit: 4 }),
+    periodType: new perftools.profiles.ValueType({type: 3, unit: 4}),
     period: 524288,
   }
 );
@@ -842,26 +845,26 @@ export const decodedHeapProfileExcludePath = Object.freeze(
 const mapDir = tmp.dirSync();
 export const mapDirPath = mapDir.name;
 
-export const mapFoo = new SourceMapGenerator({ file: 'foo.js' });
+export const mapFoo = new SourceMapGenerator({file: 'foo.js'});
 mapFoo.addMapping({
   source: path.join(mapDirPath, 'foo.ts'),
   name: 'foo1',
-  generated: { line: 1, column: 3 },
-  original: { line: 10, column: 0 },
+  generated: {line: 1, column: 3},
+  original: {line: 10, column: 0},
 });
 mapFoo.addMapping({
   source: path.join(mapDirPath, 'foo.ts'),
   name: 'foo2',
-  generated: { line: 5, column: 5 },
-  original: { line: 20, column: 0 },
+  generated: {line: 5, column: 5},
+  original: {line: 20, column: 0},
 });
 
-export const mapBaz = new SourceMapGenerator({ file: 'baz.js' });
+export const mapBaz = new SourceMapGenerator({file: 'baz.js'});
 mapBaz.addMapping({
   source: path.join(mapDirPath, 'baz.ts'),
   name: 'baz',
-  generated: { line: 3, column: 0 },
-  original: { line: 5, column: 0 },
+  generated: {line: 3, column: 0},
+  original: {line: 5, column: 0},
 });
 
 fs.writeFileSync(path.join(mapDirPath, 'foo.js.map'), mapFoo.toString());
@@ -873,7 +876,7 @@ const heapGeneratedLeaf1 = {
   scriptId: 1,
   lineNumber: 5,
   columnNumber: 5,
-  allocations: [{ count: 3, sizeBytes: 2 }],
+  allocations: [{count: 3, sizeBytes: 2}],
   children: [],
 };
 
@@ -883,7 +886,7 @@ const heapGeneratedLeaf2 = {
   scriptId: 3,
   lineNumber: 3,
   columnNumber: 0,
-  allocations: [{ count: 5, sizeBytes: 5 }],
+  allocations: [{count: 5, sizeBytes: 5}],
   children: [],
 };
 
@@ -946,27 +949,27 @@ const heapSourceFunctions = [
 
 const heapSourceLocations = [
   new perftools.profiles.Location({
-    line: [{ functionId: 1, line: 10 }],
+    line: [{functionId: 1, line: 10}],
     id: 1,
   }),
   new perftools.profiles.Location({
-    line: [{ functionId: 2, line: 20 }],
+    line: [{functionId: 2, line: 20}],
     id: 2,
   }),
   new perftools.profiles.Location({
-    line: [{ functionId: 3, line: 10 }],
+    line: [{functionId: 3, line: 10}],
     id: 3,
   }),
   new perftools.profiles.Location({
-    line: [{ functionId: 4, line: 5 }],
+    line: [{functionId: 4, line: 5}],
     id: 4,
   }),
 ];
 
 export const heapSourceProfile: perftools.profiles.IProfile = Object.freeze({
   sampleType: [
-    new perftools.profiles.ValueType({ type: 1, unit: 2 }),
-    new perftools.profiles.ValueType({ type: 3, unit: 4 }),
+    new perftools.profiles.ValueType({type: 1, unit: 2}),
+    new perftools.profiles.ValueType({type: 3, unit: 4}),
   ],
   sample: [
     new perftools.profiles.Sample({
@@ -997,7 +1000,7 @@ export const heapSourceProfile: perftools.profiles.IProfile = Object.freeze({
     path.join(mapDirPath, 'baz.ts'),
   ],
   timeNanos: 0,
-  periodType: new perftools.profiles.ValueType({ type: 3, unit: 4 }),
+  periodType: new perftools.profiles.ValueType({type: 3, unit: 4}),
   period: 524288,
 });
 
@@ -1085,27 +1088,27 @@ const timeSourceFunctions = [
 
 const timeSourceLocations = [
   new perftools.profiles.Location({
-    line: [{ functionId: 1, line: 10 }],
+    line: [{functionId: 1, line: 10}],
     id: 1,
   }),
   new perftools.profiles.Location({
-    line: [{ functionId: 2, line: 20 }],
+    line: [{functionId: 2, line: 20}],
     id: 2,
   }),
   new perftools.profiles.Location({
-    line: [{ functionId: 3, line: 10 }],
+    line: [{functionId: 3, line: 10}],
     id: 3,
   }),
   new perftools.profiles.Location({
-    line: [{ functionId: 4, line: 5 }],
+    line: [{functionId: 4, line: 5}],
     id: 4,
   }),
 ];
 
 export const timeSourceProfile: perftools.profiles.IProfile = Object.freeze({
   sampleType: [
-    new perftools.profiles.ValueType({ type: 1, unit: 2 }),
-    new perftools.profiles.ValueType({ type: 3, unit: 4 }),
+    new perftools.profiles.ValueType({type: 1, unit: 2}),
+    new perftools.profiles.ValueType({type: 3, unit: 4}),
   ],
   sample: [
     new perftools.profiles.Sample({
@@ -1137,6 +1140,6 @@ export const timeSourceProfile: perftools.profiles.IProfile = Object.freeze({
   ],
   timeNanos: 0,
   durationNanos: 10 * 1000 * 1000 * 1000,
-  periodType: new perftools.profiles.ValueType({ type: 3, unit: 4 }),
+  periodType: new perftools.profiles.ValueType({type: 3, unit: 4}),
   period: 1000,
 });

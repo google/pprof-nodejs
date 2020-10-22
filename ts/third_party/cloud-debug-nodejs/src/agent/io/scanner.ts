@@ -123,7 +123,8 @@ function computeStats(
   fileList: string[],
   shouldHash: boolean
 ): Promise<ScanResults> {
-  return new Promise<ScanResults>(async (resolve, reject) => {
+  // eslint-disable-next-line no-async-promise-executor
+  return new Promise<ScanResults>(async resolve => {
     // return a valid, if fake, result when there are no js files to hash.
     if (fileList.length === 0) {
       resolve(new ScanResultsImpl({}, new Map(), 'EMPTY-no-js-files'));
@@ -152,10 +153,7 @@ function computeStats(
       // Sort the hashes to get a deterministic order as the files may
       // not be in the same order each time we scan the disk.
       const buffer = hashes.sort().join();
-      const sha1 = crypto
-        .createHash('sha1')
-        .update(buffer)
-        .digest('hex');
+      const sha1 = crypto.createHash('sha1').update(buffer).digest('hex');
       hash = 'SHA1-' + sha1;
     }
     resolve(new ScanResultsImpl(statistics, errors, hash));
@@ -250,7 +248,7 @@ function statsForFile(
           reject(error);
         } else {
           const hash = shouldHash ? shasum.digest('hex') : undefined;
-          resolve({ hash, lines });
+          resolve({hash, lines});
         }
       });
     });

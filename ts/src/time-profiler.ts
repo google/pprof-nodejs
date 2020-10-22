@@ -16,8 +16,8 @@
 
 import delay from 'delay';
 
-import { serializeTimeProfile } from './profile-serializer';
-import { SourceMapper } from './sourcemapper/sourcemapper';
+import {serializeTimeProfile} from './profile-serializer';
+import {SourceMapper} from './sourcemapper/sourcemapper';
 import {
   setSamplingInterval,
   startProfiling,
@@ -77,13 +77,13 @@ export function start(
   // code. Ideally this should be default behavior. Until then, use the
   // undocumented API.
   // See https://github.com/nodejs/node/issues/19009#issuecomment-403161559.
-  // tslint:disable-next-line no-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   (process as any)._startProfilerIdleNotifier();
   startProfiling(runName, lineNumbers);
   return function stop() {
     profiling = false;
     const result = stopProfiling(runName, lineNumbers);
-    // tslint:disable-next-line no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (process as any)._stopProfilerIdleNotifier();
     const profile = serializeTimeProfile(result, intervalMicros, sourceMapper);
     return profile;

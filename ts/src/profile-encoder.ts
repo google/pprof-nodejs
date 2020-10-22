@@ -15,9 +15,9 @@
  */
 
 import * as pify from 'pify';
-import { gzip, gzipSync } from 'zlib';
+import {gzip, gzipSync} from 'zlib';
 
-import { perftools } from '../../proto/profile';
+import {perftools} from '../../proto/profile';
 
 const gzipPromise = pify(gzip);
 
