@@ -278,11 +278,7 @@ NAN_METHOD(StartProfiling) {
     return Nan::ThrowError("CPU profiler is already started.");
   }
   cpuProfiler = CpuProfiler::New(v8::Isolate::GetCurrent());
-  // The default sampling interval is 1000us. If the sampling interval is
-  // different, set the sampling interval.
-  if (samplingIntervalUS != 1000) {
-    cpuProfiler->SetSamplingInterval(samplingIntervalUS);
-  }
+  cpuProfiler->SetSamplingInterval(samplingIntervalUS);
 #endif
 
   Local<String> name =
@@ -312,7 +308,7 @@ NAN_METHOD(StartProfiling) {
 NAN_METHOD(StopProfiling) {
 #if NODE_MODULE_VERSION >= NODE_12_0_MODULE_VERSION
   if (!cpuProfiler) {
-    return Nan::ThrowError("CPU profiler is not started.");
+    return Nan::ThrowError("StopProfiling called without an active CPU profiler.");
   }
 #endif
   if (info.Length() != 2) {
