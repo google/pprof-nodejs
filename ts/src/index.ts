@@ -13,19 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { writeFileSync } from 'fs';
+import {writeFileSync} from 'fs';
 
 import * as heapProfiler from './heap-profiler';
-import { encodeSync } from './profile-encoder';
+import {encodeSync} from './profile-encoder';
 import * as timeProfiler from './time-profiler';
-export {
-  AllocationProfileNode,
-  TimeProfileNode,
-  ProfileNode,
-} from './v8-types';
+export {AllocationProfileNode, TimeProfileNode, ProfileNode} from './v8-types';
 
-export { encode, encodeSync } from './profile-encoder';
-export { SourceMapper } from './sourcemapper/sourcemapper';
+export {encode, encodeSync} from './profile-encoder';
+export {SourceMapper} from './sourcemapper/sourcemapper';
 
 export const time = {
   profile: timeProfiler.profile,

@@ -15,7 +15,9 @@
  */
 
 import {writeFile} from 'fs';
+// eslint-disable-next-line node/no-extraneous-import
 import * as pify from 'pify';
+// eslint-disable-next-line node/no-missing-import
 import {encode, heap, SourceMapper, time} from 'pprof';
 
 const writeFilePromise = pify(writeFile);
@@ -47,15 +49,20 @@ function benchmark(durationSeconds: number) {
 }
 
 async function collectAndSaveTimeProfile(
-    durationSeconds: number, sourceMapper: SourceMapper): Promise<void> {
-  const profile = await time.profile(
-      {durationMillis: 1000 * durationSeconds, sourceMapper});
+  durationSeconds: number,
+  sourceMapper: SourceMapper
+): Promise<void> {
+  const profile = await time.profile({
+    durationMillis: 1000 * durationSeconds,
+    sourceMapper,
+  });
   const buf = await encode(profile);
   await writeFilePromise('time.pb.gz', buf);
 }
 
-async function collectAndSaveHeapProfile(sourceMapper: SourceMapper):
-    Promise<void> {
+async function collectAndSaveHeapProfile(
+  sourceMapper: SourceMapper
+): Promise<void> {
   const profile = await heap.profile(undefined, sourceMapper);
   const buf = await encode(profile);
   await writeFilePromise('heap.pb.gz', buf);

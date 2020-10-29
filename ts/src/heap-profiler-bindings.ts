@@ -16,7 +16,7 @@
 
 import * as path from 'path';
 
-import { AllocationProfileNode } from './v8-types';
+import {AllocationProfileNode} from './v8-types';
 
 const binary = require('node-pre-gyp');
 const bindingPath = binary.find(

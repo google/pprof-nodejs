@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { perftools } from '../../proto/profile';
+import {perftools} from '../../proto/profile';
 import {
   GeneratedLocation,
   SourceLocation,
@@ -111,8 +111,6 @@ function serialize<T extends ProfileNode>(
   const samples: perftools.profiles.Sample[] = [];
   const locations: perftools.profiles.Location[] = [];
   const functions: perftools.profiles.Function[] = [];
-  const locationMap: Map<number, perftools.profiles.Location> = new Map();
-  const functionMap: Map<number, perftools.profiles.Function> = new Map();
   const functionIdMap = new Map<string, number>();
   const locationIdMap = new Map<string, number>();
 
@@ -131,7 +129,7 @@ function serialize<T extends ProfileNode>(
     stack.unshift(location.id as number);
     appendToSamples(entry, samples);
     for (const child of node.children as T[]) {
-      entries.push({ node: child, stack: stack.slice() });
+      entries.push({node: child, stack: stack.slice()});
     }
   }
 
@@ -170,7 +168,7 @@ function serialize<T extends ProfileNode>(
       profLoc.name,
       profLoc.line
     );
-    const location = new perftools.profiles.Location({ id, line: [line] });
+    const location = new perftools.profiles.Location({id, line: [line]});
     locations.push(location);
     return location;
   }

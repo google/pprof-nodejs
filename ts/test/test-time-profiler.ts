@@ -18,7 +18,7 @@ import delay from 'delay';
 import * as sinon from 'sinon';
 import * as time from '../src/time-profiler';
 import * as v8TimeProfiler from '../src/time-profiler-bindings';
-import { timeProfile, v8TimeProfile } from './profiles-for-tests';
+import {timeProfile, v8TimeProfile} from './profiles-for-tests';
 
 const assert = require('assert');
 
@@ -43,8 +43,8 @@ describe('Time Profiler', () => {
   });
 
   describe('profile (w/ stubs)', () => {
-    // tslint:disable-next-line: no-any
-    const sinonStubs: Array<sinon.SinonStub<any, any>> = new Array();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const sinonStubs: Array<sinon.SinonStub<any, any>> = [];
     before(() => {
       sinonStubs.push(sinon.stub(v8TimeProfiler, 'startProfiling'));
       sinonStubs.push(
@@ -62,7 +62,7 @@ describe('Time Profiler', () => {
 
     it('should profile during duration and finish profiling after duration', async () => {
       let isProfiling = true;
-      const profilePromise = time.profile(PROFILE_OPTIONS).then(() => {
+      time.profile(PROFILE_OPTIONS).then(() => {
         isProfiling = false;
       });
       await delay(2 * PROFILE_OPTIONS.durationMillis);
