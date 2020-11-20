@@ -1,5 +1,6 @@
 #!/bin/bash
 
+trap "cd $(dirname $0)/.. && npm run clean" EXIT
 trap "echo '** TEST FAILED **'" ERR
 
 . $(dirname $0)/../tools/retry.sh
