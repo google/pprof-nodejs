@@ -18,7 +18,7 @@ if [[ "$RUN_ONLY_V8_CANARY_TEST" == "true" ]]; then
   NVM_NODEJS_ORG_MIRROR="https://nodejs.org/download/v8-canary"
   NODE_VERSIONS=(node)
 else
-  NODE_VERSIONS=(10 12 14)
+  NODE_VERSIONS=(10 12 14 15)
 fi
 
 for i in ${NODE_VERSIONS[@]}; do
@@ -33,7 +33,7 @@ for i in ${NODE_VERSIONS[@]}; do
 
   # Test support for accurate line numbers with node versions supporting this
   # feature.
-  if [ "$i" != "10" ] && [ "$i" != "11" ]; then
+  if [ "$i" != "10" ]; then
     docker run  -v $PWD/..:/src -e BINARY_HOST="$BINARY_HOST" \
         -e VERIFY_TIME_LINE_NUMBERS="true" node$i-linux \
         /src/system-test/test.sh
