@@ -33,7 +33,7 @@
     "delay": "^4.0.1",
     "findit2": "^2.2.3",
     "nan": "^2.14.0",
-    "node-pre-gyp": "^0.16.0",
+    "node-pre-gyp": "^0.17.0",
     "p-limit": "^3.0.0",
     "pify": "^5.0.0",
     "protobufjs": "~6.10.0",
