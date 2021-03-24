@@ -110,7 +110,7 @@ Install [`pprof`][npm-url] with `npm` or add to your `package.json`.
 
 [circle-image]: https://circleci.com/gh/google/pprof-nodejs.svg?style=svg
 [circle-url]: https://circleci.com/gh/google/pprof-nodejs
-[coveralls-image]: https://coveralls.io/repos/google/pprof-nodejs/badge.svg?branch=master&service=github
+[coveralls-image]: https://coveralls.io/repos/google/pprof-nodejs/badge.svg?branch=main&service=github
 [npm-image]: https://badge.fury.io/js/pprof.svg
 [npm-url]: https://npmjs.org/package/pprof
 [pprof-url]: https://github.com/google/pprof
