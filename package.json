@@ -56,7 +56,7 @@
     "linkinator": "^2.0.0",
     "mocha": "^8.0.0",
     "nyc": "^15.0.0",
-    "sinon": "^10.0.0",
+    "sinon": "^11.0.0",
     "source-map-support": "^0.5.12",
     "tmp": "0.2.1",
     "ts-mockito": "^2.2.5",
