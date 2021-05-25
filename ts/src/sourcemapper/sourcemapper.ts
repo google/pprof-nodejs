@@ -84,9 +84,9 @@ async function processSourceMap(
     // TODO: Resolve the cast of `contents as any` (This is needed because the
     //       type is expected to be of `RawSourceMap` but the existing
     //       working code uses a string.)
-    consumer = ((await new sourceMap.SourceMapConsumer(
-      (contents as {}) as sourceMap.RawSourceMap
-    )) as {}) as sourceMap.RawSourceMap;
+    consumer = (await new sourceMap.SourceMapConsumer(
+      contents as {} as sourceMap.RawSourceMap
+    )) as {} as sourceMap.RawSourceMap;
   } catch (e) {
     throw new Error(
       'An error occurred while reading the ' +
@@ -206,7 +206,8 @@ export class SourceMapper {
     const generatedPos = {line: location.line, column: location.column};
 
     // TODO: Determine how to remove the explicit cast here.
-    const consumer: sourceMap.SourceMapConsumer = (entry.mapConsumer as {}) as sourceMap.SourceMapConsumer;
+    const consumer: sourceMap.SourceMapConsumer =
+      entry.mapConsumer as {} as sourceMap.SourceMapConsumer;
 
     const pos = consumer.originalPositionFor(generatedPos);
     if (pos.source === null) {
