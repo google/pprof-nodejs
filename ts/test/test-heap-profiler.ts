@@ -61,6 +61,7 @@ describe('HeapProfiler', () => {
         rss: 2048,
         heapTotal: 4096,
         heapUsed: 2048,
+        arrayBuffers: 512,
       });
       const intervalBytes = 1024 * 512;
       const stackDepth = 32;
@@ -78,6 +79,7 @@ describe('HeapProfiler', () => {
         rss: 2048,
         heapTotal: 4096,
         heapUsed: 2048,
+        arrayBuffers: 512,
       });
       const intervalBytes = 1024 * 512;
       const stackDepth = 32;
@@ -95,6 +97,7 @@ describe('HeapProfiler', () => {
         rss: 2048,
         heapTotal: 4096,
         heapUsed: 2048,
+        arrayBuffers: 512,
       });
       const intervalBytes = 1024 * 512;
       const stackDepth = 32;
