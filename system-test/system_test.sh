@@ -11,14 +11,14 @@ set -eox pipefail
 cd $(dirname $0)
 
 if [[ -z "$BINARY_HOST" ]]; then
-  ADDITIONAL_PACKAGES="python g++ make"
+  ADDITIONAL_PACKAGES="python3 g++ make"
 fi
 
 if [[ "$RUN_ONLY_V8_CANARY_TEST" == "true" ]]; then
   NVM_NODEJS_ORG_MIRROR="https://nodejs.org/download/v8-canary"
   NODE_VERSIONS=(node)
 else
-  NODE_VERSIONS=(10 12 14 15)
+  NODE_VERSIONS=(10 12 14 15 16)
 fi
 
 for i in ${NODE_VERSIONS[@]}; do
