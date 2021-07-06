@@ -48,7 +48,7 @@
     "@types/pretty-ms": "^4.0.0",
     "@types/request": "^2.47.1",
     "@types/sinon": "^10.0.0",
-    "@types/tmp": "0.2.0",
+    "@types/tmp": "0.2.1",
     "codecov": "^3.0.0",
     "deep-copy": "^1.4.2",
     "gts": "^3.0.0",
