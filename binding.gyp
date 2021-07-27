@@ -1,25 +1,36 @@
 {
   "targets": [
     {
-      "target_name": "pprof",
+      "target_name": "dd-pprof",
       "sources": [ 
         "bindings/profiler.cc",
       ],
-      "include_dirs": [ "<!(node -e \"require('nan')\")" ],
-      # TODO(#62): The following line suppresses compliation warnings
-      # originating from v8 and node that appear when gcc 8 is used.
-      # Once the warnings are fixed upstream, this line should be removed.
-      "cflags": [ "-Wno-cast-function-type" ]
-    },
-    {
-      "target_name": "action_after_build",
-      "type": "none",
-      "dependencies": [ "<(module_name)" ],
-      "copies": [
-        {
-          "files": [ "<(PRODUCT_DIR)/<(module_name).node" ],
-          "destination": "<(module_path)"
-        }
+      "include_dirs": ["<!(node -e \"require('nan')\")"],
+        "xcode_settings": {
+          "MACOSX_DEPLOYMENT_TARGET": "10.10",
+          "OTHER_CFLAGS": [
+              "-std=c++14",
+              "-stdlib=libc++",
+              "-Wall",
+              "-Werror"
+          ]
+      },
+        "conditions": [
+          ["OS == 'linux'", {
+              "cflags": [
+                  "-std=c++11",
+                  "-Wall",
+                  "-Werror"
+              ],
+              "cflags_cc": [
+                  "-Wno-cast-function-type"
+              ]
+          }],
+          ["OS == 'win'", {
+              "cflags": [
+                  "/WX"
+              ]
+          }]
       ]
     },
   ]

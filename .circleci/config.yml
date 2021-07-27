@@ -1,0 +1,393 @@
+version: 2.1
+
+orbs:
+  win: circleci/windows@2.2.0
+
+node-core-base: &node-core-base
+  resource_class: small
+  working_directory: ~/dd-pprof
+  steps:
+    - checkout
+    - &restore-npm-cache
+      restore_cache:
+        key: npm-{{ .Environment.CIRCLE_JOB }}-{{ checksum "package.json" }}
+    - &npm-install
+      run:
+        name: Install dependencies
+        command: npm install
+    - &save-npm-cache
+      save_cache:
+        key: npm-{{ .Environment.CIRCLE_JOB }}-{{ checksum "package.json" }}
+        paths:
+          - ./node_modules
+          - ./package-lock.json
+    - &npm-rebuild
+      run:
+        name: Compile native code
+        command: npm run rebuild
+    - &npm-test
+      run:
+        name: Unit tests
+        command: npm test
+    - store_test_results:
+        path: test-results
+        when: always
+
+prebuild-linux-base: &prebuild-linux-base
+  docker:
+    - image: node:10.0.0 # glibc needs to be old enough for older distros
+  working_directory: ~/dd-pprof
+  resource_class: small
+  steps:
+    - checkout
+    - *restore-npm-cache
+    - *npm-install
+    - *save-npm-cache
+    - &npm-prebuild
+      run:
+        name: Compile prebuilt binaries
+        command: npm run prebuild
+    - &persist-prebuilds
+      persist_to_workspace:
+        root: ~/dd-pprof
+        paths:
+          - prebuilds
+
+prebuild-linux-ia32-base: &prebuild-linux-ia32-base
+  <<: *prebuild-linux-base
+  steps:
+    - run:
+        name: Install job dependencies
+        command: apt-get update && apt-get install -y g++-multilib
+    - checkout
+    - *restore-npm-cache
+    - *npm-install
+    - *save-npm-cache
+    - *npm-prebuild
+    - *persist-prebuilds
+
+prebuild-darwin-base: &prebuild-darwin-base
+  macos:
+    xcode: "10.2.0"
+  working_directory: ~/dd-pprof
+  steps:
+    - checkout
+    - *restore-npm-cache
+    - *npm-install
+    - *save-npm-cache
+    - *npm-prebuild
+    - *persist-prebuilds
+
+prebuild-win32-base: &prebuild-win32-base
+  executor:
+    name: win/default
+    size: medium
+  working_directory: ~/dd-pprof
+  steps:
+    - checkout
+    - *restore-npm-cache
+    - *npm-install
+    - *save-npm-cache
+    - *npm-prebuild
+    - *persist-prebuilds
+
+prebuild-job: &prebuild-job
+  filters:
+    branches:
+      only:
+        - main
+        - /v\d+\.\d+/
+        - /v\d+\.x/
+        - /.*native.*/
+        - /^node-\d+/
+        - /prebuild/
+        - /.*/
+
+jobs:
+  # Linting
+
+  lint:
+    docker:
+      - image: node
+    working_directory: ~/dd-pprof
+    resource_class: small
+    steps:
+      - checkout
+      - *restore-npm-cache
+      - *npm-install
+      - *save-npm-cache
+      - run:
+          name: Lint
+          command: npm run lint
+
+  # Core tests
+
+  node-core-12:
+    <<: *node-core-base
+    docker:
+      - image: node:12
+
+  node-core-14:
+    <<: *node-core-base
+    docker:
+      - image: node:14
+
+  node-core-16:
+    <<: *node-core-base
+    docker:
+      - image: node:16
+
+  node-core-latest:
+    <<: *node-core-base
+    docker:
+      - image: node
+
+  # Windows tests
+
+  node-core-windows:
+    executor:
+      name: win/default
+      size: medium
+    working_directory: ~/dd-pprof
+    steps:
+      - checkout
+      - *restore-npm-cache
+      - *npm-install
+      - *save-npm-cache
+      - *npm-rebuild
+      - *npm-test
+
+  # Prebuilds (linux x64)
+
+  linux-x64-16:
+    <<: *prebuild-linux-base
+    docker:
+      - image: node:12.0.0
+    environment:
+      - ARCH=x64
+      - NODE_VERSIONS=15 - 16
+
+  linux-x64-14:
+    <<: *prebuild-linux-base
+    environment:
+      - ARCH=x64
+      - NODE_VERSIONS=14
+
+  linux-x64-12:
+    <<: *prebuild-linux-base
+    environment:
+      - ARCH=x64
+      - NODE_VERSIONS=12 - 13
+
+  # Prebuilds (alpine x64)
+
+  alpine-x64: &alpine-base
+    docker:
+      - image: node:alpine
+    working_directory: ~/dd-pprof
+    resource_class: small
+    steps:
+      - run:
+          name: Install job dependencies
+          command: apk add g++ git make python3
+      - checkout
+      - *restore-npm-cache
+      - *npm-install
+      - *save-npm-cache
+      - *npm-rebuild
+      - *npm-test
+
+  # Prebuilds (alpine ia32)
+
+  alpine-ia32:
+    <<: *alpine-base
+    docker:
+      - image: i386/node:alpine
+
+  # Prebuilds (linux ia32)
+
+  linux-ia32-12:
+    <<: *prebuild-linux-ia32-base
+    environment:
+      - ARCH=ia32
+      - NODE_VERSIONS=12 - 13
+
+  # Prebuilds (darwin x64)
+
+  mac-x64-16:
+    <<: *prebuild-darwin-base
+    environment:
+      - ARCH=x64
+      - NODE_VERSIONS=16
+
+  mac-x64-14:
+    <<: *prebuild-darwin-base
+    environment:
+      - ARCH=x64
+      - NODE_VERSIONS=14 - 15
+
+  mac-x64-12:
+    <<: *prebuild-darwin-base
+    environment:
+      - ARCH=x64
+      - NODE_VERSIONS=12 - 13
+
+  # Prebuilds (darwin ia32)
+
+  mac-ia32-16:
+    <<: *prebuild-darwin-base
+    environment:
+      - ARCH=ia32
+      - NODE_VERSIONS=16
+
+  mac-ia32-14:
+    <<: *prebuild-darwin-base
+    environment:
+      - ARCH=ia32
+      - NODE_VERSIONS=14 - 15
+
+  mac-ia32-12:
+    <<: *prebuild-darwin-base
+    environment:
+      - ARCH=ia32
+      - NODE_VERSIONS=12 - 13
+
+  # Prebuilds (win32 x64)
+
+  win-x64-16:
+    <<: *prebuild-win32-base
+    environment:
+      - ARCH=x64
+      - NODE_VERSIONS=16
+
+  win-x64-14:
+    <<: *prebuild-win32-base
+    environment:
+      - ARCH=x64
+      - NODE_VERSIONS=14 - 15
+
+  win-x64-12:
+    <<: *prebuild-win32-base
+    environment:
+      - ARCH=x64
+      - NODE_VERSIONS=12 - 13
+
+  # Prebuilds (win32 ia32)
+
+  win-ia32-16:
+    <<: *prebuild-win32-base
+    environment:
+      - ARCH=ia32
+      - NODE_VERSIONS=16
+
+  win-ia32-14:
+    <<: *prebuild-win32-base
+    environment:
+      - ARCH=ia32
+      - NODE_VERSIONS=14 - 15
+
+  win-ia32-12:
+    <<: *prebuild-win32-base
+    environment:
+      - ARCH=ia32
+      - NODE_VERSIONS=12 - 13
+
+  # Prebuild Artifacts
+
+  prebuilds:
+    docker:
+      - image: node
+    working_directory: ~/dd-pprof
+    resource_class: small
+    steps:
+      - checkout
+      - attach_workspace:
+          at: ~/dd-pprof
+      - *restore-npm-cache
+      - *npm-install
+      - *save-npm-cache
+      - run:
+          name: Create prebuilds archive
+          command: npm run prebuilds
+      - store_artifacts:
+          path: ./prebuilds.tgz
+      - store_artifacts:
+          path: ./prebuilds.tgz.sha1
+
+workflows:
+  version: 2
+  build:
+    jobs:
+      - lint
+      - node-core-12
+      - node-core-14
+      - node-core-16
+      - node-core-latest
+      - node-core-windows
+  prebuild:
+    jobs:
+      # Linux x64
+      - linux-x64-16:
+          <<: *prebuild-job
+      - linux-x64-14:
+          <<: *prebuild-job
+      - linux-x64-12:
+          <<: *prebuild-job
+      # Linux ia32
+      - linux-ia32-12:
+          <<: *prebuild-job
+      # Alpine x64
+      - alpine-x64:
+          <<: *prebuild-job
+      # Alpine ia32
+      - alpine-ia32:
+          <<: *prebuild-job
+      # Darwin x64
+      - mac-x64-16:
+          <<: *prebuild-job
+      - mac-x64-14:
+          <<: *prebuild-job
+      - mac-x64-12:
+          <<: *prebuild-job
+      # Darwin ia32
+      - mac-ia32-16:
+          <<: *prebuild-job
+      - mac-ia32-14:
+          <<: *prebuild-job
+      - mac-ia32-12:
+          <<: *prebuild-job
+      # Windows x64
+      - win-x64-16:
+          <<: *prebuild-job
+      - win-x64-14:
+          <<: *prebuild-job
+      - win-x64-12:
+          <<: *prebuild-job
+      # Windows ia32
+      - win-ia32-16:
+          <<: *prebuild-job
+      - win-ia32-14:
+          <<: *prebuild-job
+      - win-ia32-12:
+          <<: *prebuild-job
+      # Artifacts
+      - prebuilds:
+          requires:
+            - linux-x64-16
+            - linux-x64-14
+            - linux-x64-12
+            - linux-ia32-12
+            - alpine-x64
+            - alpine-ia32
+            - mac-x64-16
+            - mac-x64-14
+            - mac-x64-12
+            - mac-ia32-16
+            - mac-ia32-14
+            - mac-ia32-12
+            - win-x64-16
+            - win-x64-14
+            - win-x64-12
+            - win-ia32-16
+            - win-ia32-14
+            - win-ia32-12

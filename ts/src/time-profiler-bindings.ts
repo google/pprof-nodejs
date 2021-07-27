@@ -16,11 +16,8 @@
 import * as path from 'path';
 import {TimeProfile} from './v8-types';
 
-const binary = require('@mapbox/node-pre-gyp');
-const bindingPath = binary.find(
-  path.resolve(path.join(__dirname, '../../package.json'))
-);
-const profiler = require(bindingPath);
+const findBinding = require('node-gyp-build');
+const profiler = findBinding(path.join(__dirname, '..', '..'));
 
 // Wrappers around native time profiler functions.
 export function startProfiling(runName: string, includeLineInfo?: boolean) {

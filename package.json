@@ -1,12 +1,14 @@
 {
-  "name": "pprof",
-  "version": "3.2.0",
+  "name": "@datadog/pprof",
+  "version": "0.1.0",
   "description": "pprof support for Node.js",
-  "repository": "google/pprof-nodejs",
+  "repository": "datadog/pprof-nodejs",
   "main": "out/src/index.js",
   "types": "out/src/index.d.ts",
   "scripts": {
-    "install": "node-pre-gyp install --fallback-to-build",
+    "preinstall": "node scripts/preinstall.js",
+    "install": "(node scripts/should_rebuild && node-gyp-build) || exit 0",
+    "rebuild": "node-gyp rebuild --jobs=max",
     "test": "nyc mocha  out/test/test-*.js",
     "check": "gts check",
     "clean": "gts clean && node-gyp clean",
@@ -15,8 +17,11 @@
     "fix": "gts fix",
     "lint": "gts check",
     "docs": "echo 'no docs yet'",
+    "prebuild": "node scripts/prebuild.js",
+    "prebuilds": "node scripts/prebuilds.js",
     "prepare": "npm run compile",
-    "pretest": "npm run compile && node-pre-gyp install --build-from-source",
+    "prepublishOnly": "node scripts/prepublish.js",
+    "pretest": "npm run compile && npm run rebuild",
     "posttest": "npm run check && npm run license-check",
     "proto": "npm run proto:profile",
     "proto:profile": "mkdir -p proto && pbjs -t static-module -w commonjs -o proto/profile.js third_party/proto/profile.proto && pbts -o proto/profile.d.ts proto/profile.js",
@@ -29,14 +34,14 @@
   },
   "license": "Apache-2.0",
   "dependencies": {
-    "bindings": "^1.2.1",
     "delay": "^5.0.0",
     "findit2": "^2.2.3",
     "nan": "^2.14.0",
-    "@mapbox/node-pre-gyp": "^1.0.0",
     "p-limit": "^3.0.0",
     "pify": "^5.0.0",
     "protobufjs": "~6.11.0",
+    "rimraf": "^3.0.2",
+    "semver": "^7.3.5",
     "source-map": "^0.7.3",
     "split": "^1.0.1"
   },
@@ -49,15 +54,23 @@
     "@types/request": "^2.47.1",
     "@types/sinon": "^10.0.0",
     "@types/tmp": "0.2.1",
+    "axios": "^0.21.1",
+    "checksum": "^0.1.1",
     "codecov": "^3.0.0",
     "deep-copy": "^1.4.2",
+    "glob": "^7.1.7",
     "gts": "^3.0.0",
     "js-green-licenses": "^3.0.0",
     "linkinator": "^2.0.0",
+    "mkdirp": "^1.0.4",
     "mocha": "^8.0.0",
+    "node-gyp-build": "^4.2.3",
     "nyc": "^15.0.0",
+    "rimraf": "^3.0.2",
+    "semver": "^7.3.5",
     "sinon": "^11.1.0",
     "source-map-support": "^0.5.12",
+    "tar": "^6.1.0",
     "tmp": "0.2.1",
     "ts-mockito": "^2.2.5",
     "typescript": "~4.3.0"
@@ -81,15 +94,5 @@
   },
   "engines": {
     "node": ">=10.4.1"
-  },
-  "binary": {
-    "module_name": "pprof",
-    "module_path": "./build/{node_abi}-{platform}-{arch}-{libc}",
-    "host": "https://storage.googleapis.com/cloud-profiler/pprof-nodejs/release",
-    "remote_path": "v{version}",
-    "package_name": "{node_abi}-{platform}-{arch}-{libc}.tar.gz"
-  },
-  "publishConfig": {
-    "registry": "https://wombat-dressing-room.appspot.com"
   }
 }
