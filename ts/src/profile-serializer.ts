@@ -224,13 +224,13 @@ function createSampleCountValueType(
 }
 
 /**
- * @return value type for time samples (type:wall, units:microseconds), and
+ * @return value type for time samples (type:wall, units:nanoseconds), and
  * adds strings used in this value type to the table.
  */
 function createTimeValueType(table: StringTable): perftools.profiles.ValueType {
   return new perftools.profiles.ValueType({
     type: table.getIndexOrAdd('wall'),
-    unit: table.getIndexOrAdd('microseconds'),
+    unit: table.getIndexOrAdd('nanoseconds'),
   });
 }
 
@@ -272,6 +272,7 @@ export function serializeTimeProfile(
   intervalMicros: number,
   sourceMapper?: SourceMapper
 ): perftools.profiles.IProfile {
+  const intervalNanos = intervalMicros * 1000;
   const appendTimeEntryToSamples: AppendEntryToSamples<TimeProfileNode> = (
     entry: Entry<TimeProfileNode>,
     samples: perftools.profiles.Sample[]
@@ -279,7 +280,7 @@ export function serializeTimeProfile(
     if (entry.node.hitCount > 0) {
       const sample = new perftools.profiles.Sample({
         locationId: entry.stack,
-        value: [entry.node.hitCount, entry.node.hitCount * intervalMicros],
+        value: [entry.node.hitCount, entry.node.hitCount * intervalNanos],
       });
       samples.push(sample);
     }

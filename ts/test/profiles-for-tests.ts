@@ -143,22 +143,22 @@ export const timeProfile: perftools.profiles.IProfile = Object.freeze({
   sample: [
     new perftools.profiles.Sample({
       locationId: [2, 1],
-      value: [1, 1000],
+      value: [1, 1000000],
       label: [],
     }),
     new perftools.profiles.Sample({
       locationId: [2],
-      value: [3, 3000],
+      value: [3, 3000000],
       label: [],
     }),
     new perftools.profiles.Sample({
       locationId: [3, 2],
-      value: [2, 2000],
+      value: [2, 2000000],
       label: [],
     }),
     new perftools.profiles.Sample({
       locationId: [4, 2],
-      value: [1, 1000],
+      value: [1, 1000000],
       label: [],
     }),
   ],
@@ -169,7 +169,7 @@ export const timeProfile: perftools.profiles.IProfile = Object.freeze({
     'sample',
     'count',
     'wall',
-    'microseconds',
+    'nanoseconds',
     'function2',
     'script2',
     'function1',
@@ -578,7 +578,7 @@ export const anonymousFunctionTimeProfile: perftools.profiles.IProfile =
     sample: [
       new perftools.profiles.Sample({
         locationId: [1],
-        value: [1, 1000],
+        value: [1, 1000000],
         label: [],
       }),
     ],
@@ -589,7 +589,7 @@ export const anonymousFunctionTimeProfile: perftools.profiles.IProfile =
       'sample',
       'count',
       'wall',
-      'microseconds',
+      'nanoseconds',
       '(anonymous)',
       'main',
     ],
@@ -1105,12 +1105,12 @@ export const timeSourceProfile: perftools.profiles.IProfile = Object.freeze({
   sample: [
     new perftools.profiles.Sample({
       locationId: [2, 1],
-      value: [5, 5000],
+      value: [5, 5000000],
       label: [],
     }),
     new perftools.profiles.Sample({
       locationId: [4, 3, 1],
-      value: [10, 10000],
+      value: [10, 10000000],
       label: [],
     }),
   ],
@@ -1121,7 +1121,7 @@ export const timeSourceProfile: perftools.profiles.IProfile = Object.freeze({
     'sample',
     'count',
     'wall',
-    'microseconds',
+    'nanoseconds',
     'foo1',
     path.join(mapDirPath, 'foo.ts'),
     'foo2',
