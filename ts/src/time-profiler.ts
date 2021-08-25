@@ -78,13 +78,19 @@ export function start(
   // undocumented API.
   // See https://github.com/nodejs/node/issues/19009#issuecomment-403161559.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  (process as any)._startProfilerIdleNotifier();
+  if (typeof (process as any)._startProfilerIdleNotifier === 'function') {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (process as any)._startProfilerIdleNotifier();
+  }
   startProfiling(runName, lineNumbers);
   return function stop() {
     profiling = false;
     const result = stopProfiling(runName, lineNumbers);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (process as any)._stopProfilerIdleNotifier();
+    if (typeof (process as any)._stopProfilerIdleNotifier === 'function') {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (process as any)._stopProfilerIdleNotifier();
+    }
     const profile = serializeTimeProfile(result, intervalMicros, sourceMapper);
     return profile;
   };

@@ -16,6 +16,7 @@
 
 #include <memory>
 
+#include <node.h>
 #include "nan.h"
 #include "v8-profiler.h"
 
@@ -352,7 +353,11 @@ NAN_METHOD(SetSamplingInterval) {
 #endif
 }
 
-NAN_MODULE_INIT(InitAll) {
+extern "C" NODE_MODULE_EXPORT void
+NODE_MODULE_INITIALIZER(Local<Object> target,
+                        Local<Value> module,
+                        Local<Context> context)
+{
   Local<Object> timeProfiler = Nan::New<Object>();
   Nan::Set(timeProfiler, Nan::New("startProfiling").ToLocalChecked(),
            Nan::GetFunction(Nan::New<FunctionTemplate>(StartProfiling))
@@ -381,5 +386,3 @@ NAN_MODULE_INIT(InitAll) {
   Nan::Set(target, Nan::New<String>("heapProfiler").ToLocalChecked(),
            heapProfiler);
 }
-
-NODE_MODULE(google_cloud_profiler, InitAll);
