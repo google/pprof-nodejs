@@ -29,10 +29,10 @@ const PROFILE_OPTIONS = {
 
 describe('Time Profiler', () => {
   describe('profile', () => {
-    it('should detect program or idle time', async () => {
+    it('should exclude program and idle time', async () => {
       const profile = await time.profile(PROFILE_OPTIONS);
       assert.ok(profile.stringTable);
-      assert.notDeepEqual(
+      assert.deepEqual(
         [
           profile.stringTable!.indexOf('(program)'),
           profile.stringTable!.indexOf('(idle)'),

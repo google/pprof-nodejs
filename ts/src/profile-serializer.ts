@@ -124,6 +124,7 @@ function serialize<T extends ProfileNode>(
     if (ignoreSamplesPath && node.scriptName.indexOf(ignoreSamplesPath) > -1) {
       continue;
     }
+    if (node.name === '(idle)' || node.name === '(program)') continue;
     const stack = entry.stack;
     const location = getLocation(node, sourceMapper);
     stack.unshift(location.id as number);
