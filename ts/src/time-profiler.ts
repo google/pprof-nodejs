@@ -18,13 +18,7 @@ import delay from 'delay';
 
 import {serializeTimeProfile} from './profile-serializer';
 import {SourceMapper} from './sourcemapper/sourcemapper';
-import {
-  setSamplingInterval,
-  startProfiling,
-  stopProfiling,
-} from './time-profiler-bindings';
-
-let profiling = false;
+import {TimeProfiler} from './time-profiler-bindings';
 
 const DEFAULT_INTERVAL_MICROS: Microseconds = 1000;
 
@@ -63,15 +57,11 @@ export function start(
   intervalMicros: Microseconds = DEFAULT_INTERVAL_MICROS,
   name?: string,
   sourceMapper?: SourceMapper,
-  lineNumbers?: boolean
+  lineNumbers = true
 ) {
-  if (profiling) {
-    throw new Error('already profiling');
-  }
-
-  profiling = true;
   const runName = name || `pprof-${Date.now()}-${Math.random()}`;
-  setSamplingInterval(intervalMicros);
+  const profiler = new TimeProfiler(intervalMicros);
+  profiler.start(runName, lineNumbers);
   // Node.js contains an undocumented API for reporting idle status to V8.
   // This lets the profiler distinguish idle time from time spent in native
   // code. Ideally this should be default behavior. Until then, use the
@@ -82,10 +72,8 @@ export function start(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (process as any)._startProfilerIdleNotifier();
   }
-  startProfiling(runName, lineNumbers);
   return function stop() {
-    profiling = false;
-    const result = stopProfiling(runName, lineNumbers);
+    const result = profiler.stop(runName, lineNumbers);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     if (typeof (process as any)._stopProfilerIdleNotifier === 'function') {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -9,7 +9,7 @@
     "preinstall": "node scripts/preinstall.js",
     "install": "(node scripts/should_rebuild && node-gyp-build) || exit 0",
     "rebuild": "node-gyp rebuild --jobs=max",
-    "test": "nyc node ./out/test/runner.js",
+    "test": "nyc mocha out/test/test-*.js",
     "check": "gts check",
     "clean": "gts clean && node-gyp clean",
     "codecov": "nyc report --reporter=json && codecov -f coverage/*.json",
@@ -97,6 +97,6 @@
     ]
   },
   "engines": {
-    "node": ">=10.4.1"
+    "node": ">=12.0.0"
   }
 }

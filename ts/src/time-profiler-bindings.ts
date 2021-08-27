@@ -13,24 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import * as path from 'path';
-import {TimeProfile} from './v8-types';
+import {join} from 'path';
 
 const findBinding = require('node-gyp-build');
-const profiler = findBinding(path.join(__dirname, '..', '..'));
+const profiler = findBinding(join(__dirname, '..', '..'));
 
-// Wrappers around native time profiler functions.
-export function startProfiling(runName: string, includeLineInfo?: boolean) {
-  profiler.timeProfiler.startProfiling(runName, includeLineInfo || false);
-}
-
-export function stopProfiling(
-  runName: string,
-  includeLineInfo?: boolean
-): TimeProfile {
-  return profiler.timeProfiler.stopProfiling(runName, includeLineInfo || false);
-}
-
-export function setSamplingInterval(intervalMicros: number) {
-  profiler.timeProfiler.setSamplingInterval(intervalMicros);
-}
+export const TimeProfiler = profiler.TimeProfiler;

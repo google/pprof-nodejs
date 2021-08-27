@@ -46,11 +46,14 @@ describe('Time Profiler', () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const sinonStubs: Array<sinon.SinonStub<any, any>> = [];
     before(() => {
-      sinonStubs.push(sinon.stub(v8TimeProfiler, 'startProfiling'));
       sinonStubs.push(
-        sinon.stub(v8TimeProfiler, 'stopProfiling').returns(v8TimeProfile)
+        sinon.stub(v8TimeProfiler, 'TimeProfiler').returns({
+          start() {},
+          stop() {
+            return v8TimeProfile;
+          },
+        })
       );
-      sinonStubs.push(sinon.stub(v8TimeProfiler, 'setSamplingInterval'));
       sinonStubs.push(sinon.stub(Date, 'now').returns(0));
     });
 

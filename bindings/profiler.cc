@@ -96,22 +96,6 @@ NAN_METHOD(GetAllocationProfile) {
   info.GetReturnValue().Set(TranslateAllocationProfile(root));
 }
 
-// Time profiler
-#if NODE_MODULE_VERSION >= NODE_12_0_MODULE_VERSION
-// For Node 12 and Node 14, a new CPU profiler object will be created each
-// time profiling is started to work around
-// https://bugs.chromium.org/p/v8/issues/detail?id=11051.
-CpuProfiler* cpuProfiler;
-// Default sampling interval is 1000us.
-int samplingIntervalUS = 1000;
-#elif NODE_MODULE_VERSION > NODE_8_0_MODULE_VERSION
-// This profiler exists for the lifetime of the program. Not calling
-// CpuProfiler::Dispose() is intentional.
-CpuProfiler* cpuProfiler = CpuProfiler::New(v8::Isolate::GetCurrent());
-#else
-CpuProfiler* cpuProfiler = v8::Isolate::GetCurrent()->GetCpuProfiler();
-#endif
-
 Local<Object> CreateTimeNode(Local<String> name, Local<String> scriptName,
                              Local<Integer> scriptId, Local<Integer> lineNumber,
                              Local<Integer> columnNumber,
@@ -131,7 +115,6 @@ Local<Object> CreateTimeNode(Local<String> name, Local<String> scriptName,
   return js_node;
 }
 
-#if NODE_MODULE_VERSION > NODE_11_0_MODULE_VERSION
 Local<Object> TranslateLineNumbersTimeProfileNode(const CpuProfileNode* parent,
                                                   const CpuProfileNode* node);
 
@@ -217,7 +200,6 @@ Local<Value> TranslateLineNumbersTimeProfileRoot(const CpuProfileNode* node) {
                         Nan::New<Integer>(node->GetColumnNumber()),
                         Nan::New<Integer>(0), children);
 }
-#endif
 
 Local<Value> TranslateTimeProfileNode(const CpuProfileNode* node) {
   int32_t count = node->GetChildrenCount();
@@ -258,131 +240,145 @@ Local<Value> TranslateTimeProfile(const CpuProfile* profile,
   return js_profile;
 }
 
-// Signature:
-// startProfiling(runName: string, includeLineInfo: boolean)
-NAN_METHOD(StartProfiling) {
-  if (info.Length() != 2) {
-    return Nan::ThrowTypeError("StartProfiling must have two arguments.");
-  }
-  if (!info[0]->IsString()) {
-    return Nan::ThrowTypeError("First argument must be a string.");
-  }
-  if (!info[1]->IsBoolean()) {
-    return Nan::ThrowTypeError("Second argument must be a boolean.");
+class TimeProfiler : public Nan::ObjectWrap {
+ public:
+  static inline Nan::Persistent<v8::Function> & constructor() {
+    static Nan::Persistent<v8::Function> my_constructor;
+    return my_constructor;
   }
 
-#if NODE_MODULE_VERSION >= NODE_12_0_MODULE_VERSION
-  // Since the CPU profiler is created and destroyed each time a CPU
-  // profile is collected, there cannot be multiple CPU profiling requests
-  // inflight in parallel.
-  if (cpuProfiler) {
-    return Nan::ThrowError("CPU profiler is already started.");
-  }
-  cpuProfiler = CpuProfiler::New(v8::Isolate::GetCurrent());
-  cpuProfiler->SetSamplingInterval(samplingIntervalUS);
-#endif
+  explicit TimeProfiler(int interval) {
+    Isolate* isolate = Isolate::GetCurrent();
 
-  Local<String> name =
-      Nan::MaybeLocal<String>(info[0].As<String>()).ToLocalChecked();
-
-  // Sample counts and timestamps are not used, so we do not need to record
-  // samples.
-  const bool recordSamples = false;
-
-// Line level accurate line information is not available in Node 11 or earlier.
-#if NODE_MODULE_VERSION > NODE_11_0_MODULE_VERSION
-  bool includeLineInfo =
-      Nan::MaybeLocal<Boolean>(info[1].As<Boolean>()).ToLocalChecked()->Value();
-  if (includeLineInfo) {
-    cpuProfiler->StartProfiling(name, CpuProfilingMode::kCallerLineNumbers,
-                                recordSamples);
-  } else {
-    cpuProfiler->StartProfiling(name, recordSamples);
+    // A new CPU profiler object will be created each time profiling is started
+    // to work around https://bugs.chromium.org/p/v8/issues/detail?id=11051.
+    cpuProfiler = CpuProfiler::New(isolate);
+    cpuProfiler->SetSamplingInterval(interval);
   }
-#else
-  cpuProfiler->StartProfiling(name, recordSamples);
-#endif
-}
 
-// Signature:
-// stopProfiling(runName: string, includeLineInfo: boolean): TimeProfile
-NAN_METHOD(StopProfiling) {
-#if NODE_MODULE_VERSION >= NODE_12_0_MODULE_VERSION
-  if (!cpuProfiler) {
-    return Nan::ThrowError("StopProfiling called without an active CPU profiler.");
-  }
-#endif
-  if (info.Length() != 2) {
-    return Nan::ThrowTypeError("StopProfling must have two arguments.");
-  }
-  if (!info[0]->IsString()) {
-    return Nan::ThrowTypeError("First argument must be a string.");
-  }
-  if (!info[1]->IsBoolean()) {
-    return Nan::ThrowTypeError("Second argument must be a boolean.");
-  }
-  Local<String> name =
-      Nan::MaybeLocal<String>(info[0].As<String>()).ToLocalChecked();
-  bool includeLineInfo =
-      Nan::MaybeLocal<Boolean>(info[1].As<Boolean>()).ToLocalChecked()->Value();
+  static NAN_METHOD(New) {
+    if (info.Length() != 1) {
+      return Nan::ThrowTypeError("TimeProfiler must have one argument.");
+    }
+    if (!info[0]->IsNumber()) {
+      return Nan::ThrowTypeError("Sample rate must be a number.");
+    }
 
-  CpuProfile* profile = cpuProfiler->StopProfiling(name);
-  Local<Value> translated_profile =
-      TranslateTimeProfile(profile, includeLineInfo);
-  profile->Delete();
-#if NODE_MODULE_VERSION >= NODE_12_0_MODULE_VERSION
-  // Dispose of CPU profiler to work around memory leak.
-  cpuProfiler->Dispose();
-  cpuProfiler = NULL;
-#endif
-  info.GetReturnValue().Set(translated_profile);
-}
+    if (info.IsConstructCall()) {
+      int interval =
+          Nan::MaybeLocal<Integer>(info[0].As<Integer>()).ToLocalChecked()->Value();
 
-// Signature:
-// setSamplingInterval(intervalMicros: number)
-NAN_METHOD(SetSamplingInterval) {
-#if NODE_MODULE_VERSION > NODE_8_0_MODULE_VERSION
-  int us = info[0].As<Integer>()->Value();
-#else
-  int us = info[0].As<Integer>()->IntegerValue();
-#endif
-#if NODE_MODULE_VERSION >= NODE_12_0_MODULE_VERSION
-  samplingIntervalUS = us;
-#else
-  cpuProfiler->SetSamplingInterval(us);
-#endif
-}
+      TimeProfiler* obj = new TimeProfiler(interval);
+      obj->Wrap(info.This());
+      info.GetReturnValue().Set(info.This());
+    } else {
+      const int argc = 1;
+      v8::Local<v8::Value> argv[argc] = {info[0]};
+      v8::Local<v8::Function> cons = Nan::New(constructor());
+      info.GetReturnValue().Set(Nan::NewInstance(cons, argc, argv).ToLocalChecked());
+    }
+  }
+
+  void StartProfiling(Local<String> name, bool includeLines) {
+    // Sample counts and timestamps are not used, so we do not need to record
+    // samples.
+    const bool recordSamples = false;
+
+    if (includeLines) {
+      cpuProfiler->StartProfiling(name, CpuProfilingMode::kCallerLineNumbers,
+                                  recordSamples);
+    } else {
+      cpuProfiler->StartProfiling(name, recordSamples);
+    }
+  }
+
+  static NAN_METHOD(Start) {
+    TimeProfiler* timeProfiler =
+        Nan::ObjectWrap::Unwrap<TimeProfiler>(info.Holder());
+
+    if (info.Length() != 2) {
+      return Nan::ThrowTypeError("Start must have two arguments.");
+    }
+    if (!info[0]->IsString()) {
+      return Nan::ThrowTypeError("Profile name must be a string.");
+    }
+    if (!info[1]->IsBoolean()) {
+      return Nan::ThrowTypeError("Include lines must be a boolean.");
+    }
+
+    Local<String> name =
+        Nan::MaybeLocal<String>(info[0].As<String>()).ToLocalChecked();
+
+    bool includeLines =
+        Nan::MaybeLocal<Boolean>(info[1].As<Boolean>()).ToLocalChecked()->Value();
+
+    timeProfiler->StartProfiling(name, includeLines);
+  }
+
+  Local<Value> StopProfiling(Local<String> name, bool includeLines) {
+    CpuProfile* profile = cpuProfiler->StopProfiling(name);
+    Local<Value> translated_profile =
+        TranslateTimeProfile(profile, includeLines);
+    profile->Delete();
+    // Dispose of CPU profiler to work around memory leak.
+    cpuProfiler->Dispose();
+    cpuProfiler = NULL;
+    return translated_profile;
+  }
+
+  static NAN_METHOD(Stop) {
+    TimeProfiler* timeProfiler =
+        Nan::ObjectWrap::Unwrap<TimeProfiler>(info.Holder());
+
+    if (info.Length() != 2) {
+      return Nan::ThrowTypeError("Start must have two arguments.");
+    }
+    if (!info[0]->IsString()) {
+      return Nan::ThrowTypeError("Profile name must be a string.");
+    }
+    if (!info[1]->IsBoolean()) {
+      return Nan::ThrowTypeError("Include lines must be a boolean.");
+    }
+
+    Local<String> name =
+        Nan::MaybeLocal<String>(info[0].As<String>()).ToLocalChecked();
+
+    bool includeLines =
+        Nan::MaybeLocal<Boolean>(info[1].As<Boolean>()).ToLocalChecked()->Value();
+
+    Local<Value> profile = timeProfiler->StopProfiling(name, includeLines);
+    info.GetReturnValue().Set(profile);
+  }
+
+  static NAN_MODULE_INIT(Init) {
+    Local<FunctionTemplate> tpl = Nan::New<FunctionTemplate>(New);
+    Local<String> className = Nan::New("TimeProfiler").ToLocalChecked();
+    tpl->SetClassName(className);
+    tpl->InstanceTemplate()->SetInternalFieldCount(1);
+
+    Nan::SetPrototypeMethod(tpl, "start", Start);
+    Nan::SetPrototypeMethod(tpl, "stop", Stop);
+
+    constructor().Reset(Nan::GetFunction(tpl).ToLocalChecked());
+    Nan::Set(target, className, Nan::GetFunction(tpl).ToLocalChecked());
+  }
+ private:
+  CpuProfiler* cpuProfiler;
+};
 
 extern "C" NODE_MODULE_EXPORT void
 NODE_MODULE_INITIALIZER(Local<Object> target,
                         Local<Value> module,
-                        Local<Context> context)
-{
-  Local<Object> timeProfiler = Nan::New<Object>();
-  Nan::Set(timeProfiler, Nan::New("startProfiling").ToLocalChecked(),
-           Nan::GetFunction(Nan::New<FunctionTemplate>(StartProfiling))
-               .ToLocalChecked());
-  Nan::Set(timeProfiler, Nan::New("stopProfiling").ToLocalChecked(),
-           Nan::GetFunction(Nan::New<FunctionTemplate>(StopProfiling))
-               .ToLocalChecked());
-  Nan::Set(timeProfiler, Nan::New("setSamplingInterval").ToLocalChecked(),
-           Nan::GetFunction(Nan::New<FunctionTemplate>(SetSamplingInterval))
-               .ToLocalChecked());
-  Nan::Set(target, Nan::New<String>("timeProfiler").ToLocalChecked(),
-           timeProfiler);
+                        Local<Context> context) {
+  TimeProfiler::Init(target);
 
   Local<Object> heapProfiler = Nan::New<Object>();
-  Nan::Set(
-      heapProfiler, Nan::New("startSamplingHeapProfiler").ToLocalChecked(),
-      Nan::GetFunction(Nan::New<FunctionTemplate>(StartSamplingHeapProfiler))
-          .ToLocalChecked());
-  Nan::Set(
-      heapProfiler, Nan::New("stopSamplingHeapProfiler").ToLocalChecked(),
-      Nan::GetFunction(Nan::New<FunctionTemplate>(StopSamplingHeapProfiler))
-          .ToLocalChecked());
-  Nan::Set(heapProfiler, Nan::New("getAllocationProfile").ToLocalChecked(),
-           Nan::GetFunction(Nan::New<FunctionTemplate>(GetAllocationProfile))
-               .ToLocalChecked());
+  Nan::SetMethod(heapProfiler, "startSamplingHeapProfiler",
+                 StartSamplingHeapProfiler);
+  Nan::SetMethod(heapProfiler, "stopSamplingHeapProfiler",
+                 StopSamplingHeapProfiler);
+  Nan::SetMethod(heapProfiler, "getAllocationProfile",
+                 GetAllocationProfile);
   Nan::Set(target, Nan::New<String>("heapProfiler").ToLocalChecked(),
            heapProfiler);
 }
