@@ -35,7 +35,9 @@ node-core-base: &node-core-base
 
 prebuild-linux-base: &prebuild-linux-base
   docker:
-    - image: node:10.0.0 # glibc needs to be old enough for older distros
+    # from node:10.0.0 on 2021-08-30
+    # glibc needs to be old enough for older distros
+    - image: node@sha256:4013aa6c297808defd01234fce4a42e1ca0518a5bd0260752a86a46542b38206
   working_directory: ~/dd-pprof
   resource_class: small
   steps:
