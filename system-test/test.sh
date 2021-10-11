@@ -21,6 +21,9 @@ npm_install() {
 set -eox pipefail
 cd $(dirname $0)/..
 
+# Install supported Python version to build Node.js binaries with node-gyp.
+sudo apt-get update && sudo apt-get install python3.6
+
 NODEDIR=$(dirname $(dirname $(which node)))
 
 # TODO: Remove when a new version of nan (current version 2.12.1) is released.
