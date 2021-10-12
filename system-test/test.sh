@@ -22,7 +22,9 @@ set -eox pipefail
 cd $(dirname $0)/..
 
 # Install supported Python version to build Node.js binaries with node-gyp.
-sudo apt-get update && sudo apt-get install python3.6
+apt-get update
+apt-get install python3.6
+
 alias python3=python3.6
 
 NODEDIR=$(dirname $(dirname $(which node)))
