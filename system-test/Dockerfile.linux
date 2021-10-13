@@ -15,11 +15,6 @@ ARG VERIFY_TIME_LINE_NUMBERS
 RUN apt-get update && apt-get install -y curl $ADDITIONAL_PACKAGES \
     && rm -rf /var/lib/apt/lists/*
 
-RUN apt-get update && apt-get install -y software-properties-common && \
-    add-apt-repository -y ppa:deadsnakes/ppa
-
-RUN apt-get update && apt-get install -y python3.6
-
 ENV NVM_DIR /bin/.nvm
 RUN mkdir -p $NVM_DIR
 
