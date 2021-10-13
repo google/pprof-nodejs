@@ -21,6 +21,7 @@ npm_install() {
 set -eox pipefail
 cd $(dirname $0)/..
 
+add-apt-repository ppa:deadsnakes/ppa
 apt-get update && apt-get install python3.6
 
 NODEDIR=$(dirname $(dirname $(which node)))
