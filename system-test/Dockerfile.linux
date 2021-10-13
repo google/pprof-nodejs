@@ -12,7 +12,9 @@ ARG NVM_NODEJS_ORG_MIRROR
 ARG ADDITIONAL_PACKAGES
 ARG VERIFY_TIME_LINE_NUMBERS
 
-RUN apt-get update && apt-get install -y curl $ADDITIONAL_PACKAGES \
+RUN apt-get update && apt-get install -y software-properties-common \
+    && add-apt-repository -y ppa:deadsnakes/ppa \
+    && apt-get update && apt-get install -y curl $ADDITIONAL_PACKAGES \
     && rm -rf /var/lib/apt/lists/*
 
 ENV NVM_DIR /bin/.nvm
