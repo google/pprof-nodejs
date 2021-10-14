@@ -11,7 +11,7 @@ set -eox pipefail
 cd $(dirname $0)
 
 if [[ -z "$BINARY_HOST" ]]; then
-  ADDITIONAL_PACKAGES="g++ make"
+  ADDITIONAL_PACKAGES="python3.6 g++ make"
 fi
 
 if [[ "$RUN_ONLY_V8_CANARY_TEST" == "true" ]]; then
