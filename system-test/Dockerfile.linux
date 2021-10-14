@@ -5,7 +5,7 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /root/
 RUN go get github.com/google/pprof
 
-FROM debian:stretch
+FROM debian:11
 
 ARG NODE_VERSION
 ARG NVM_NODEJS_ORG_MIRROR
