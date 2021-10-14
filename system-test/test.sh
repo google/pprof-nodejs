@@ -22,8 +22,8 @@ set -eox pipefail
 cd $(dirname $0)/..
 
 alias python3=python3.6
-which python3
-which python3.6
+echo which python3
+echo which python3.6
 
 NODEDIR=$(dirname $(dirname $(which node)))
 
