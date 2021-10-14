@@ -21,6 +21,8 @@ npm_install() {
 set -eox pipefail
 cd $(dirname $0)/..
 
+alias python3=python3.6
+
 NODEDIR=$(dirname $(dirname $(which node)))
 
 # TODO: Remove when a new version of nan (current version 2.12.1) is released.
