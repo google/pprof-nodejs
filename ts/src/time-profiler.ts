@@ -22,6 +22,8 @@ import {TimeProfiler} from './time-profiler-bindings';
 
 const DEFAULT_INTERVAL_MICROS: Microseconds = 1000;
 
+const majorVersion = process.version.slice(1).split('.').map(Number)[0];
+
 type Microseconds = number;
 type Milliseconds = number;
 
@@ -53,33 +55,52 @@ export async function profile(options: TimeProfilerOptions) {
   return stop();
 }
 
+function ensureRunName(name?: string) {
+  return name || `pprof-${Date.now()}-${Math.random()}`;
+}
+
+// NOTE: refreshing doesn't work if giving a profile name.
 export function start(
   intervalMicros: Microseconds = DEFAULT_INTERVAL_MICROS,
   name?: string,
   sourceMapper?: SourceMapper,
   lineNumbers = true
 ) {
-  const runName = name || `pprof-${Date.now()}-${Math.random()}`;
   const profiler = new TimeProfiler(intervalMicros);
-  profiler.start(runName, lineNumbers);
-  // Node.js contains an undocumented API for reporting idle status to V8.
-  // This lets the profiler distinguish idle time from time spent in native
-  // code. Ideally this should be default behavior. Until then, use the
-  // undocumented API.
-  // See https://github.com/nodejs/node/issues/19009#issuecomment-403161559.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  if (typeof (process as any)._startProfilerIdleNotifier === 'function') {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (process as any)._startProfilerIdleNotifier();
+  let runName = start();
+  return majorVersion < 16 ? stopOld : stop;
+
+  function start() {
+    const runName = ensureRunName(name);
+    profiler.start(runName, lineNumbers);
+    return runName;
   }
-  return function stop() {
+
+  // Node.js versions prior to v16 leak memory if not disposed and recreated
+  // between each profile. As disposing deletes current profile data too,
+  // we must stop then dispose then start.
+  function stopOld(restart = false) {
     const result = profiler.stop(runName, lineNumbers);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    if (typeof (process as any)._stopProfilerIdleNotifier === 'function') {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (process as any)._stopProfilerIdleNotifier();
+    profiler.dispose();
+    if (restart) {
+      runName = start();
     }
-    const profile = serializeTimeProfile(result, intervalMicros, sourceMapper);
-    return profile;
-  };
+    return serializeTimeProfile(result, intervalMicros, sourceMapper);
+  }
+
+  // For Node.js v16+, we want to start the next profile before we stop the
+  // current one as otherwise the active profile count could reach zero which
+  // means V8 might tear down the symbolizer thread and need to start it again.
+  function stop(restart = false) {
+    let nextRunName;
+    if (restart) {
+      nextRunName = start();
+    }
+    const result = profiler.stop(runName, lineNumbers);
+    if (nextRunName) {
+      runName = nextRunName;
+    }
+    if (!restart) profiler.dispose();
+    return serializeTimeProfile(result, intervalMicros, sourceMapper);
+  }
 }

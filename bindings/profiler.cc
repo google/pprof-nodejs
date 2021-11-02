@@ -242,18 +242,21 @@ Local<Value> TranslateTimeProfile(const CpuProfile* profile,
 
 class TimeProfiler : public Nan::ObjectWrap {
  public:
-  static inline Nan::Persistent<v8::Function> & constructor() {
-    static Nan::Persistent<v8::Function> my_constructor;
-    return my_constructor;
+  explicit TimeProfiler(int interval)
+    : samplingInterval(interval) {}
+
+  void Dispose() {
+    if (cpuProfiler != nullptr) {
+      cpuProfiler->Dispose();
+      cpuProfiler = nullptr;
+    }
   }
 
-  explicit TimeProfiler(int interval) {
-    Isolate* isolate = Isolate::GetCurrent();
+  static NAN_METHOD(Dispose) {
+    TimeProfiler* timeProfiler =
+        Nan::ObjectWrap::Unwrap<TimeProfiler>(info.Holder());
 
-    // A new CPU profiler object will be created each time profiling is started
-    // to work around https://bugs.chromium.org/p/v8/issues/detail?id=11051.
-    cpuProfiler = CpuProfiler::New(isolate);
-    cpuProfiler->SetSamplingInterval(interval);
+    timeProfiler->Dispose();
   }
 
   static NAN_METHOD(New) {
@@ -285,10 +288,10 @@ class TimeProfiler : public Nan::ObjectWrap {
     const bool recordSamples = false;
 
     if (includeLines) {
-      cpuProfiler->StartProfiling(name, CpuProfilingMode::kCallerLineNumbers,
-                                  recordSamples);
+      GetProfiler()->StartProfiling(name, CpuProfilingMode::kCallerLineNumbers,
+                                    recordSamples);
     } else {
-      cpuProfiler->StartProfiling(name, recordSamples);
+      GetProfiler()->StartProfiling(name, recordSamples);
     }
   }
 
@@ -316,13 +319,10 @@ class TimeProfiler : public Nan::ObjectWrap {
   }
 
   Local<Value> StopProfiling(Local<String> name, bool includeLines) {
-    CpuProfile* profile = cpuProfiler->StopProfiling(name);
+    CpuProfile* profile = GetProfiler()->StopProfiling(name);
     Local<Value> translated_profile =
         TranslateTimeProfile(profile, includeLines);
     profile->Delete();
-    // Dispose of CPU profiler to work around memory leak.
-    cpuProfiler->Dispose();
-    cpuProfiler = NULL;
     return translated_profile;
   }
 
@@ -357,13 +357,35 @@ class TimeProfiler : public Nan::ObjectWrap {
     tpl->InstanceTemplate()->SetInternalFieldCount(1);
 
     Nan::SetPrototypeMethod(tpl, "start", Start);
+    Nan::SetPrototypeMethod(tpl, "dispose", Dispose);
     Nan::SetPrototypeMethod(tpl, "stop", Stop);
 
     constructor().Reset(Nan::GetFunction(tpl).ToLocalChecked());
     Nan::Set(target, className, Nan::GetFunction(tpl).ToLocalChecked());
   }
  private:
-  CpuProfiler* cpuProfiler;
+  int samplingInterval = 0;
+  CpuProfiler* cpuProfiler = nullptr;
+
+  static inline Nan::Persistent<v8::Function> & constructor() {
+    static Nan::Persistent<v8::Function> my_constructor;
+    return my_constructor;
+  }
+
+  ~TimeProfiler() {
+    Dispose();
+  }
+
+  // A new CPU profiler object will be created each time profiling is started
+  // to work around https://bugs.chromium.org/p/v8/issues/detail?id=11051.
+  CpuProfiler* GetProfiler() {
+    if (cpuProfiler == nullptr) {
+      Isolate* isolate = Isolate::GetCurrent();
+      cpuProfiler = CpuProfiler::New(isolate);
+      cpuProfiler->SetSamplingInterval(samplingInterval);
+    }
+    return cpuProfiler;
+  }
 };
 
 extern "C" NODE_MODULE_EXPORT void

@@ -22,6 +22,8 @@ import {timeProfile, v8TimeProfile} from './profiles-for-tests';
 
 const assert = require('assert');
 
+const majorVersion = process.version.slice(1).split('.').map(Number)[0];
+
 const PROFILE_OPTIONS = {
   durationMillis: 500,
   intervalMicros: 1000,
@@ -45,14 +47,15 @@ describe('Time Profiler', () => {
   describe('profile (w/ stubs)', () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const sinonStubs: Array<sinon.SinonStub<any, any>> = [];
+    const timeProfilerStub = {
+      start: sinon.stub(),
+      stop: sinon.stub().returns(v8TimeProfile),
+      dispose: sinon.stub(),
+    };
+
     before(() => {
       sinonStubs.push(
-        sinon.stub(v8TimeProfiler, 'TimeProfiler').returns({
-          start() {},
-          stop() {
-            return v8TimeProfile;
-          },
-        })
+        sinon.stub(v8TimeProfiler, 'TimeProfiler').returns(timeProfilerStub)
       );
       sinonStubs.push(sinon.stub(Date, 'now').returns(0));
     });
@@ -75,6 +78,33 @@ describe('Time Profiler', () => {
     it('should return a profile equal to the expected profile', async () => {
       const profile = await time.profile(PROFILE_OPTIONS);
       assert.deepEqual(timeProfile, profile);
+    });
+
+    it('should be able to restart when stopping', async () => {
+      const stop = time.start(PROFILE_OPTIONS.intervalMicros);
+      timeProfilerStub.start.resetHistory();
+      timeProfilerStub.stop.resetHistory();
+      timeProfilerStub.dispose.resetHistory();
+
+      assert.deepEqual(timeProfile, stop(true));
+
+      sinon.assert.calledOnce(timeProfilerStub.start);
+      sinon.assert.calledOnce(timeProfilerStub.stop);
+      if (majorVersion >= 16) {
+        sinon.assert.notCalled(timeProfilerStub.dispose);
+      } else {
+        sinon.assert.calledOnce(timeProfilerStub.dispose);
+      }
+
+      timeProfilerStub.start.resetHistory();
+      timeProfilerStub.stop.resetHistory();
+      timeProfilerStub.dispose.resetHistory();
+
+      assert.deepEqual(timeProfile, stop());
+
+      sinon.assert.notCalled(timeProfilerStub.start);
+      sinon.assert.calledOnce(timeProfilerStub.stop);
+      sinon.assert.calledOnce(timeProfilerStub.dispose);
     });
   });
 });
