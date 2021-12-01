@@ -7,9 +7,10 @@ const mkdirp = require('mkdirp');
 const {execSync} = require('child_process');
 const semver = require('semver');
 const checksum = require('checksum');
+const rimraf = require('rimraf');
 
 const platform = os.platform();
-const arch = process.env.ARCH || os.arch();
+const arches = (process.env.ARCH || os.arch()).split(',');
 
 const {NODE_VERSIONS = '>=12'} = process.env;
 
@@ -29,30 +30,35 @@ function prebuildify() {
   const cache = path.join(os.tmpdir(), 'prebuilds');
 
   mkdirp.sync(cache);
-  mkdirp.sync(`prebuilds/${platform}-${arch}`);
 
-  targets.forEach(target => {
-    const output = `prebuilds/${platform}-${arch}/node-${target.abi}.node`;
-    const cmd = [
-      'node-gyp rebuild',
-      `--target=${target.version}`,
-      `--target_arch=${arch}`,
-      `--devdir=${cache}`,
-      '--release',
-      '--jobs=max',
-      '--build_v8_with_gn=false',
-      '--v8_enable_pointer_compression=""',
-      '--v8_enable_31bit_smis_on_64bit_arch=""',
-      '--enable_lto=false',
-    ].join(' ');
+  for (const arch of arches) {
+    mkdirp.sync(`prebuilds/${platform}-${arch}`);
 
-    execSync(cmd, {stdio: [0, 1, 2]});
+    targets.forEach(target => {
+      const output = `prebuilds/${platform}-${arch}/node-${target.abi}.node`;
+      const cmd = [
+        'node-gyp rebuild',
+        `--target=${target.version}`,
+        `--target_arch=${arch}`,
+        `--devdir=${cache}`,
+        '--release',
+        '--jobs=max',
+        '--build_v8_with_gn=false',
+        '--v8_enable_pointer_compression=""',
+        '--v8_enable_31bit_smis_on_64bit_arch=""',
+        '--enable_lto=false',
+      ].join(' ');
 
-    const sum = checksum(fs.readFileSync('build/Release/dd-pprof.node'), {
-      algorithm: 'sha256',
+      execSync(cmd, {stdio: [0, 1, 2]});
+
+      const sum = checksum(fs.readFileSync('build/Release/dd-pprof.node'), {
+        algorithm: 'sha256',
+      });
+
+      fs.writeFileSync(`${output}.sha256`, sum);
+      fs.copyFileSync('build/Release/dd-pprof.node', output);
     });
+  }
 
-    fs.writeFileSync(`${output}.sha1`, sum);
-    fs.copyFileSync('build/Release/dd-pprof.node', output);
-  });
+  rimraf.sync('./build');
 }

@@ -22,7 +22,7 @@
     "prepare": "npm run compile",
     "prepublishOnly": "node scripts/prepublish.js",
     "pretest": "npm run compile && npm run rebuild",
-    "posttest": "npm run check && npm run license-check",
+    "posttest": "npm run license-check",
     "proto": "npm run proto:profile",
     "proto:profile": "mkdir -p proto && pbjs -t static-module -w commonjs -o proto/profile.js third_party/proto/profile.proto && pbts -o proto/profile.d.ts proto/profile.js",
     "license-check": "jsgl --local .",
