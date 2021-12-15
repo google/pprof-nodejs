@@ -59,8 +59,8 @@ accept your pull requests.
 
 # Running the system test
 The system test starts a simple benchmark, uses this module to collect a time
-and a heap profile, and verifies that the profiles contain functions from 
-within the benchmark. 
+and a heap profile, and verifies that the profiles contain functions from
+within the benchmark.
 
 To run the system test, [golang](https://golang.org/) must be installed.
 
@@ -68,9 +68,4 @@ The following command can be used to run the system test with all supported
 versions of Node.JS:
 ```sh
 sh system-test/system_test.sh
-```
-
-To run the system test with the v8 canary build, use:
-```sh
-RUN_ONLY_V8_CANARY_TEST=true sh system-test/system_test.sh
 ```

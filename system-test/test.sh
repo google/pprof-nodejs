@@ -23,13 +23,6 @@ cd $(dirname $0)/..
 
 NODEDIR=$(dirname $(dirname $(which node)))
 
-# TODO: Remove when a new version of nan (current version 2.12.1) is released.
-# For v8-canary tests, we need to use the version of NAN on github, which
-# contains unreleased fixes that allow the native component to be compiled
-# with Node's V8 canary build.
-[ -z $NVM_NODEJS_ORG_MIRROR ] \
-    || retry npm_install https://github.com/nodejs/nan.git
-
 retry npm_install --nodedir="$NODEDIR" \
     ${BINARY_HOST:+--pprof_binary_host_mirror=$BINARY_HOST} >/dev/null
 
