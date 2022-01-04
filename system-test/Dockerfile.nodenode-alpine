@@ -1,0 +1,14 @@
+FROM golang:1.17-alpine as builder
+RUN apk add --no-cache git
+WORKDIR /root/
+RUN go get github.com/google/pprof
+
+
+FROM node:current-alpine
+
+ARG ADDITIONAL_PACKAGES
+
+RUN apk add --no-cache bash $ADDITIONAL_PACKAGES
+WORKDIR /root/
+COPY --from=builder /go/bin/pprof /bin
+RUN chmod a+x /bin/pprof
