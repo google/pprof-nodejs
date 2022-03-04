@@ -22,19 +22,6 @@ jobs:
         uses: codecov/codecov-action@v1
         with:
           name: actions linux ${{ matrix.node }}
-  test-windows:
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
-        with:
-          node-version: 14
-      - run: npm install
-      - run: npm test
-      - name: coverage
-        uses: codecov/codecov-action@v1
-        with:
-          name: actions windows
   lint:
     runs-on: ubuntu-latest
     steps:
