@@ -21,7 +21,7 @@ import * as timeProfiler from './time-profiler';
 export {AllocationProfileNode, TimeProfileNode, ProfileNode} from './v8-types';
 
 export {encode, encodeSync} from './profile-encoder';
-export {SourceMapper} from './sourcemapper/sourcemapper';
+export {SourceMapper, createFromMapFiles} from './sourcemapper/sourcemapper';
 
 export const time = {
   profile: timeProfiler.profile,
