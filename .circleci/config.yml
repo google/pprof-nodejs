@@ -122,14 +122,14 @@ jobs:
 
   # Prebuilds (linux x64)
 
-  linux-x64-16:
+  linux-x64-18:
     <<: *prebuild-linux-base
     docker:
       # from node:12.0.0 on 2021-08-30
       - image: node@sha256:c88ef4f7ca8d52ed50366d821e104d029f43e8686120a29541ce0371f333453f
     environment:
       - ARCH=x64
-      - NODE_VERSIONS=15 - 17
+      - NODE_VERSIONS=15 - 18
 
   linux-x64-12:
     <<: *prebuild-linux-base
@@ -143,6 +143,11 @@ jobs:
     <<: *test-prebuild-linux-base
     docker:
       - image: node
+
+  linux-x64-18-test:
+    <<: *test-prebuild-linux-base
+    docker:
+      - image: node:18
 
   linux-x64-16-test:
     <<: *test-prebuild-linux-base
@@ -193,6 +198,11 @@ jobs:
     docker:
       - image: node:alpine
 
+  alpine-x64-18-test:
+    <<: *test-prebuild-alpine-base
+    docker:
+      - image: node:18-alpine
+
   alpine-x64-16-test:
     <<: *test-prebuild-alpine-base
     docker:
@@ -241,7 +251,7 @@ jobs:
       xcode: "12.2.0"
     environment:
       - ARCH=ia32,x64
-      - NODE_VERSIONS=12 - 17
+      - NODE_VERSIONS=12 - 18
 
   macos-apple:
     working_directory: ~/dd-pprof
@@ -254,7 +264,7 @@ jobs:
       xcode: "12.5.1"
     environment:
       - ARCH=arm64
-      - NODE_VERSIONS=12 - 17
+      - NODE_VERSIONS=12 - 18
 
   # Prebuilds (win32 x64)
 
@@ -262,7 +272,7 @@ jobs:
     <<: *prebuild-win32-base
     environment:
       - ARCH=ia32,x64
-      - NODE_VERSIONS=12 - 17
+      - NODE_VERSIONS=12 - 18
 
   # Prebuild Artifacts
 
@@ -288,14 +298,17 @@ workflows:
   build:
     jobs: &jobs
       # Linux x64
-      - linux-x64-16
+      - linux-x64-18
       - linux-x64-12
       - linux-x64-latest-test:
           requires:
-            - linux-x64-16
+            - linux-x64-18
+      - linux-x64-18-test:
+          requires:
+            - linux-x64-18
       - linux-x64-16-test:
           requires:
-            - linux-x64-16
+            - linux-x64-18
       - linux-x64-14-test:
           requires:
             - linux-x64-12
@@ -306,6 +319,9 @@ workflows:
       - linux-ia32
       - alpine-x64
       - alpine-x64-latest-test:
+          requires:
+            - alpine-x64
+      - alpine-x64-18-test:
           requires:
             - alpine-x64
       - alpine-x64-16-test:
@@ -330,11 +346,13 @@ workflows:
       - prebuilds:
           requires:
             - linux-x64-latest-test
+            - linux-x64-18-test
             - linux-x64-16-test
             - linux-x64-14-test
             - linux-x64-12-test
             - linux-ia32
             - alpine-x64-latest-test
+            - alpine-x64-18-test
             - alpine-x64-16-test
             - alpine-x64-14-test
             - alpine-x64-12-test

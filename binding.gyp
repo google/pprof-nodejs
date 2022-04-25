@@ -23,7 +23,9 @@
                   "-Werror"
               ],
               "cflags_cc": [
-                  "-Wno-cast-function-type"
+                  "-Wno-cast-function-type",
+                  # TODO: Remove when nan is updated to support v18 properly
+                  "-Wno-deprecated-declarations",
               ]
           }],
           ["OS == 'win'", {

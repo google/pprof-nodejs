@@ -5,11 +5,12 @@ on:
       - main
   pull_request:
 jobs:
-  test-linux:
-    runs-on: ubuntu-latest
+  test:
     strategy:
       matrix:
-        node: [ 12, 14, 16, 17]
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        node: [ 12, 14, 16, 18 ]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
@@ -21,26 +22,11 @@ jobs:
       - name: coverage
         uses: codecov/codecov-action@v1
         with:
-          name: actions linux ${{ matrix.node }}
-  test-windows:
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
-        with:
-          node-version: 16
-      - run: npm install
-      - run: npm test
-      - name: coverage
-        uses: codecov/codecov-action@v1
-        with:
-          name: actions windows
+          name: actions ${{ matrix.os }} ${{ matrix.node }}
   lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
-        with:
-          node-version: 16
       - run: npm install
       - run: npm run lint
