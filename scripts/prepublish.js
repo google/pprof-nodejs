@@ -85,7 +85,7 @@ function getWorkflow(pipeline) {
     const workflows = response.data.items.sort((a, b) =>
       a.stopped_at < b.stopped_at ? 1 : -1
     );
-    const workflow = workflows.find(workflow => workflow.name === 'prebuild');
+    const workflow = workflows.find(workflow => workflow.name === 'build');
 
     if (!workflow) {
       throw new Error(
@@ -161,7 +161,7 @@ function downloadArtifact(file) {
 function validatePrebuilds() {
   const file = path.join(os.tmpdir(), 'prebuilds.tgz');
   const content = fs.readFileSync(file);
-  const sum = fs.readFileSync(path.join(`${file}.sha1`), 'ascii');
+  const sum = fs.readFileSync(path.join(`${file}.sha256`), 'ascii');
 
   if (sum !== checksum(content, {algorithm: 'sha256'})) {
     throw new Error('Invalid checksum for "prebuilds.tgz".');

@@ -12,7 +12,8 @@
               "-std=c++14",
               "-stdlib=libc++",
               "-Wall",
-              "-Werror"
+              "-Werror",
+              "-Wno-deprecated-declarations",
           ]
       },
         "conditions": [

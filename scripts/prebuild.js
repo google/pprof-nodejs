@@ -22,6 +22,7 @@ const targets = [
   {version: '15.0.0', abi: '88'},
   {version: '16.0.0', abi: '93'},
   {version: '17.0.1', abi: '102'},
+  {version: '18.0.0', abi: '108'},
 ].filter(target => semver.satisfies(target.version, NODE_VERSIONS));
 
 prebuildify();
@@ -35,11 +36,15 @@ function prebuildify() {
     mkdirp.sync(`prebuilds/${platform}-${arch}`);
 
     targets.forEach(target => {
+      if (platform === 'linux' && arch === 'ia32' && semver.gte(target.version, '14.0.0')) return
+      if (platform === 'win32' && arch === 'ia32' && semver.gte(target.version, '18.0.0')) return
+
       const output = `prebuilds/${platform}-${arch}/node-${target.abi}.node`;
       const cmd = [
         'node-gyp rebuild',
         `--target=${target.version}`,
         `--target_arch=${arch}`,
+        `--arch=${arch}`,
         `--devdir=${cache}`,
         '--release',
         '--jobs=max',

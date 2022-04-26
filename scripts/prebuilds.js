@@ -54,7 +54,7 @@ function validatePrebuilds() {
             path.join('prebuilds', platform, file)
           );
           const sum = fs.readFileSync(
-            path.join('prebuilds', platform, `${file}.sha1`),
+            path.join('prebuilds', platform, `${file}.sha256`),
             'ascii'
           );
 
@@ -74,7 +74,7 @@ function createChecksum() {
   const file = path.join(os.tmpdir(), 'prebuilds.tgz');
   const sum = checksum(fs.readFileSync(file), {algorithm: 'sha256'});
 
-  fs.writeFileSync(`${file}.sha1`, sum);
+  fs.writeFileSync(`${file}.sha256`, sum);
 }
 
 function copyPrebuilds() {
@@ -87,7 +87,7 @@ function copyPrebuilds() {
   );
 
   fs.copyFileSync(
-    path.join(os.tmpdir(), `${filename}.sha1`),
-    path.join(basename, `${filename}.sha1`)
+    path.join(os.tmpdir(), `${filename}.sha256`),
+    path.join(basename, `${filename}.sha256`)
   );
 }
