@@ -10,11 +10,13 @@ set -eox pipefail
 
 cd $(dirname $0)
 
+# The list of tested versions below should be in sync with node's
+# official releases. https://nodejs.org/en/about/releases/
 if [[ -z "$BINARY_HOST" ]]; then
   ADDITIONAL_PACKAGES="python3 g++ make"
   NODE_VERSIONS=(12 14 16 17 node)
 else
-  NODE_VERSIONS=(12 14 16 17)
+  NODE_VERSIONS=(12 14 16 17 18)
 fi
 
 for i in ${NODE_VERSIONS[@]}; do
