@@ -33,7 +33,7 @@
     "delay": "^5.0.0",
     "findit2": "^2.2.3",
     "nan": "^2.14.0",
-    "@mapbox/node-pre-gyp": "^1.0.0",
+    "@mapbox/node-pre-gyp": "^1.0.9",
     "p-limit": "^3.0.0",
     "pify": "^5.0.0",
     "protobufjs": "~6.11.0",
