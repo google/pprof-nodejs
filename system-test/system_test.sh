@@ -16,7 +16,9 @@ if [[ -z "$BINARY_HOST" ]]; then
   ADDITIONAL_PACKAGES="python3 g++ make"
   NODE_VERSIONS=(12 14 16 17 node)
 else
-  NODE_VERSIONS=(12 14 16 17 18)
+  # Tested versions for pre-built binaries are limited based on
+  # what node-pre-gyp can specify as its target version.
+  NODE_VERSIONS=(12 14 16)
 fi
 
 for i in ${NODE_VERSIONS[@]}; do
