@@ -20,7 +20,7 @@ npm_install() {
 
 set -eox pipefail
 cp -r /src /cloned_src
-cd /cloned_src/system-test
+cd /cloned_src
 
 NODEDIR=$(dirname $(dirname $(which node)))
 
