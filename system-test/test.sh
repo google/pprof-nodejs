@@ -5,8 +5,6 @@ SRCDIR="/cloned_src"
 trap "cd $SRCDIR && npm run clean" EXIT
 trap "echo '** TEST FAILED **'" ERR
 
-. "$SRCDIR/tools/retry.sh"
-
 function timeout_after() {
   # timeout on Node 11 alpine image requires -t to specify time.
   if [[ -f /bin/busybox ]] &&  [[ $(node -v) =~ ^v11.* ]]; then
@@ -23,6 +21,7 @@ npm_install() {
 set -eox pipefail
 cp -r /src "$SRCDIR"
 cd "$SRCDIR"
+. "tools/retry.sh"
 
 NODEDIR=$(dirname $(dirname $(which node)))
 
