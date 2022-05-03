@@ -1,9 +1,11 @@
 #!/bin/bash
 
-trap "cd $(dirname $0)/.. && npm run clean" EXIT
+SRCDIR="/cloned_src"
+
+trap "cd $SRCDIR && npm run clean" EXIT
 trap "echo '** TEST FAILED **'" ERR
 
-. $(dirname $0)/../tools/retry.sh
+. "$SRCDIR/tools/retry.sh"
 
 function timeout_after() {
   # timeout on Node 11 alpine image requires -t to specify time.
@@ -19,8 +21,8 @@ npm_install() {
 }
 
 set -eox pipefail
-cp -r /src /cloned_src
-cd /cloned_src
+cp -r /src "$SRCDIR"
+cd "$SRCDIR"
 
 NODEDIR=$(dirname $(dirname $(which node)))
 
