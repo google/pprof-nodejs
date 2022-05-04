@@ -28,7 +28,7 @@ mkdir -p "$ARTIFACTS_OUT"
 
 npm install --quiet
 
-for version in 12.0.0 14.0.0 16.0.0 17.0.1
+for version in 12.0.0 14.0.0 16.0.0 17.0.1 18.0.0
 do
   ./node_modules/.bin/node-pre-gyp configure rebuild package \
       --target=$version --target_arch="x64"
