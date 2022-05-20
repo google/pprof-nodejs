@@ -31,7 +31,7 @@ prebuild-linux-base: &prebuild-linux-base
     # glibc needs to be old enough for older distros
     - image: node@sha256:4013aa6c297808defd01234fce4a42e1ca0518a5bd0260752a86a46542b38206
   working_directory: ~/dd-pprof
-  resource_class: small
+  resource_class: medium+
   steps:
     - checkout-and-yarn-install
     - &yarn-prebuild
@@ -58,7 +58,7 @@ test-prebuild-linux-base: &test-prebuild-linux-base
   docker:
     - image: node:slim
   working_directory: ~/dd-pprof
-  resource_class: small
+  resource_class: medium+
   steps:
     - checkout-and-yarn-install
     - attach_workspace:
@@ -72,7 +72,7 @@ test-prebuild-alpine-base: &test-prebuild-alpine-base
   docker:
     - image: node:slim
   working_directory: ~/dd-pprof
-  resource_class: small
+  resource_class: medium+
   steps:
     - run:
         name: Install job dependencies
@@ -113,7 +113,7 @@ jobs:
     docker:
       - image: node
     working_directory: ~/dd-pprof
-    resource_class: small
+    resource_class: medium+
     steps:
       - checkout-and-yarn-install
       - run:
@@ -179,7 +179,7 @@ jobs:
       # from node:alpine on 2021-08-30
       - image: node@sha256:1ee1478ef46a53fc0584729999a0570cf2fb174fbfe0370edbf09680b2378b56
     working_directory: ~/dd-pprof
-    resource_class: small
+    resource_class: medium+
     steps:
       - run:
           name: Install job dependencies
@@ -280,7 +280,7 @@ jobs:
     docker:
       - image: node
     working_directory: ~/dd-pprof
-    resource_class: small
+    resource_class: medium+
     steps:
       - checkout-and-yarn-install
       - attach_workspace:

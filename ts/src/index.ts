@@ -15,6 +15,7 @@
  */
 import {writeFileSync} from 'fs';
 
+import cpuProfiler from './cpu-profiler';
 import * as heapProfiler from './heap-profiler';
 import {encodeSync} from './profile-encoder';
 import * as timeProfiler from './time-profiler';
@@ -22,6 +23,8 @@ export {AllocationProfileNode, TimeProfileNode, ProfileNode} from './v8-types';
 
 export {encode, encodeSync} from './profile-encoder';
 export {SourceMapper} from './sourcemapper/sourcemapper';
+
+export const CpuProfiler = cpuProfiler;
 
 export const time = {
   profile: timeProfiler.profile,

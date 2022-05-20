@@ -56,12 +56,12 @@ function prebuildify() {
 
       execSync(cmd, {stdio: [0, 1, 2]});
 
-      const sum = checksum(fs.readFileSync('build/Release/dd-pprof.node'), {
+      const sum = checksum(fs.readFileSync('build/Release/dd_pprof.node'), {
         algorithm: 'sha256',
       });
 
       fs.writeFileSync(`${output}.sha256`, sum);
-      fs.copyFileSync('build/Release/dd-pprof.node', output);
+      fs.copyFileSync('build/Release/dd_pprof.node', output);
     });
   }
 

@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import {inspect} from 'util';
+
 import {perftools} from '../../proto/profile';
 import {
   GeneratedLocation,
@@ -22,6 +24,8 @@ import {
 } from './sourcemapper/sourcemapper';
 import {
   AllocationProfileNode,
+  CpuProfile,
+  CpuProfileNode,
   ProfileNode,
   TimeProfile,
   TimeProfileNode,
@@ -236,6 +240,17 @@ function createTimeValueType(table: StringTable): perftools.profiles.ValueType {
 }
 
 /**
+ * @return value type for cpu samples (type:cpu, units:nanoseconds), and
+ * adds strings used in this value type to the table.
+ */
+function createCpuValueType(table: StringTable): perftools.profiles.ValueType {
+  return new perftools.profiles.ValueType({
+    type: table.getIndexOrAdd('cpu'),
+    unit: table.getIndexOrAdd('nanoseconds'),
+  });
+}
+
+/**
  * @return value type for object counts (type:objects, units:count), and
  * adds strings used in this value type to the table.
  */
@@ -303,6 +318,96 @@ export function serializeTimeProfile(
     profile,
     prof.topDownRoot,
     appendTimeEntryToSamples,
+    stringTable,
+    undefined,
+    sourceMapper
+  );
+
+  return profile;
+}
+
+function buildLabels(
+  labelSet: any,
+  stringTable: StringTable
+): perftools.profiles.Label[] {
+  const labels: perftools.profiles.Label[] = [];
+
+  for (const [key, value] of Object.entries(labelSet)) {
+    if (typeof value === 'number' || typeof value === 'string') {
+      const label = new perftools.profiles.Label({
+        key: stringTable.getIndexOrAdd(key),
+        num: typeof value === 'number' ? value : undefined,
+        str:
+          typeof value === 'string'
+            ? stringTable.getIndexOrAdd(value as string)
+            : undefined,
+      });
+
+      labels.push(label);
+    }
+  }
+
+  return labels;
+}
+
+/**
+ * Converts cpu profile into into a profile proto.
+ * (https://github.com/google/pprof/blob/master/proto/profile.proto)
+ *
+ * @param prof - profile to be converted.
+ * @param intervalMicros - average time (microseconds) between samples.
+ */
+export function serializeCpuProfile(
+  prof: CpuProfile,
+  intervalMicros: number,
+  sourceMapper?: SourceMapper
+): perftools.profiles.IProfile {
+  const intervalNanos = intervalMicros * 1000;
+  const appendCpuEntryToSamples: AppendEntryToSamples<CpuProfileNode> = (
+    entry: Entry<CpuProfileNode>,
+    samples: perftools.profiles.Sample[]
+  ) => {
+    for (const labelSet of entry.node.labelSets) {
+      const sample = new perftools.profiles.Sample({
+        locationId: entry.stack,
+        value: [1, intervalNanos],
+        label: buildLabels(labelSet, stringTable),
+      });
+
+      samples.push(sample);
+    }
+
+    const unknownEntryCount = entry.node.hitCount - entry.node.labelSets.length;
+    if (unknownEntryCount > 0) {
+      const sample = new perftools.profiles.Sample({
+        locationId: entry.stack,
+        value: [
+          unknownEntryCount,
+          entry.node.cpuTime,
+          // unknownEntryCount * intervalNanos,
+        ],
+      });
+      samples.push(sample);
+    }
+  };
+
+  const stringTable = new StringTable();
+  const sampleValueType = createSampleCountValueType(stringTable);
+  // const wallValueType = createTimeValueType(stringTable);
+  const cpuValueType = createCpuValueType(stringTable);
+
+  const profile = {
+    sampleType: [sampleValueType, cpuValueType /*, wallValueType*/],
+    timeNanos: Date.now() * 1000 * 1000,
+    durationNanos: prof.endTime - prof.startTime,
+    periodType: cpuValueType,
+    period: intervalMicros,
+  };
+
+  serialize(
+    profile,
+    prof.topDownRoot,
+    appendCpuEntryToSamples,
     stringTable,
     undefined,
     sourceMapper
