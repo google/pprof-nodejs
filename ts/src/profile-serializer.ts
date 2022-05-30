@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-import {inspect} from 'util';
-
 import {perftools} from '../../proto/profile';
 import {
   GeneratedLocation,
@@ -26,6 +24,7 @@ import {
   AllocationProfileNode,
   CpuProfile,
   CpuProfileNode,
+  LabelSet,
   ProfileNode,
   TimeProfile,
   TimeProfileNode,
@@ -327,7 +326,7 @@ export function serializeTimeProfile(
 }
 
 function buildLabels(
-  labelSet: any,
+  labelSet: LabelSet,
   stringTable: StringTable
 ): perftools.profiles.Label[] {
   const labels: perftools.profiles.Label[] = [];
@@ -433,22 +432,23 @@ export function serializeHeapProfile(
   ignoreSamplesPath?: string,
   sourceMapper?: SourceMapper
 ): perftools.profiles.IProfile {
-  const appendHeapEntryToSamples: AppendEntryToSamples<AllocationProfileNode> =
-    (
-      entry: Entry<AllocationProfileNode>,
-      samples: perftools.profiles.Sample[]
-    ) => {
-      if (entry.node.allocations.length > 0) {
-        for (const alloc of entry.node.allocations) {
-          const sample = new perftools.profiles.Sample({
-            locationId: entry.stack,
-            value: [alloc.count, alloc.sizeBytes * alloc.count],
-            // TODO: add tag for allocation size
-          });
-          samples.push(sample);
-        }
+  const appendHeapEntryToSamples: AppendEntryToSamples<
+    AllocationProfileNode
+  > = (
+    entry: Entry<AllocationProfileNode>,
+    samples: perftools.profiles.Sample[]
+  ) => {
+    if (entry.node.allocations.length > 0) {
+      for (const alloc of entry.node.allocations) {
+        const sample = new perftools.profiles.Sample({
+          locationId: entry.stack,
+          value: [alloc.count, alloc.sizeBytes * alloc.count],
+          // TODO: add tag for allocation size
+        });
+        samples.push(sample);
       }
-    };
+    }
+  };
 
   const stringTable = new StringTable();
   const sampleValueType = createObjectCountValueType(stringTable);

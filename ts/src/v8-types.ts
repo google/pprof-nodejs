@@ -63,14 +63,18 @@ export interface CpuProfile {
   startTime: number;
 }
 
+export interface LabelSet {
+  [key: string]: string | number;
+}
+
 export interface CpuProfileNode extends ProfileNode {
   hitCount: number;
   cpuTime: number;
-  labelSets: any[];
+  labelSets: LabelSet[];
 }
 
 export interface CpuProfileSample {
-  labels: any;
+  labels: LabelSet;
   locations: CodeEvent[];
   cpuTime: number;
 }

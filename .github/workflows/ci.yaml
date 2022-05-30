@@ -8,7 +8,8 @@ jobs:
   test:
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        # Switch to windows-latest when we drop 12
+        os: [ubuntu-latest, windows-2019, macos-latest]
         node: [ 12, 14, 16, 18 ]
     runs-on: ${{ matrix.os }}
     steps:
@@ -17,8 +18,8 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
       - run: node --version
-      - run: npm install
-      - run: npm test
+      - run: yarn
+      - run: yarn test
       - name: coverage
         uses: codecov/codecov-action@v1
         with:
@@ -28,5 +29,5 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
-      - run: npm install
-      - run: npm run lint
+      - run: yarn
+      - run: yarn lint
