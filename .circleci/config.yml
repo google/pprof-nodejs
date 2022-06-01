@@ -7,23 +7,69 @@ commands:
   checkout-and-yarn-install:
     steps:
       - checkout
-      - &yarn-versions
-        run:
+      - run:
           name: Versions
           command: yarn versions
-      - &restore-yarn-cache
-        restore_cache:
+      - restore_cache:
           key: yarn-{{ .Environment.CIRCLE_JOB }}-{{ checksum "package.json" }}
-      - &yarn-install
-        run:
+      - run:
           name: Install dependencies
           command: yarn install --ignore-engines
-      - &save-yarn-cache
-        save_cache:
+      - save_cache:
           key: yarn-{{ .Environment.CIRCLE_JOB }}-{{ checksum "package.json" }}
           paths:
             - ./node_modules
             - ./yarn.lock
+  yarn-prebuild:
+    steps:
+      - run:
+          name: Compile prebuilt binaries
+          command: yarn prebuild
+  persist-prebuilds:
+    steps:
+      - persist_to_workspace:
+          root: ~/dd-pprof
+          paths:
+            - prebuilds
+  yarn-rebuild:
+    steps:
+      - run:
+          name: Compile native code
+          command: yarn rebuild
+  yarn-test:
+    steps:
+      - run:
+          name: Unit tests
+          command: yarn test
+
+node-bench-sirun-base: &node-bench-sirun-base
+  parameters:
+    node-version:
+      type: string
+      default: "latest"
+  docker:
+    - image: node:<< parameters.node-version >>
+  resource_class: medium+
+  working_directory: ~/dd-pprof
+  steps:
+    - checkout-and-yarn-install
+    - attach_workspace:
+        at: ~/dd-pprof
+    - run:
+        name: Install system deps
+        command: apt-get update && apt-get install -y valgrind wget
+    - run:
+        name: Install sirun
+        command: wget https://github.com/DataDog/sirun/releases/download/v0.1.9/sirun-v0.1.9-x86_64-unknown-linux-gnu.tar.gz && tar zxf sirun-v0.1.9-x86_64-unknown-linux-gnu.tar.gz && mv sirun /usr/bin
+    - run:
+        name: Run sirun
+        command: |
+          cd benchmark/sirun/$(node -p "process.env.CIRCLE_JOB.replace('node-bench-sirun-', '').replace('-latest', '').replace(/-\d*$/, '')")
+          node /root/dd-pprof/benchmark/sirun/run-all-variants.js | tee ../$CIRCLE_JOB-sirun-output.ndjson
+    - persist_to_workspace:
+        root: ~/dd-pprof
+        paths:
+          - benchmark/sirun/*-sirun-output.ndjson
 
 prebuild-linux-base: &prebuild-linux-base
   docker:
@@ -34,15 +80,8 @@ prebuild-linux-base: &prebuild-linux-base
   resource_class: medium+
   steps:
     - checkout-and-yarn-install
-    - &yarn-prebuild
-      run:
-        name: Compile prebuilt binaries
-        command: yarn prebuild
-    - &persist-prebuilds
-      persist_to_workspace:
-        root: ~/dd-pprof
-        paths:
-          - prebuilds
+    - yarn-prebuild
+    - persist-prebuilds
 
 prebuild-linux-ia32-base: &prebuild-linux-ia32-base
   <<: *prebuild-linux-base
@@ -51,8 +90,8 @@ prebuild-linux-ia32-base: &prebuild-linux-ia32-base
         name: Install job dependencies
         command: apt-get update && apt-get install -y g++-multilib python3
     - checkout-and-yarn-install
-    - *yarn-prebuild
-    - *persist-prebuilds
+    - yarn-prebuild
+    - persist-prebuilds
 
 test-prebuild-linux-base: &test-prebuild-linux-base
   docker:
@@ -63,10 +102,7 @@ test-prebuild-linux-base: &test-prebuild-linux-base
     - checkout-and-yarn-install
     - attach_workspace:
         at: ~/dd-pprof
-    - &yarn-test
-      run:
-        name: Unit tests
-        command: yarn test
+    - yarn-test
 
 test-prebuild-alpine-base: &test-prebuild-alpine-base
   docker:
@@ -80,31 +116,7 @@ test-prebuild-alpine-base: &test-prebuild-alpine-base
     - checkout-and-yarn-install
     - attach_workspace:
         at: ~/dd-pprof
-    - &yarn-test
-      run:
-        name: Unit tests
-        command: yarn test
-
-prebuild-darwin-base: &prebuild-darwin-base
-  macos:
-    xcode: "12.2.0"
-  working_directory: ~/dd-pprof
-  steps:
-    - checkout-and-yarn-install
-    - *yarn-prebuild
-    - *yarn-test
-    - *persist-prebuilds
-
-prebuild-win32-base: &prebuild-win32-base
-  executor:
-    name: win/default
-    size: medium
-  working_directory: ~/dd-pprof
-  steps:
-    - checkout-and-yarn-install
-    - *yarn-prebuild
-    - *yarn-test
-    - *persist-prebuilds
+    - yarn-test
 
 jobs:
   # Linting
@@ -119,6 +131,11 @@ jobs:
       - run:
           name: Lint
           command: yarn lint
+
+  # Benchmarks
+
+  node-bench-sirun-cpu-profiler: *node-bench-sirun-base
+  node-bench-sirun-sampling: *node-bench-sirun-base
 
   # Prebuilds (linux x64)
 
@@ -185,11 +202,8 @@ jobs:
           name: Install job dependencies
           command: apk add g++ git make python3
       - checkout-and-yarn-install
-      - &yarn-rebuild
-          run:
-            name: Compile native code
-            command: yarn rebuild
-      - *yarn-test
+      - yarn-rebuild
+      - yarn-test
 
   # Tests (alpine x64)
 
@@ -244,9 +258,9 @@ jobs:
     working_directory: ~/dd-pprof
     steps:
       - checkout-and-yarn-install
-      - *yarn-prebuild
-      - *yarn-test
-      - *persist-prebuilds
+      - yarn-prebuild
+      - yarn-test
+      - persist-prebuilds
     macos:
       xcode: "12.2.0"
     environment:
@@ -257,9 +271,9 @@ jobs:
     working_directory: ~/dd-pprof
     steps:
       - checkout-and-yarn-install
-      - *yarn-prebuild
+      - yarn-prebuild
       # TODO: run tests when CircleCI adds Apple silicon executors
-      - *persist-prebuilds
+      - persist-prebuilds
     macos:
       xcode: "12.5.1"
     environment:
@@ -269,7 +283,15 @@ jobs:
   # Prebuilds (win32 x64)
 
   windows:
-    <<: *prebuild-win32-base
+    executor:
+      name: win/default
+      size: medium
+    working_directory: ~/dd-pprof
+    steps:
+      - checkout-and-yarn-install
+      - yarn-prebuild
+      - yarn-test
+      - persist-prebuilds
     environment:
       - ARCH=ia32,x64
       - NODE_VERSIONS=12 - 18
@@ -361,6 +383,14 @@ workflows:
             - macos-intel
             - macos-apple
             - windows
+      - node-bench-sirun-cpu-profiler: &matrix-exact-supported-node-versions
+          requires:
+            - linux-x64-18
+            - linux-x64-12
+          matrix:
+            parameters:
+              node-version: ["12", "14", "16", "18"]
+      - node-bench-sirun-sampling: *matrix-exact-supported-node-versions
   nightly:
     triggers:
       - schedule:

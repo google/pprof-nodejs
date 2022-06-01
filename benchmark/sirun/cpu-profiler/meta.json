@@ -1,0 +1,50 @@
+{
+  "name": "profiler",
+  "run": "node index.js",
+  "cachegrind": true,
+  "iterations": 10,
+  "variants": {
+    "idle-no-cpu-profiler": {
+      "env": {
+        "CONCURRENCY": "0",
+        "REQUEST_FREQUENCY": "0",
+        "SAMPLE_FREQUENCY": "0"
+      }
+    },
+    "idle-with-cpu-profiler": {
+      "env": {
+        "CONCURRENCY": "0",
+        "REQUEST_FREQUENCY": "0",
+        "SAMPLE_FREQUENCY": "999"
+      }
+    },
+    "light-load-no-cpu-profiler": {
+      "env": {
+        "CONCURRENCY": "5",
+        "REQUEST_FREQUENCY": "5",
+        "SAMPLE_FREQUENCY": "0"
+      }
+    },
+    "light-load-with-cpu-profiler": {
+      "env": {
+        "CONCURRENCY": "5",
+        "REQUEST_FREQUENCY": "5",
+        "SAMPLE_FREQUENCY": "999"
+      }
+    },
+    "heavy-load-no-cpu-profiler": {
+      "env": {
+        "CONCURRENCY": "15",
+        "REQUEST_FREQUENCY": "50",
+        "SAMPLE_FREQUENCY": "0"
+      }
+    },
+    "heavy-load-with-cpu-profiler": {
+      "env": {
+        "CONCURRENCY": "15",
+        "REQUEST_FREQUENCY": "50",
+        "SAMPLE_FREQUENCY": "999"
+      }
+    }
+  }
+}
