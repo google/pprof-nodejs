@@ -1,7 +1,7 @@
-'use strict';
+'use strict'
 
-const path = require('path');
-const fs = require('fs');
+const path = require('path')
+const fs = require('fs')
 
 /**
  * Given a package name and a module to start from, find a package's
@@ -14,20 +14,20 @@ const fs = require('fs');
  * @param {Module} module
  * @return {Object} The parsed package.json
  */
-function requirePackageJson(name, module) {
+function requirePackageJson (name, module) {
   if (path.isAbsolute(name)) {
-    const candidate = path.join(name, 'package.json');
-    return JSON.parse(fs.readFileSync(candidate, 'utf8'));
+    const candidate = path.join(name, 'package.json')
+    return JSON.parse(fs.readFileSync(candidate, 'utf8'))
   }
   for (const modulePath of module.paths) {
-    const candidate = path.join(modulePath, name, 'package.json');
+    const candidate = path.join(modulePath, name, 'package.json')
     try {
-      return JSON.parse(fs.readFileSync(candidate, 'utf8'));
+      return JSON.parse(fs.readFileSync(candidate, 'utf8'))
     } catch (e) {
-      continue;
+      continue
     }
   }
-  throw new Error(`could not find ${name}/package.json`);
+  throw new Error(`could not find ${name}/package.json`)
 }
 
-module.exports = requirePackageJson;
+module.exports = requirePackageJson

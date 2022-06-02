@@ -1,8 +1,8 @@
-'use strict';
+'use strict'
 
-const {CI, INIT_CWD, PWD} = process.env;
+const { CI, INIT_CWD, PWD } = process.env
 
 // skip for local development, CI, or very old package managers without INIT_CWD
 if (CI === 'true' || !INIT_CWD || INIT_CWD.includes(PWD)) {
-  process.exitCode = 1;
+  process.exitCode = 1
 }
