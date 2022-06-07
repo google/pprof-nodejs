@@ -14,13 +14,10 @@
  * limitations under the License.
  */
 
-import {writeFile} from 'fs';
-// eslint-disable-next-line node/no-extraneous-import
-import * as pify from 'pify';
+// eslint-disable-next-line node/no-unsupported-features/node-builtins
+import {promises} from 'fs';
 // eslint-disable-next-line node/no-extraneous-import
 import {encode, heap, SourceMapper, time} from 'pprof';
-
-const writeFilePromise = pify(writeFile);
 
 const startTime: number = Date.now();
 const testArr: number[][] = [];
@@ -57,7 +54,7 @@ async function collectAndSaveTimeProfile(
     sourceMapper,
   });
   const buf = await encode(profile);
-  await writeFilePromise('time.pb.gz', buf);
+  await promises.writeFile('time.pb.gz', buf);
 }
 
 async function collectAndSaveHeapProfile(
@@ -65,7 +62,7 @@ async function collectAndSaveHeapProfile(
 ): Promise<void> {
   const profile = await heap.profile(undefined, sourceMapper);
   const buf = await encode(profile);
-  await writeFilePromise('heap.pb.gz', buf);
+  await promises.writeFile('heap.pb.gz', buf);
 }
 
 async function collectAndSaveProfiles(): Promise<void> {
