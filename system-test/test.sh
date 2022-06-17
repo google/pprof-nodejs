@@ -45,7 +45,7 @@ TESTDIR=$(mktemp -d)
 cp -r "$BENCHDIR" "$TESTDIR/busybench"
 cd "$TESTDIR/busybench"
 
-retry npm_install pify @types/pify typescript gts @types/node >/dev/null
+retry npm_install typescript gts @types/node >/dev/null
 retry npm_install --nodedir="$NODEDIR" \
     $([ -z "$BINARY_HOST" ] && echo "--build-from-source=pprof" \
         || echo "--pprof_binary_host_mirror=$BINARY_HOST")\
@@ -59,18 +59,14 @@ node -v
 node --trace-warnings "$BENCHPATH" 10 $VERIFY_TIME_LINE_NUMBERS
 
 if [[ "$VERIFY_TIME_LINE_NUMBERS" == "true" ]]; then
-  pprof -lines -top -nodecount=2 time.pb.gz
-  pprof -lines -top -nodecount=2 time.pb.gz | \
-      grep "busyLoop.*src/busybench.js:3[3-5]"
-  pprof -filefunctions -top -nodecount=2 heap.pb.gz
-  pprof -filefunctions -top -nodecount=2 heap.pb.gz | \
+  pprof -lines -top -nodecount=2 time.pb.gz | tee $tty | \
+      grep "busyLoop.*src/busybench.js:[2-3][08-9]"
+  pprof -filefunctions -top -nodecount=2 heap.pb.gz | tee $tty | \
       grep "busyLoop.*src/busybench.js"
 else
-  pprof -filefunctions -top -nodecount=2 time.pb.gz
-  pprof -filefunctions -top -nodecount=2 time.pb.gz | \
+  pprof -filefunctions -top -nodecount=2 time.pb.gz | tee $tty | \
       grep "busyLoop.*src/busybench.ts"
-  pprof -filefunctions -top -nodecount=2 heap.pb.gz
-  pprof -filefunctions -top -nodecount=2 heap.pb.gz | \
+  pprof -filefunctions -top -nodecount=2 heap.pb.gz | tee $tty | \
       grep "busyLoop.*src/busybench.ts"
 fi
 

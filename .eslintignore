@@ -3,3 +3,4 @@
 build/
 proto/
 out/
+system-test/busybench-js/src/busybench.js
