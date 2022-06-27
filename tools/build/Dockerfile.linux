@@ -5,4 +5,4 @@
 
 # node:14-stretch images has dependencies required to build pre-built binaries 
 # already installed.
-FROM node:14-stretch
+FROM node:17-stretch
