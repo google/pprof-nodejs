@@ -6,7 +6,6 @@
   "main": "out/src/index.js",
   "types": "out/src/index.d.ts",
   "scripts": {
-    "install": "(node scripts/should_rebuild && node-gyp-build) || exit 0",
     "rebuild": "node-gyp rebuild --jobs=max",
     "test:js": "nyc mocha out/test/test-*.js",
     "test:cpp": "node scripts/cctest.js",
@@ -76,9 +75,7 @@
   "files": [
     "out/src",
     "out/third_party/cloud-debug-nodejs",
-    "bindings",
     "proto",
-    "binding.gyp",
     "package-lock.json",
     "package.json",
     "README.md",

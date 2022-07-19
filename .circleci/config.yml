@@ -13,8 +13,14 @@ commands:
       - restore_cache:
           key: yarn-{{ .Environment.CIRCLE_JOB }}-{{ checksum "package.json" }}
       - run:
+          name: Hide gyp file
+          command: mv binding.gyp binding.gyp.bak
+      - run:
           name: Install dependencies
           command: yarn install --ignore-engines
+      - run:
+          name: Restore gyp file
+          command: mv binding.gyp.bak binding.gyp
       - save_cache:
           key: yarn-{{ .Environment.CIRCLE_JOB }}-{{ checksum "package.json" }}
           paths:
