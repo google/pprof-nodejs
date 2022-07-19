@@ -8,12 +8,11 @@ namespace dd {
 
 class PerIsolateData {
  private:
-  v8::Isolate* isolate_;
   Nan::Global<v8::Function> cpu_profiler_constructor;
   Nan::Global<v8::Function> location_constructor;
   Nan::Global<v8::Function> sample_constructor;
 
-  PerIsolateData(v8::Isolate* isolate);
+  PerIsolateData() {}
 
  public:
   static PerIsolateData* For(v8::Isolate* isolate);

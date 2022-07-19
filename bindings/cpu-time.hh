@@ -1,7 +1,7 @@
 #pragma once
 
-#include <stdint.h>
-#include <time.h>
+#include <cstdint>
+#include <ctime>
 
 #ifdef __linux__
 #include <pthread.h>

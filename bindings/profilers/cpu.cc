@@ -1,4 +1,6 @@
 #include <queue>
+#include <thread>
+#include <chrono>
 
 #include <v8-profiler.h>
 #include <v8.h>
@@ -76,7 +78,6 @@ void CpuProfiler::CaptureSample(v8::Isolate* isolate) {
 
 // TODO: Make sampler thread a separate class?
 void CpuProfiler::SamplerThread(double hz) {
-  using hrc = std::chrono::high_resolution_clock;
   std::chrono::duration<double> interval(1.0 / hz);
   while (sampler_running) {
     isolate_->RequestInterrupt([](v8::Isolate* isolate, void* data) {

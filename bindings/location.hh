@@ -1,7 +1,5 @@
 #pragma once
 
-#include <string>
-
 #include <nan.h>
 #include <node_object_wrap.h> // cppcheck-suppress missingIncludeSystem
 

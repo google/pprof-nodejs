@@ -1,5 +1,9 @@
 #pragma once
 
+#include <vector>
+#include <memory>
+#include <cstdint>
+
 #include "code-map.hh"
 #include "wrap.hh"
 

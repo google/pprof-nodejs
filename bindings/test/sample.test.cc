@@ -105,9 +105,9 @@ void test_sample(Tap& t) {
 
   // Do symbolization
   auto recordA = std::make_shared<dd::CodeEventRecord>(
-    isolate, 1234, 0, 5678, 1, 2, "fnA");
+    1234, 0, 5678, 1, 2, "fnA");
   auto recordB = std::make_shared<dd::CodeEventRecord>(
-    isolate, 2345, 0, 5678, 3, 4, "fnB");
+    2345, 0, 5678, 3, 4, "fnB");
 
   auto map = dd::CodeMap::For(isolate);
   map->Clear();

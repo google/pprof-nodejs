@@ -13,7 +13,7 @@ void test_code_map(Tap& t) {
   }
 
   auto record = std::make_shared<dd::CodeEventRecord>(
-    isolate, 1234, 0, 5678, 1, 2, "fn");
+    1234, 0, 5678, 1, 2, "fn");
 
   // Lookup with record at matching address should return record
   {

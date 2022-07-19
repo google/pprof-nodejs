@@ -1,4 +1,6 @@
 #include <algorithm>
+#include <iterator>
+#include <deque>
 
 #include <nan.h>
 

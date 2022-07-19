@@ -158,7 +158,7 @@ describe('HeapProfiler', () => {
         heapProfiler.start(intervalBytes2, stackDepth2);
       } catch (e) {
         assert.strictEqual(
-          e.message,
+          (e as Error).message,
           'Heap profiler is already started  with intervalBytes 524288 and' +
             ' stackDepth 64'
         );

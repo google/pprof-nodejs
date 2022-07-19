@@ -52,7 +52,7 @@ void test_samples(Tap& t) {
     new dd::Sample(isolate, label_wrap, frames, cpu_time));
 
   auto record = std::make_shared<dd::CodeEventRecord>(
-    isolate, 1234, 0, 5678, 1, 2, "fnA");
+    1234, 0, 5678, 1, 2, "fnA");
 
   auto map = dd::CodeMap::For(isolate);
   map->Clear();

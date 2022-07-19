@@ -14,7 +14,9 @@
  * limitations under the License.
  */
 
+#include <cstdint>
 #include <memory>
+#include <vector>
 
 #include <node.h>
 #include <nan.h>
@@ -294,6 +296,7 @@ NAN_MODULE_INIT(WallProfiler::Init) {
 
 // A new CPU profiler object will be created each time profiling is started
 // to work around https://bugs.chromium.org/p/v8/issues/detail?id=11051.
+// TODO: Fixed in v16. Delete this hack when deprecating v14.
 v8::CpuProfiler* WallProfiler::GetProfiler() {
   if (cpuProfiler == nullptr) {
     v8::Isolate* isolate = v8::Isolate::GetCurrent();

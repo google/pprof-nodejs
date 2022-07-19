@@ -1,6 +1,7 @@
 #pragma once
 
-#include <string>
+#include <cstdint>
+#include <memory>
 #include <map>
 
 #include <node_object_wrap.h> // cppcheck-suppress missingIncludeSystem

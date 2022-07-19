@@ -108,7 +108,7 @@ function busyWait(ms: number) {
       for (let i = 0; i < 1e6; i++) {
         sum += sum;
       }
-      setImmediate(work, sum);
+      setImmediate<number[]>(work, sum);
     }
     setImmediate(work);
     setTimeout(() => {

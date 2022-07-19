@@ -1,11 +1,12 @@
 #pragma once
 
+#include <cstdint>
+#include <memory>
 #include <atomic>
 #include <mutex>
-#include <thread>
-#include <chrono>
 
 #include <nan.h>
+#include <uv.h>
 
 #include "../code-map.hh"
 #include "../cpu-time.hh"

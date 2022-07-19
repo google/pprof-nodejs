@@ -7,7 +7,7 @@ void test_location(Tap& t) {
   auto isolate = v8::Isolate::GetCurrent();
 
   auto record = std::make_shared<dd::CodeEventRecord>(
-      isolate, 1234, 0, 5678, 1, 2, "a", "b", "c");
+      1234, 0, 5678, 1, 2, "a", "b", "c");
   record->SetScriptId(123);
 
   auto obj = dd::Location::New(isolate, record)->handle();

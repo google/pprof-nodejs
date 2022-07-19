@@ -4,23 +4,22 @@
 
 namespace dd {
 
-  CodeEventRecord::CodeEventRecord(v8::Isolate *isolate,
-                                   uintptr_t address,
-                                   uintptr_t previousAddress,
-                                   size_t size,
-                                   int line,
-                                   int column,
-                                   std::string comment,
-                                   std::string functionName,
-                                   std::string scriptName)
-      : address(address),
-        previousAddress(previousAddress),
-        size(size),
-        line(line),
-        column(column),
-        comment(comment),
-        functionName(functionName),
-        scriptName(scriptName) {}
+CodeEventRecord::CodeEventRecord(uintptr_t address,
+                                 uintptr_t previousAddress,
+                                 size_t size,
+                                 int line,
+                                 int column,
+                                 std::string comment,
+                                 std::string functionName,
+                                 std::string scriptName)
+  : address(address),
+    previousAddress(previousAddress),
+    size(size),
+    line(line),
+    column(column),
+    comment(comment),
+    functionName(functionName),
+    scriptName(scriptName) {}
 
 std::string safe_string(const char* maybe_string) {
   return maybe_string == nullptr ? "" : maybe_string;
@@ -35,7 +34,6 @@ std::string safe_string(v8::Isolate* isolate, v8::Local<v8::String> maybe_string
 
 CodeEventRecord::CodeEventRecord(v8::Isolate* isolate, v8::CodeEvent* code_event)
   : CodeEventRecord(
-      isolate,
       code_event->GetCodeStartAddress(),
   // CodeEvent::GetPreviousCodeStartAddress didn't exist until Node.js 13.
   #if NODE_MODULE_VERSION > 79

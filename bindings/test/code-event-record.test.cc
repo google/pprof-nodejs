@@ -10,7 +10,7 @@ void test_code_event_record(Tap& t) {
   auto isolate = v8::Isolate::GetCurrent();
 
   auto record = new dd::CodeEventRecord(
-      isolate, 1234, 0, 5678, 1, 2, "a", "b", "c");
+      1234, 0, 5678, 1, 2, "a", "b", "c");
   record->SetScriptId(123);
 
   // Type helpers
@@ -33,39 +33,39 @@ void test_code_event_record(Tap& t) {
   t.equal("c", Str(record->GetScriptName(isolate)), "script name");
 
   auto same = new dd::CodeEventRecord(
-      isolate, 1234, 0, 5678, 1, 2, "a", "b", "c");
+      1234, 0, 5678, 1, 2, "a", "b", "c");
   same->SetScriptId(123);
   t.ok(record->Equal(same), "should be equal to itself");
 
   using TestPair = std::pair<dd::CodeEventRecord*, dd::CodeEventRecord*>;
   std::unordered_map<std::string, TestPair> non_matching = {
     {"id",
-      {new dd::CodeEventRecord(isolate, 1, 1, 1, 1, 1, "a", "a", "a"),
-        new dd::CodeEventRecord(isolate, 1, 1, 1, 1, 1, "a", "a", "a")}},
+      {new dd::CodeEventRecord(1, 1, 1, 1, 1, "a", "a", "a"),
+        new dd::CodeEventRecord(1, 1, 1, 1, 1, "a", "a", "a")}},
     {"address",
-      {new dd::CodeEventRecord(isolate, 1, 1, 1, 1, 1, "a", "a", "a"),
-        new dd::CodeEventRecord(isolate, 2, 1, 1, 1, 1, "a", "a", "a")}},
+      {new dd::CodeEventRecord(1, 1, 1, 1, 1, "a", "a", "a"),
+        new dd::CodeEventRecord(2, 1, 1, 1, 1, "a", "a", "a")}},
     {"previousAddress",
-      {new dd::CodeEventRecord(isolate, 1, 1, 1, 1, 1, "a", "a", "a"),
-        new dd::CodeEventRecord(isolate, 1, 2, 1, 1, 1, "a", "a", "a")}},
+      {new dd::CodeEventRecord(1, 1, 1, 1, 1, "a", "a", "a"),
+        new dd::CodeEventRecord(1, 2, 1, 1, 1, "a", "a", "a")}},
     {"size",
-      {new dd::CodeEventRecord(isolate, 1, 1, 1, 1, 1, "a", "a", "a"),
-        new dd::CodeEventRecord(isolate, 1, 1, 2, 1, 1, "a", "a", "a")}},
+      {new dd::CodeEventRecord(1, 1, 1, 1, 1, "a", "a", "a"),
+        new dd::CodeEventRecord(1, 1, 2, 1, 1, "a", "a", "a")}},
     {"line",
-      {new dd::CodeEventRecord(isolate, 1, 1, 1, 1, 1, "a", "a", "a"),
-        new dd::CodeEventRecord(isolate, 1, 1, 1, 2, 1, "a", "a", "a")}},
+      {new dd::CodeEventRecord(1, 1, 1, 1, 1, "a", "a", "a"),
+        new dd::CodeEventRecord(1, 1, 1, 2, 1, "a", "a", "a")}},
     {"column",
-      {new dd::CodeEventRecord(isolate, 1, 1, 1, 1, 1, "a", "a", "a"),
-        new dd::CodeEventRecord(isolate, 1, 1, 1, 1, 2, "a", "a", "a")}},
+      {new dd::CodeEventRecord(1, 1, 1, 1, 1, "a", "a", "a"),
+        new dd::CodeEventRecord(1, 1, 1, 1, 2, "a", "a", "a")}},
     {"comment",
-      {new dd::CodeEventRecord(isolate, 1, 1, 1, 1, 1, "a", "a", "a"),
-        new dd::CodeEventRecord(isolate, 1, 1, 1, 1, 1, "b", "a", "a")}},
+      {new dd::CodeEventRecord(1, 1, 1, 1, 1, "a", "a", "a"),
+        new dd::CodeEventRecord(1, 1, 1, 1, 1, "b", "a", "a")}},
     {"functionName",
-      {new dd::CodeEventRecord(isolate, 1, 1, 1, 1, 1, "a", "a", "a"),
-        new dd::CodeEventRecord(isolate, 1, 1, 1, 1, 1, "a", "b", "a")}},
+      {new dd::CodeEventRecord(1, 1, 1, 1, 1, "a", "a", "a"),
+        new dd::CodeEventRecord(1, 1, 1, 1, 1, "a", "b", "a")}},
     {"scriptName",
-      {new dd::CodeEventRecord(isolate, 1, 1, 1, 1, 1, "a", "a", "a"),
-        new dd::CodeEventRecord(isolate, 1, 1, 1, 1, 1, "a", "a", "b")}}
+      {new dd::CodeEventRecord(1, 1, 1, 1, 1, "a", "a", "a"),
+        new dd::CodeEventRecord(1, 1, 1, 1, 1, "a", "a", "b")}}
   };
 
   // Script Id is not a constructor argument

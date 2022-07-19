@@ -1,6 +1,6 @@
-#include "node.h"
-#include "nan.h"
-#include "v8.h"
+#include <node.h>
+#include <nan.h>
+#include <v8.h>
 
 #include "profilers/cpu.hh"
 #include "profilers/heap.hh"
