@@ -10,13 +10,22 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  build:
+    uses: Datadog/action-prebuildify/.github/workflows/build.yml@main
+    with:
+      target-name: 'dd_pprof' # target name in binding.gyp
+      package-manager: 'npm' # npm or yarn
+      cache: true # enable caching of dependencies based on lockfile
+
   publish:
+    needs: build
     runs-on: ubuntu-latest
     environment: npm
     env:
       NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
     steps:
       - uses: actions/checkout@v2
+      - uses: actions/download-artifact@v3
       - uses: actions/setup-node@v3
         with:
           registry-url: 'https://registry.npmjs.org'
