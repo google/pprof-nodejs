@@ -6,6 +6,7 @@
   "main": "out/src/index.js",
   "types": "out/src/index.d.ts",
   "scripts": {
+    "install": "exit 0",
     "rebuild": "node-gyp rebuild --jobs=max",
     "test:js": "nyc mocha out/test/test-*.js",
     "test:cpp": "node scripts/cctest.js",
