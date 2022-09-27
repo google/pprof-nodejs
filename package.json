@@ -20,7 +20,7 @@
     "prepare": "npm run compile",
     "pretest": "npm run compile && npm run rebuild",
     "proto": "npm run proto:profile",
-    "proto:profile": "mkdir -p proto && pbjs -t static-module -w commonjs -o proto/profile.js third_party/proto/profile.proto && pbts -o proto/profile.d.ts proto/profile.js"
+    "proto:profile": "mkdir -p proto && npx --yes pbjs -t static-module -w commonjs -o proto/profile.js third_party/proto/profile.proto && pbts -o proto/profile.d.ts proto/profile.js"
   },
   "author": {
     "name": "Google Inc."
@@ -48,6 +48,7 @@
     "@types/request": "^2.47.1",
     "@types/sinon": "^10.0.0",
     "@types/tmp": "^0.2.3",
+    "@typescript-eslint/eslint-plugin": "^5.38.0",
     "axios": "^0.27.2",
     "checksum": "^1.0.0",
     "codecov": "^3.0.0",
@@ -63,6 +64,7 @@
     "mkdirp": "^1.0.4",
     "mocha": "^9.2.2",
     "nyc": "^15.0.0",
+    "protobufjs-cli": "^1.0.2",
     "rimraf": "^3.0.2",
     "semver": "^7.3.5",
     "sinon": "^14.0.0",

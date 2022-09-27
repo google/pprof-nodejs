@@ -164,6 +164,8 @@ describe('CPU Profiler', () => {
       verifySample(profile, 0);
 
       const {label = []} = profile.sample![0];
+      assert.notEqual(label, null);
+      if (label === null) return; // Appease TypeScript.
       assert.strictEqual(label.length, 2);
       assert.strictEqual(str(profile, label[0].key! as number), 'str');
       assert.strictEqual(str(profile, label[0].str! as number), 'foo');

@@ -1,5 +1,5 @@
 import * as $protobuf from "protobufjs";
-
+import Long = require("long");
 /** Namespace perftools. */
 export namespace perftools {
 
@@ -10,50 +10,50 @@ export namespace perftools {
         interface IProfile {
 
             /** Profile sampleType */
-            sampleType?: perftools.profiles.IValueType[];
+            sampleType?: (perftools.profiles.IValueType[]|null);
 
             /** Profile sample */
-            sample?: perftools.profiles.ISample[];
+            sample?: (perftools.profiles.ISample[]|null);
 
             /** Profile mapping */
-            mapping?: perftools.profiles.IMapping[];
+            mapping?: (perftools.profiles.IMapping[]|null);
 
             /** Profile location */
-            location?: perftools.profiles.ILocation[];
+            location?: (perftools.profiles.ILocation[]|null);
 
             /** Profile function */
-            "function"?: perftools.profiles.IFunction[];
+            "function"?: (perftools.profiles.IFunction[]|null);
 
             /** Profile stringTable */
-            stringTable?: string[];
+            stringTable?: (string[]|null);
 
             /** Profile dropFrames */
-            dropFrames?: (number|Long);
+            dropFrames?: (number|Long|null);
 
             /** Profile keepFrames */
-            keepFrames?: (number|Long);
+            keepFrames?: (number|Long|null);
 
             /** Profile timeNanos */
-            timeNanos?: (number|Long);
+            timeNanos?: (number|Long|null);
 
             /** Profile durationNanos */
-            durationNanos?: (number|Long);
+            durationNanos?: (number|Long|null);
 
             /** Profile periodType */
-            periodType?: perftools.profiles.IValueType;
+            periodType?: (perftools.profiles.IValueType|null);
 
             /** Profile period */
-            period?: (number|Long);
+            period?: (number|Long|null);
 
             /** Profile comment */
-            comment?: (number|Long)[];
+            comment?: ((number|Long)[]|null);
 
             /** Profile defaultSampleType */
-            defaultSampleType?: (number|Long);
+            defaultSampleType?: (number|Long|null);
         }
 
         /** Represents a Profile. */
-        class Profile {
+        class Profile implements IProfile {
 
             /**
              * Constructs a new Profile.
@@ -74,7 +74,7 @@ export namespace perftools {
             public location: perftools.profiles.ILocation[];
 
             /** Profile function. */
-            public function_: perftools.profiles.IFunction[];
+            public function: perftools.profiles.IFunction[];
 
             /** Profile stringTable. */
             public stringTable: string[];
@@ -172,20 +172,27 @@ export namespace perftools {
              * @returns JSON object
              */
             public toJSON(): { [k: string]: any };
+
+            /**
+             * Gets the default type url for Profile
+             * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+             * @returns The default type url
+             */
+            public static getTypeUrl(typeUrlPrefix?: string): string;
         }
 
         /** Properties of a ValueType. */
         interface IValueType {
 
             /** ValueType type */
-            type?: (number|Long);
+            type?: (number|Long|null);
 
             /** ValueType unit */
-            unit?: (number|Long);
+            unit?: (number|Long|null);
         }
 
         /** Represents a ValueType. */
-        class ValueType {
+        class ValueType implements IValueType {
 
             /**
              * Constructs a new ValueType.
@@ -268,23 +275,30 @@ export namespace perftools {
              * @returns JSON object
              */
             public toJSON(): { [k: string]: any };
+
+            /**
+             * Gets the default type url for ValueType
+             * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+             * @returns The default type url
+             */
+            public static getTypeUrl(typeUrlPrefix?: string): string;
         }
 
         /** Properties of a Sample. */
         interface ISample {
 
             /** Sample locationId */
-            locationId?: (number|Long)[];
+            locationId?: ((number|Long)[]|null);
 
             /** Sample value */
-            value?: (number|Long)[];
+            value?: ((number|Long)[]|null);
 
             /** Sample label */
-            label?: perftools.profiles.ILabel[];
+            label?: (perftools.profiles.ILabel[]|null);
         }
 
         /** Represents a Sample. */
-        class Sample {
+        class Sample implements ISample {
 
             /**
              * Constructs a new Sample.
@@ -370,26 +384,33 @@ export namespace perftools {
              * @returns JSON object
              */
             public toJSON(): { [k: string]: any };
+
+            /**
+             * Gets the default type url for Sample
+             * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+             * @returns The default type url
+             */
+            public static getTypeUrl(typeUrlPrefix?: string): string;
         }
 
         /** Properties of a Label. */
         interface ILabel {
 
             /** Label key */
-            key?: (number|Long);
+            key?: (number|Long|null);
 
             /** Label str */
-            str?: (number|Long);
+            str?: (number|Long|null);
 
             /** Label num */
-            num?: (number|Long);
+            num?: (number|Long|null);
 
             /** Label numUnit */
-            numUnit?: (number|Long);
+            numUnit?: (number|Long|null);
         }
 
         /** Represents a Label. */
-        class Label {
+        class Label implements ILabel {
 
             /**
              * Constructs a new Label.
@@ -478,44 +499,51 @@ export namespace perftools {
              * @returns JSON object
              */
             public toJSON(): { [k: string]: any };
+
+            /**
+             * Gets the default type url for Label
+             * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+             * @returns The default type url
+             */
+            public static getTypeUrl(typeUrlPrefix?: string): string;
         }
 
         /** Properties of a Mapping. */
         interface IMapping {
 
             /** Mapping id */
-            id?: (number|Long);
+            id?: (number|Long|null);
 
             /** Mapping memoryStart */
-            memoryStart?: (number|Long);
+            memoryStart?: (number|Long|null);
 
             /** Mapping memoryLimit */
-            memoryLimit?: (number|Long);
+            memoryLimit?: (number|Long|null);
 
             /** Mapping fileOffset */
-            fileOffset?: (number|Long);
+            fileOffset?: (number|Long|null);
 
             /** Mapping filename */
-            filename?: (number|Long);
+            filename?: (number|Long|null);
 
             /** Mapping buildId */
-            buildId?: (number|Long);
+            buildId?: (number|Long|null);
 
             /** Mapping hasFunctions */
-            hasFunctions?: boolean;
+            hasFunctions?: (boolean|null);
 
             /** Mapping hasFilenames */
-            hasFilenames?: boolean;
+            hasFilenames?: (boolean|null);
 
             /** Mapping hasLineNumbers */
-            hasLineNumbers?: boolean;
+            hasLineNumbers?: (boolean|null);
 
             /** Mapping hasInlineFrames */
-            hasInlineFrames?: boolean;
+            hasInlineFrames?: (boolean|null);
         }
 
         /** Represents a Mapping. */
-        class Mapping {
+        class Mapping implements IMapping {
 
             /**
              * Constructs a new Mapping.
@@ -622,26 +650,33 @@ export namespace perftools {
              * @returns JSON object
              */
             public toJSON(): { [k: string]: any };
+
+            /**
+             * Gets the default type url for Mapping
+             * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+             * @returns The default type url
+             */
+            public static getTypeUrl(typeUrlPrefix?: string): string;
         }
 
         /** Properties of a Location. */
         interface ILocation {
 
             /** Location id */
-            id?: (number|Long);
+            id?: (number|Long|null);
 
             /** Location mappingId */
-            mappingId?: (number|Long);
+            mappingId?: (number|Long|null);
 
             /** Location address */
-            address?: (number|Long);
+            address?: (number|Long|null);
 
             /** Location line */
-            line?: perftools.profiles.ILine[];
+            line?: (perftools.profiles.ILine[]|null);
         }
 
         /** Represents a Location. */
-        class Location {
+        class Location implements ILocation {
 
             /**
              * Constructs a new Location.
@@ -730,20 +765,27 @@ export namespace perftools {
              * @returns JSON object
              */
             public toJSON(): { [k: string]: any };
+
+            /**
+             * Gets the default type url for Location
+             * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+             * @returns The default type url
+             */
+            public static getTypeUrl(typeUrlPrefix?: string): string;
         }
 
         /** Properties of a Line. */
         interface ILine {
 
             /** Line functionId */
-            functionId?: (number|Long);
+            functionId?: (number|Long|null);
 
             /** Line line */
-            line?: (number|Long);
+            line?: (number|Long|null);
         }
 
         /** Represents a Line. */
-        class Line {
+        class Line implements ILine {
 
             /**
              * Constructs a new Line.
@@ -826,29 +868,36 @@ export namespace perftools {
              * @returns JSON object
              */
             public toJSON(): { [k: string]: any };
+
+            /**
+             * Gets the default type url for Line
+             * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+             * @returns The default type url
+             */
+            public static getTypeUrl(typeUrlPrefix?: string): string;
         }
 
         /** Properties of a Function. */
         interface IFunction {
 
             /** Function id */
-            id?: (number|Long);
+            id?: (number|Long|null);
 
             /** Function name */
-            name?: (number|Long);
+            name?: (number|Long|null);
 
             /** Function systemName */
-            systemName?: (number|Long);
+            systemName?: (number|Long|null);
 
             /** Function filename */
-            filename?: (number|Long);
+            filename?: (number|Long|null);
 
             /** Function startLine */
-            startLine?: (number|Long);
+            startLine?: (number|Long|null);
         }
 
         /** Represents a Function. */
-        class Function {
+        class Function implements IFunction {
 
             /**
              * Constructs a new Function.
@@ -940,6 +989,13 @@ export namespace perftools {
              * @returns JSON object
              */
             public toJSON(): { [k: string]: any };
+
+            /**
+             * Gets the default type url for Function
+             * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+             * @returns The default type url
+             */
+            public static getTypeUrl(typeUrlPrefix?: string): string;
         }
     }
 }
