@@ -26,10 +26,12 @@ export function startProfiling(): Promise<void> {
     session.post('Profiler.enable', err => {
       if (err !== null) {
         reject(err);
+        return;
       }
       session.post('Profiler.start', err => {
         if (err !== null) {
           reject(err);
+          return;
         }
         resolve();
       });
@@ -43,6 +45,7 @@ export function stopProfiling(): Promise<TimeProfile> {
     session.post('Profiler.stop', (err, {profile}) => {
       if (err !== null) {
         reject(err);
+        return;
       }
       resolve(translateToTimeProfile(profile));
     });
@@ -105,6 +108,7 @@ export function setSamplingInterval(intervalMicros: number): Promise<void> {
       err => {
         if (err !== null) {
           reject(err);
+          return;
         }
         resolve();
       }
