@@ -40,7 +40,6 @@ export function startProfiling(): Promise<void> {
 }
 
 export function stopProfiling(): Promise<TimeProfile> {
-  // return profiler.timeProfiler.stopProfiling(runName, includeLineInfo || false);
   return new Promise<TimeProfile>((resolve, reject) => {
     session.post('Profiler.stop', (err, {profile}) => {
       if (err !== null) {
