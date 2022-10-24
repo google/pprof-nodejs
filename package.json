@@ -29,11 +29,11 @@
   },
   "license": "Apache-2.0",
   "dependencies": {
+    "@mapbox/node-pre-gyp": "^1.0.9",
     "bindings": "^1.2.1",
     "delay": "^5.0.0",
     "findit2": "^2.2.3",
-    "nan": "^2.14.0",
-    "@mapbox/node-pre-gyp": "^1.0.9",
+    "nan": "^2.17.0",
     "p-limit": "^3.0.0",
     "pify": "^5.0.0",
     "protobufjs": "~7.0.0",
@@ -80,7 +80,7 @@
     ]
   },
   "engines": {
-    "node": ">=10.4.1"
+    "node": ">=14.0.0"
   },
   "binary": {
     "module_name": "pprof",

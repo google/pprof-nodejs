@@ -14,11 +14,11 @@ cd $(dirname $0)
 # official releases. https://nodejs.org/en/about/releases/
 if [[ -z "$BINARY_HOST" ]]; then
   ADDITIONAL_PACKAGES="python3 g++ make"
-  NODE_VERSIONS=(12 14 16 17 18 node)
+  NODE_VERSIONS=(14 16 18 19)
 else
   # Tested versions for pre-built binaries are limited based on
   # what node-pre-gyp can specify as its target version.
-  NODE_VERSIONS=(12 14 16 17)
+  NODE_VERSIONS=(14 16)
 fi
 
 for i in ${NODE_VERSIONS[@]}; do
@@ -35,8 +35,9 @@ for i in ${NODE_VERSIONS[@]}; do
       /src/system-test/test.sh
 
   # Test Alpine support for the given node version.
-  retry docker build -f Dockerfile.node$i-alpine \
-      --build-arg ADDITIONAL_PACKAGES="$ADDITIONAL_PACKAGES" -t node$i-alpine .
+  retry docker build -f Dockerfile.node-alpine \
+      --build-arg ADDITIONAL_PACKAGES="$ADDITIONAL_PACKAGES" \
+      --build-arg NODE_VERSION=$i -t node$i-alpine .
 
   docker run -v $PWD/..:/src -e BINARY_HOST="$BINARY_HOST" node$i-alpine \
       /src/system-test/test.sh

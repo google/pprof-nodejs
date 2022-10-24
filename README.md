@@ -7,20 +7,14 @@
 [pprof][pprof-url] support for Node.js.
 
 ## Prerequisites
-1. Your application will need to be using Node.js 10.4.1 or greater, or any
-version of Node 12 or 14. 
-
-The profiler should not be enabled when using earlier versions of Node 10, 
-since versions of Node.js 10 prior to 10.4.1 are impacted by 
-[this](https://bugs.chromium.org/p/chromium/issues/detail?id=847863) issue, 
-which can cause garbage collection to take several minutes when heap profiling
-is enabled.
+1. Your application will need to be using Node.js 14 or greater. This package is tested against
+[current versions of Node.js][node-versions]: 14, 16, 18, and 19.
 
 2. The `pprof` module has a native component that is used to collect profiles 
 with v8's CPU and Heap profilers. You may need to install additional
 dependencies to build this module.
     * For Linux: `pprof` has prebuilt binaries available for Linux and Alpine
-    Linux for Node 10, 12 and 14. No additional dependencies are required.
+    Linux for Node 14 and 16. No additional dependencies are required.
     * For other environments: when using `@google-cloud/profiler` on environments
     that `pprof` does not have prebuilt binaries for, the module
     [`node-gyp`](https://www.npmjs.com/package/node-gyp) will be used to
@@ -111,9 +105,10 @@ Install [`pprof`][npm-url] with `npm` or add to your `package.json`.
 [circle-image]: https://circleci.com/gh/google/pprof-nodejs.svg?style=svg
 [circle-url]: https://circleci.com/gh/google/pprof-nodejs
 [coveralls-image]: https://coveralls.io/repos/google/pprof-nodejs/badge.svg?branch=main&service=github
+[node-versions]: https://github.com/nodejs/Release#release-schedule
 [npm-image]: https://badge.fury.io/js/pprof.svg
 [npm-url]: https://npmjs.org/package/pprof
-[pprof-url]: https://github.com/google/pprof
 [pprof-install-url]: https://github.com/google/pprof#building-pprof
+[pprof-url]: https://github.com/google/pprof
 [snyk-image]: https://snyk.io/test/github/google/pprof-nodejs/badge.svg
 [snyk-url]: https://snyk.io/test/github/google/pprof-nodejs
