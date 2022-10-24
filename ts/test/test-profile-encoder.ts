@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import * as pify from 'pify';
+import {promisify} from 'util';
 import {gunzip as gunzipPromise, gunzipSync} from 'zlib';
 
 import {perftools} from '../../proto/profile';
@@ -23,7 +23,7 @@ import {encode, encodeSync} from '../src/profile-encoder';
 import {decodedTimeProfile, timeProfile} from './profiles-for-tests';
 
 const assert = require('assert');
-const gunzip = pify(gunzipPromise);
+const gunzip = promisify(gunzipPromise);
 
 describe('profile-encoded', () => {
   describe('encode', () => {

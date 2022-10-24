@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-import * as pify from 'pify';
+import {promisify} from 'util';
 import {gzip, gzipSync} from 'zlib';
 
 import {perftools} from '../../proto/profile';
 
-const gzipPromise = pify(gzip);
+const gzipPromise = promisify(gzip);
 
 export async function encode(
   profile: perftools.profiles.IProfile
