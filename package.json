@@ -34,8 +34,6 @@
     "p-limit": "^3.1.0",
     "pify": "^5.0.0",
     "protobufjs": "^7.0.0",
-    "rimraf": "^3.0.2",
-    "semver": "^7.3.5",
     "source-map": "^0.7.3",
     "split": "^1.0.1"
   },
