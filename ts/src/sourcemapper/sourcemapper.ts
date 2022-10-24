@@ -22,12 +22,12 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as sourceMap from 'source-map';
+import {promisify} from 'util';
 
 import * as scanner from '../../third_party/cloud-debug-nodejs/src/agent/io/scanner';
 
-const pify = require('pify');
 const pLimit = require('p-limit');
-const readFile = pify(fs.readFile);
+const readFile = promisify(fs.readFile);
 
 const CONCURRENCY = 10;
 const MAP_EXT = '.map';
