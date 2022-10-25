@@ -17,20 +17,16 @@
 import * as sinon from 'sinon';
 import CpuProfiler from '../src/cpu-profiler';
 import * as v8CpuProfiler from '../src/cpu-profiler-bindings';
-import {perftools} from '../../proto/profile';
+import {Profile, ValueType} from 'pprof-format';
 
 const assert = require('assert');
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function str(profile: perftools.profiles.IProfile, index: any) {
+function str(profile: Profile, index: any) {
   return profile.stringTable![index as number];
 }
 
-function verifyValueType(
-  profile: perftools.profiles.IProfile,
-  valueType: perftools.profiles.IValueType,
-  name: string
-) {
+function verifyValueType(profile: Profile, valueType: ValueType, name: string) {
   const type = str(profile, valueType.type!);
   const unit = str(profile, valueType.unit!);
 
@@ -41,20 +37,16 @@ function verifyValueType(
   );
 }
 
-function verifySampleType(
-  profile: perftools.profiles.IProfile,
-  index: number,
-  name: string
-) {
+function verifySampleType(profile: Profile, index: number, name: string) {
   const sampleType = profile.sampleType![index];
   verifyValueType(profile, sampleType, name);
 }
 
-function verifyPeriodType(profile: perftools.profiles.IProfile, name: string) {
+function verifyPeriodType(profile: Profile, name: string) {
   verifyValueType(profile, profile.periodType!, name);
 }
 
-function verifyFunction(profile: perftools.profiles.IProfile, index: number) {
+function verifyFunction(profile: Profile, index: number) {
   const fn = profile.function![index];
   assert.ok(fn, 'has function matching function id');
   assert.ok(fn.id! >= 0, 'has id for function');
@@ -76,7 +68,7 @@ function verifyFunction(profile: perftools.profiles.IProfile, index: number) {
   );
 }
 
-function verifyLocation(profile: perftools.profiles.IProfile, index: number) {
+function verifyLocation(profile: Profile, index: number) {
   const location = profile.location![index];
   assert.ok(location, 'has location matching location id');
   assert.ok(location.id! > 0, 'has id for location');
@@ -87,7 +79,7 @@ function verifyLocation(profile: perftools.profiles.IProfile, index: number) {
   }
 }
 
-function verifySample(profile: perftools.profiles.IProfile, index: number) {
+function verifySample(profile: Profile, index: number) {
   const sample = profile.sample![index];
   for (const locationId of sample.locationId!) {
     verifyLocation(profile, (locationId as number) - 1);
