@@ -10,7 +10,7 @@
         "MACOSX_DEPLOYMENT_TARGET": "10.10",
         'CLANG_CXX_LIBRARY': 'libc++',
         "OTHER_CFLAGS": [
-          "-std=c++14",
+          "-std=c++17",
           "-stdlib=libc++",
           "-Wall",
           "-Werror",
