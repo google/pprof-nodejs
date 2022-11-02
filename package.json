@@ -18,7 +18,9 @@
     "prebuild": "node scripts/prebuild.js",
     "prebuilds": "node scripts/prebuilds.js",
     "prepare": "npm run compile",
-    "pretest": "npm run compile && npm run rebuild"
+    "pretest": "npm run compile && npm run rebuild",
+    "proto": "npm run proto:profile",
+    "proto:profile": "mkdir -p proto && npx --yes pbjs -t static-module -w commonjs -o proto/profile.js third_party/proto/profile.proto && pbts -o proto/profile.d.ts proto/profile.js"
   },
   "author": {
     "name": "Google Inc."
@@ -30,7 +32,7 @@
     "node-gyp-build": "^3.9.0",
     "p-limit": "^3.1.0",
     "pify": "^5.0.0",
-    "pprof-format": "^2.0.4",
+    "protobufjs": "^7.0.0",
     "source-map": "^0.7.3",
     "split": "^1.0.1"
   },

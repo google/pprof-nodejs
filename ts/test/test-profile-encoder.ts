@@ -17,7 +17,7 @@
 import * as pify from 'pify';
 import {gunzip as gunzipPromise, gunzipSync} from 'zlib';
 
-import {Profile} from 'pprof-format';
+import {perftools} from '../../proto/profile';
 import {encode, encodeSync} from '../src/profile-encoder';
 
 import {decodedTimeProfile, timeProfile} from './profiles-for-tests';
@@ -30,7 +30,7 @@ describe('profile-encoded', () => {
     it('should encode profile such that the encoded profile can be decoded', async () => {
       const encoded = await encode(timeProfile);
       const unzipped = await gunzip(encoded);
-      const decoded = Profile.decode(unzipped);
+      const decoded = perftools.profiles.Profile.decode(unzipped);
       assert.deepEqual(decoded, decodedTimeProfile);
     });
   });
@@ -38,7 +38,7 @@ describe('profile-encoded', () => {
     it('should encode profile such that the encoded profile can be decoded', () => {
       const encoded = encodeSync(timeProfile);
       const unzipped = gunzipSync(encoded);
-      const decoded = Profile.decode(unzipped);
+      const decoded = perftools.profiles.Profile.decode(unzipped);
       assert.deepEqual(decoded, decodedTimeProfile);
     });
   });

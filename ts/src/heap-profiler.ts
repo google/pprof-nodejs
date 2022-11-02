@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {Profile} from 'pprof-format';
+import {perftools} from '../../proto/profile';
 
 import {
   getAllocationProfile,
@@ -52,7 +52,7 @@ export function v8Profile(): AllocationProfileNode {
 export function profile(
   ignoreSamplePath?: string,
   sourceMapper?: SourceMapper
-): Profile {
+): perftools.profiles.IProfile {
   const startTimeNanos = Date.now() * 1000 * 1000;
   const result = v8Profile();
   // Add node for external memory usage.

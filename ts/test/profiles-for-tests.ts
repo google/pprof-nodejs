@@ -30,8 +30,7 @@ if (desc) {
   Object.defineProperty(globalThis, 'fetch', desc);
 }
 
-import {Function, Location, Profile, Sample, ValueType} from 'pprof-format';
-
+import {perftools} from '../../proto/profile';
 import {TimeProfile} from '../src/v8-types';
 
 const timeLeaf1 = {
@@ -108,19 +107,19 @@ const timeLines = [
 ];
 
 const timeFunctions = [
-  new Function({
+  new perftools.profiles.Function({
     id: 1,
     name: 5,
     systemName: 5,
     filename: 6,
   }),
-  new Function({
+  new perftools.profiles.Function({
     id: 2,
     name: 7,
     systemName: 7,
     filename: 8,
   }),
-  new Function({
+  new perftools.profiles.Function({
     id: 3,
     name: 7,
     systemName: 7,
@@ -129,46 +128,46 @@ const timeFunctions = [
 ];
 
 const timeLocations = [
-  new Location({
+  new perftools.profiles.Location({
     line: [timeLines[0]],
     id: 1,
   }),
-  new Location({
+  new perftools.profiles.Location({
     line: [timeLines[1]],
     id: 2,
   }),
-  new Location({
+  new perftools.profiles.Location({
     line: [timeLines[2]],
     id: 3,
   }),
-  new Location({
+  new perftools.profiles.Location({
     line: [timeLines[3]],
     id: 4,
   }),
 ];
 
-export const timeProfile = new Profile({
+export const timeProfile: perftools.profiles.IProfile = Object.freeze({
   sampleType: [
-    new ValueType({type: 1, unit: 2}),
-    new ValueType({type: 3, unit: 4}),
+    new perftools.profiles.ValueType({type: 1, unit: 2}),
+    new perftools.profiles.ValueType({type: 3, unit: 4}),
   ],
   sample: [
-    new Sample({
+    new perftools.profiles.Sample({
       locationId: [2, 1],
       value: [1, 1000000],
       label: [],
     }),
-    new Sample({
+    new perftools.profiles.Sample({
       locationId: [2],
       value: [3, 3000000],
       label: [],
     }),
-    new Sample({
+    new perftools.profiles.Sample({
       locationId: [3, 2],
       value: [2, 2000000],
       label: [],
     }),
-    new Sample({
+    new perftools.profiles.Sample({
       locationId: [4, 2],
       value: [1, 1000000],
       label: [],
@@ -177,6 +176,7 @@ export const timeProfile = new Profile({
   location: timeLocations,
   function: timeFunctions,
   stringTable: [
+    '',
     'sample',
     'count',
     'wall',
@@ -188,15 +188,16 @@ export const timeProfile = new Profile({
   ],
   timeNanos: 0,
   durationNanos: 10 * 1000 * 1000 * 1000,
-  periodType: new ValueType({type: 3, unit: 4}),
+  periodType: new perftools.profiles.ValueType({type: 3, unit: 4}),
   period: 1000,
 });
 
 // timeProfile is encoded then decoded to convert numbers to longs, in
 // decodedTimeProfile
-const encodedTimeProfile = timeProfile.encode();
+const encodedTimeProfile =
+  perftools.profiles.Profile.encode(timeProfile).finish();
 export const decodedTimeProfile = Object.freeze(
-  Profile.decode(encodedTimeProfile)
+  perftools.profiles.Profile.decode(encodedTimeProfile)
 );
 
 const heapLeaf1 = {
@@ -263,25 +264,25 @@ const heapLines = [
 ];
 
 const heapFunctions = [
-  new Function({
+  new perftools.profiles.Function({
     id: 1,
     name: 5,
     systemName: 5,
     filename: 5,
   }),
-  new Function({
+  new perftools.profiles.Function({
     id: 2,
     name: 6,
     systemName: 6,
     filename: 7,
   }),
-  new Function({
+  new perftools.profiles.Function({
     id: 3,
     name: 8,
     systemName: 8,
     filename: 7,
   }),
-  new Function({
+  new perftools.profiles.Function({
     id: 4,
     name: 9,
     systemName: 9,
@@ -290,39 +291,39 @@ const heapFunctions = [
 ];
 
 const heapLocations = [
-  new Location({line: [heapLines[0]], id: 1}),
-  new Location({line: [heapLines[1]], id: 2}),
-  new Location({line: [heapLines[2]], id: 3}),
-  new Location({line: [heapLines[3]], id: 4}),
+  new perftools.profiles.Location({line: [heapLines[0]], id: 1}),
+  new perftools.profiles.Location({line: [heapLines[1]], id: 2}),
+  new perftools.profiles.Location({line: [heapLines[2]], id: 3}),
+  new perftools.profiles.Location({line: [heapLines[3]], id: 4}),
 ];
 
-export const heapProfile = new Profile({
+export const heapProfile: perftools.profiles.IProfile = Object.freeze({
   sampleType: [
-    new ValueType({type: 1, unit: 2}),
-    new ValueType({type: 3, unit: 4}),
+    new perftools.profiles.ValueType({type: 1, unit: 2}),
+    new perftools.profiles.ValueType({type: 3, unit: 4}),
   ],
   sample: [
-    new Sample({
+    new perftools.profiles.Sample({
       locationId: [1],
       value: [1, 5],
       label: [],
     }),
-    new Sample({
+    new perftools.profiles.Sample({
       locationId: [1],
       value: [3, 21],
       label: [],
     }),
-    new Sample({
+    new perftools.profiles.Sample({
       locationId: [3, 2, 1],
       value: [8, 80],
       label: [],
     }),
-    new Sample({
+    new perftools.profiles.Sample({
       locationId: [3, 2, 1],
       value: [15, 15 * 72],
       label: [],
     }),
-    new Sample({
+    new perftools.profiles.Sample({
       locationId: [4, 2, 1],
       value: [5, 5 * 1024],
       label: [],
@@ -331,6 +332,7 @@ export const heapProfile = new Profile({
   location: heapLocations,
   function: heapFunctions,
   stringTable: [
+    '',
     'objects',
     'count',
     'space',
@@ -342,15 +344,16 @@ export const heapProfile = new Profile({
     'function2',
   ],
   timeNanos: 0,
-  periodType: new ValueType({type: 3, unit: 4}),
+  periodType: new perftools.profiles.ValueType({type: 3, unit: 4}),
   period: 524288,
 });
 
 // heapProfile is encoded then decoded to convert numbers to longs, in
 // decodedHeapProfile
-const encodedHeapProfile = heapProfile.encode();
+const encodedHeapProfile =
+  perftools.profiles.Profile.encode(heapProfile).finish();
 export const decodedHeapProfile = Object.freeze(
-  Profile.decode(encodedHeapProfile)
+  perftools.profiles.Profile.decode(encodedHeapProfile)
 );
 
 const heapLinesWithExternal = [
@@ -362,31 +365,31 @@ const heapLinesWithExternal = [
 ];
 
 const heapFunctionsWithExternal = [
-  new Function({
+  new perftools.profiles.Function({
     id: 1,
     name: 5,
     systemName: 5,
     filename: 0,
   }),
-  new Function({
+  new perftools.profiles.Function({
     id: 2,
     name: 6,
     systemName: 6,
     filename: 6,
   }),
-  new Function({
+  new perftools.profiles.Function({
     id: 3,
     name: 7,
     systemName: 7,
     filename: 8,
   }),
-  new Function({
+  new perftools.profiles.Function({
     id: 4,
     name: 9,
     systemName: 9,
     filename: 8,
   }),
-  new Function({
+  new perftools.profiles.Function({
     id: 5,
     name: 10,
     systemName: 10,
@@ -395,74 +398,77 @@ const heapFunctionsWithExternal = [
 ];
 
 const heapLocationsWithExternal = [
-  new Location({line: [heapLinesWithExternal[0]], id: 1}),
-  new Location({line: [heapLinesWithExternal[1]], id: 2}),
-  new Location({line: [heapLinesWithExternal[2]], id: 3}),
-  new Location({line: [heapLinesWithExternal[3]], id: 4}),
-  new Location({line: [heapLinesWithExternal[4]], id: 5}),
+  new perftools.profiles.Location({line: [heapLinesWithExternal[0]], id: 1}),
+  new perftools.profiles.Location({line: [heapLinesWithExternal[1]], id: 2}),
+  new perftools.profiles.Location({line: [heapLinesWithExternal[2]], id: 3}),
+  new perftools.profiles.Location({line: [heapLinesWithExternal[3]], id: 4}),
+  new perftools.profiles.Location({line: [heapLinesWithExternal[4]], id: 5}),
 ];
 
-export const heapProfileWithExternal = new Profile({
-  sampleType: [
-    new ValueType({type: 1, unit: 2}),
-    new ValueType({type: 3, unit: 4}),
-  ],
-  sample: [
-    new Sample({
-      locationId: [1],
-      value: [1, 1024],
-      label: [],
-    }),
-    new Sample({
-      locationId: [2],
-      value: [1, 5],
-      label: [],
-    }),
-    new Sample({
-      locationId: [2],
-      value: [3, 21],
-      label: [],
-    }),
-    new Sample({
-      locationId: [4, 3, 2],
-      value: [8, 80],
-      label: [],
-    }),
-    new Sample({
-      locationId: [4, 3, 2],
-      value: [15, 15 * 72],
-      label: [],
-    }),
-    new Sample({
-      locationId: [5, 3, 2],
-      value: [5, 5 * 1024],
-      label: [],
-    }),
-  ],
-  location: heapLocationsWithExternal,
-  function: heapFunctionsWithExternal,
-  stringTable: [
-    'objects',
-    'count',
-    'space',
-    'bytes',
-    '(external)',
-    'main',
-    'function1',
-    'script1',
-    'function3',
-    'function2',
-  ],
-  timeNanos: 0,
-  periodType: new ValueType({type: 3, unit: 4}),
-  period: 524288,
-});
+export const heapProfileWithExternal: perftools.profiles.IProfile =
+  Object.freeze({
+    sampleType: [
+      new perftools.profiles.ValueType({type: 1, unit: 2}),
+      new perftools.profiles.ValueType({type: 3, unit: 4}),
+    ],
+    sample: [
+      new perftools.profiles.Sample({
+        locationId: [1],
+        value: [1, 1024],
+        label: [],
+      }),
+      new perftools.profiles.Sample({
+        locationId: [2],
+        value: [1, 5],
+        label: [],
+      }),
+      new perftools.profiles.Sample({
+        locationId: [2],
+        value: [3, 21],
+        label: [],
+      }),
+      new perftools.profiles.Sample({
+        locationId: [4, 3, 2],
+        value: [8, 80],
+        label: [],
+      }),
+      new perftools.profiles.Sample({
+        locationId: [4, 3, 2],
+        value: [15, 15 * 72],
+        label: [],
+      }),
+      new perftools.profiles.Sample({
+        locationId: [5, 3, 2],
+        value: [5, 5 * 1024],
+        label: [],
+      }),
+    ],
+    location: heapLocationsWithExternal,
+    function: heapFunctionsWithExternal,
+    stringTable: [
+      '',
+      'objects',
+      'count',
+      'space',
+      'bytes',
+      '(external)',
+      'main',
+      'function1',
+      'script1',
+      'function3',
+      'function2',
+    ],
+    timeNanos: 0,
+    periodType: new perftools.profiles.ValueType({type: 3, unit: 4}),
+    period: 524288,
+  });
 
 // heapProfile is encoded then decoded to convert numbers to longs, in
 // decodedHeapProfile
-const encodedHeapProfileWithExternal = heapProfile.encode();
+const encodedHeapProfileWithExternal =
+  perftools.profiles.Profile.encode(heapProfile).finish();
 export const decodedHeapProfileWithExternal = Object.freeze(
-  Profile.decode(encodedHeapProfileWithExternal)
+  perftools.profiles.Profile.decode(encodedHeapProfileWithExternal)
 );
 
 const anonymousHeapNode = {
@@ -487,7 +493,7 @@ export const v8AnonymousFunctionHeapProfile = Object.freeze({
 const anonymousFunctionHeapLines = [{functionId: 1, line: 1}];
 
 const anonymousFunctionHeapFunctions = [
-  new Function({
+  new perftools.profiles.Function({
     id: 1,
     name: 5,
     systemName: 5,
@@ -496,31 +502,40 @@ const anonymousFunctionHeapFunctions = [
 ];
 
 const anonymousFunctionHeapLocations = [
-  new Location({
+  new perftools.profiles.Location({
     line: [anonymousFunctionHeapLines[0]],
     id: 1,
   }),
 ];
 
-export const anonymousFunctionHeapProfile = new Profile({
-  sampleType: [
-    new ValueType({type: 1, unit: 2}),
-    new ValueType({type: 3, unit: 4}),
-  ],
-  sample: [
-    new Sample({
-      locationId: [1],
-      value: [1, 5],
-      label: [],
-    }),
-  ],
-  location: anonymousFunctionHeapLocations,
-  function: anonymousFunctionHeapFunctions,
-  stringTable: ['objects', 'count', 'space', 'bytes', '(anonymous)', 'main'],
-  timeNanos: 0,
-  periodType: new ValueType({type: 3, unit: 4}),
-  period: 524288,
-});
+export const anonymousFunctionHeapProfile: perftools.profiles.IProfile =
+  Object.freeze({
+    sampleType: [
+      new perftools.profiles.ValueType({type: 1, unit: 2}),
+      new perftools.profiles.ValueType({type: 3, unit: 4}),
+    ],
+    sample: [
+      new perftools.profiles.Sample({
+        locationId: [1],
+        value: [1, 5],
+        label: [],
+      }),
+    ],
+    location: anonymousFunctionHeapLocations,
+    function: anonymousFunctionHeapFunctions,
+    stringTable: [
+      '',
+      'objects',
+      'count',
+      'space',
+      'bytes',
+      '(anonymous)',
+      'main',
+    ],
+    timeNanos: 0,
+    periodType: new perftools.profiles.ValueType({type: 3, unit: 4}),
+    period: 524288,
+  });
 
 const anonymousFunctionTimeNode = {
   scriptName: 'main',
@@ -550,7 +565,7 @@ export const v8AnonymousFunctionTimeProfile: TimeProfile = Object.freeze({
 const anonymousFunctionTimeLines = [{functionId: 1, line: 1}];
 
 const anonymousFunctionTimeFunctions = [
-  new Function({
+  new perftools.profiles.Function({
     id: 1,
     name: 5,
     systemName: 5,
@@ -559,39 +574,41 @@ const anonymousFunctionTimeFunctions = [
 ];
 
 const anonymousFunctionTimeLocations = [
-  new Location({
+  new perftools.profiles.Location({
     line: [anonymousFunctionTimeLines[0]],
     id: 1,
   }),
 ];
 
-export const anonymousFunctionTimeProfile = new Profile({
-  sampleType: [
-    new ValueType({type: 1, unit: 2}),
-    new ValueType({type: 3, unit: 4}),
-  ],
-  sample: [
-    new Sample({
-      locationId: [1],
-      value: [1, 1000000],
-      label: [],
-    }),
-  ],
-  location: anonymousFunctionTimeLocations,
-  function: anonymousFunctionTimeFunctions,
-  stringTable: [
-    'sample',
-    'count',
-    'wall',
-    'nanoseconds',
-    '(anonymous)',
-    'main',
-  ],
-  timeNanos: 0,
-  durationNanos: 10 * 1000 * 1000 * 1000,
-  periodType: new ValueType({type: 3, unit: 4}),
-  period: 1000,
-});
+export const anonymousFunctionTimeProfile: perftools.profiles.IProfile =
+  Object.freeze({
+    sampleType: [
+      new perftools.profiles.ValueType({type: 1, unit: 2}),
+      new perftools.profiles.ValueType({type: 3, unit: 4}),
+    ],
+    sample: [
+      new perftools.profiles.Sample({
+        locationId: [1],
+        value: [1, 1000000],
+        label: [],
+      }),
+    ],
+    location: anonymousFunctionTimeLocations,
+    function: anonymousFunctionTimeFunctions,
+    stringTable: [
+      '',
+      'sample',
+      'count',
+      'wall',
+      'nanoseconds',
+      '(anonymous)',
+      'main',
+    ],
+    timeNanos: 0,
+    durationNanos: 10 * 1000 * 1000 * 1000,
+    periodType: new perftools.profiles.ValueType({type: 3, unit: 4}),
+    period: 1000,
+  });
 
 const heapWithPathLeaf1 = {
   name: 'foo2',
@@ -654,31 +671,31 @@ export const v8HeapWithPathProfile = Object.freeze({
 });
 
 const heapIncludePathFunctions = [
-  new Function({
+  new perftools.profiles.Function({
     id: 1,
     name: 5,
     systemName: 5,
     filename: 6,
   }),
-  new Function({
+  new perftools.profiles.Function({
     id: 2,
     name: 7,
     systemName: 7,
     filename: 8,
   }),
-  new Function({
+  new perftools.profiles.Function({
     id: 3,
     name: 9,
     systemName: 9,
     filename: 6,
   }),
-  new Function({
+  new perftools.profiles.Function({
     id: 4,
     name: 10,
     systemName: 10,
     filename: 11,
   }),
-  new Function({
+  new perftools.profiles.Function({
     id: 5,
     name: 7,
     systemName: 7,
@@ -687,86 +704,90 @@ const heapIncludePathFunctions = [
 ];
 
 const heapIncludePathLocations = [
-  new Location({
+  new perftools.profiles.Location({
     line: [{functionId: 1, line: 1}],
     id: 1,
   }),
-  new Location({
+  new perftools.profiles.Location({
     line: [{functionId: 2, line: 10}],
     id: 2,
   }),
-  new Location({
+  new perftools.profiles.Location({
     line: [{functionId: 3, line: 3}],
     id: 3,
   }),
-  new Location({
+  new perftools.profiles.Location({
     line: [{functionId: 4, line: 2}],
     id: 4,
   }),
-  new Location({
+  new perftools.profiles.Location({
     line: [{functionId: 5, line: 3}],
     id: 5,
   }),
 ];
 
-export const heapProfileIncludePath = new Profile({
-  sampleType: [
-    new ValueType({type: 1, unit: 2}),
-    new ValueType({type: 3, unit: 4}),
-  ],
-  sample: [
-    new Sample({
-      locationId: [2, 1],
-      value: [2, 4],
-      label: [],
-    }),
-    new Sample({
-      locationId: [3, 1],
-      value: [1, 2],
-      label: [],
-    }),
-    new Sample({
-      locationId: [5, 4],
-      value: [3, 6],
-      label: [],
-    }),
-  ],
-  location: heapIncludePathLocations,
-  function: heapIncludePathFunctions,
-  stringTable: [
-    'objects',
-    'count',
-    'space',
-    'bytes',
-    'baz',
-    'foo.ts',
-    'bar',
-    '@google-cloud/profiler/profiler.ts',
-    'foo2',
-    'foo1',
-    'node_modules/@google-cloud/profiler/profiler.ts',
-    'bar.ts',
-  ],
-  timeNanos: 0,
-  periodType: new ValueType({type: 3, unit: 4}),
-  period: 524288,
-});
+export const heapProfileIncludePath: perftools.profiles.IProfile =
+  Object.freeze({
+    sampleType: [
+      new perftools.profiles.ValueType({type: 1, unit: 2}),
+      new perftools.profiles.ValueType({type: 3, unit: 4}),
+    ],
+    sample: [
+      new perftools.profiles.Sample({
+        locationId: [2, 1],
+        value: [2, 4],
+        label: [],
+      }),
+      new perftools.profiles.Sample({
+        locationId: [3, 1],
+        value: [1, 2],
+        label: [],
+      }),
+      new perftools.profiles.Sample({
+        locationId: [5, 4],
+        value: [3, 6],
+        label: [],
+      }),
+    ],
+    location: heapIncludePathLocations,
+    function: heapIncludePathFunctions,
+    stringTable: [
+      '',
+      'objects',
+      'count',
+      'space',
+      'bytes',
+      'baz',
+      'foo.ts',
+      'bar',
+      '@google-cloud/profiler/profiler.ts',
+      'foo2',
+      'foo1',
+      'node_modules/@google-cloud/profiler/profiler.ts',
+      'bar.ts',
+    ],
+    timeNanos: 0,
+    periodType: new perftools.profiles.ValueType({type: 3, unit: 4}),
+    period: 524288,
+  });
 
 // heapProfile is encoded then decoded to convert numbers to longs, in
 // decodedHeapProfile
-const encodedHeapProfileIncludePath = heapProfileIncludePath.encode();
+const encodedHeapProfileIncludePath = perftools.profiles.Profile.encode(
+  heapProfileIncludePath
+).finish();
 export const decodedHeapProfileIncludePath = Object.freeze(
-  Profile.decode(encodedHeapProfileIncludePath)
+  perftools.profiles.Profile.decode(encodedHeapProfileIncludePath)
 );
 
 const heapExcludePathFunctions = [
-  new Function({
+  new perftools.profiles.Function({
     id: 1,
     name: 5,
     systemName: 5,
     filename: 6,
   }),
-  new Function({
+  new perftools.profiles.Function({
     id: 2,
     name: 7,
     systemName: 7,
@@ -775,41 +796,53 @@ const heapExcludePathFunctions = [
 ];
 
 const heapExcludePathLocations = [
-  new Location({
+  new perftools.profiles.Location({
     line: [{functionId: 1, line: 1}],
     id: 1,
   }),
-  new Location({
+  new perftools.profiles.Location({
     line: [{functionId: 2, line: 3}],
     id: 2,
   }),
 ];
 
-export const heapProfileExcludePath = new Profile({
-  sampleType: [
-    new ValueType({type: 1, unit: 2}),
-    new ValueType({type: 3, unit: 4}),
-  ],
-  sample: [
-    new Sample({
-      locationId: [2, 1],
-      value: [1, 2],
-      label: [],
-    }),
-  ],
-  location: heapExcludePathLocations,
-  function: heapExcludePathFunctions,
-  stringTable: ['objects', 'count', 'space', 'bytes', 'baz', 'foo.ts', 'foo2'],
-  timeNanos: 0,
-  periodType: new ValueType({type: 3, unit: 4}),
-  period: 524288,
-});
+export const heapProfileExcludePath: perftools.profiles.IProfile =
+  Object.freeze({
+    sampleType: [
+      new perftools.profiles.ValueType({type: 1, unit: 2}),
+      new perftools.profiles.ValueType({type: 3, unit: 4}),
+    ],
+    sample: [
+      new perftools.profiles.Sample({
+        locationId: [2, 1],
+        value: [1, 2],
+        label: [],
+      }),
+    ],
+    location: heapExcludePathLocations,
+    function: heapExcludePathFunctions,
+    stringTable: [
+      '',
+      'objects',
+      'count',
+      'space',
+      'bytes',
+      'baz',
+      'foo.ts',
+      'foo2',
+    ],
+    timeNanos: 0,
+    periodType: new perftools.profiles.ValueType({type: 3, unit: 4}),
+    period: 524288,
+  });
 
 // heapProfile is encoded then decoded to convert numbers to longs, in
 // decodedHeapProfile
-const encodedHeapProfileExcludePath = heapProfileExcludePath.encode();
+const encodedHeapProfileExcludePath = perftools.profiles.Profile.encode(
+  heapProfileExcludePath
+).finish();
 export const decodedHeapProfileExcludePath = Object.freeze(
-  Profile.decode(encodedHeapProfileExcludePath)
+  perftools.profiles.Profile.decode(encodedHeapProfileExcludePath)
 );
 
 const mapDir = tmp.dirSync();
@@ -891,25 +924,25 @@ export const v8HeapGeneratedProfile = Object.freeze({
 });
 
 const heapSourceFunctions = [
-  new Function({
+  new perftools.profiles.Function({
     id: 1,
     name: 5,
     systemName: 5,
     filename: 6,
   }),
-  new Function({
+  new perftools.profiles.Function({
     id: 2,
     name: 7,
     systemName: 7,
     filename: 6,
   }),
-  new Function({
+  new perftools.profiles.Function({
     id: 3,
     name: 8,
     systemName: 8,
     filename: 9,
   }),
-  new Function({
+  new perftools.profiles.Function({
     id: 4,
     name: 10,
     systemName: 10,
@@ -918,36 +951,36 @@ const heapSourceFunctions = [
 ];
 
 const heapSourceLocations = [
-  new Location({
+  new perftools.profiles.Location({
     line: [{functionId: 1, line: 10}],
     id: 1,
   }),
-  new Location({
+  new perftools.profiles.Location({
     line: [{functionId: 2, line: 20}],
     id: 2,
   }),
-  new Location({
+  new perftools.profiles.Location({
     line: [{functionId: 3, line: 10}],
     id: 3,
   }),
-  new Location({
+  new perftools.profiles.Location({
     line: [{functionId: 4, line: 5}],
     id: 4,
   }),
 ];
 
-export const heapSourceProfile = new Profile({
+export const heapSourceProfile: perftools.profiles.IProfile = Object.freeze({
   sampleType: [
-    new ValueType({type: 1, unit: 2}),
-    new ValueType({type: 3, unit: 4}),
+    new perftools.profiles.ValueType({type: 1, unit: 2}),
+    new perftools.profiles.ValueType({type: 3, unit: 4}),
   ],
   sample: [
-    new Sample({
+    new perftools.profiles.Sample({
       locationId: [2, 1],
       value: [3, 6],
       label: [],
     }),
-    new Sample({
+    new perftools.profiles.Sample({
       locationId: [4, 3, 1],
       value: [5, 25],
       label: [],
@@ -956,6 +989,7 @@ export const heapSourceProfile = new Profile({
   location: heapSourceLocations,
   function: heapSourceFunctions,
   stringTable: [
+    '',
     'objects',
     'count',
     'space',
@@ -969,7 +1003,7 @@ export const heapSourceProfile = new Profile({
     path.join(mapDirPath, 'baz.ts'),
   ],
   timeNanos: 0,
-  periodType: new ValueType({type: 3, unit: 4}),
+  periodType: new perftools.profiles.ValueType({type: 3, unit: 4}),
   period: 524288,
 });
 
@@ -1029,25 +1063,25 @@ export const v8TimeGeneratedProfile: TimeProfile = Object.freeze({
 });
 
 const timeSourceFunctions = [
-  new Function({
+  new perftools.profiles.Function({
     id: 1,
     name: 5,
     systemName: 5,
     filename: 6,
   }),
-  new Function({
+  new perftools.profiles.Function({
     id: 2,
     name: 7,
     systemName: 7,
     filename: 6,
   }),
-  new Function({
+  new perftools.profiles.Function({
     id: 3,
     name: 8,
     systemName: 8,
     filename: 9,
   }),
-  new Function({
+  new perftools.profiles.Function({
     id: 4,
     name: 10,
     systemName: 10,
@@ -1056,36 +1090,36 @@ const timeSourceFunctions = [
 ];
 
 const timeSourceLocations = [
-  new Location({
+  new perftools.profiles.Location({
     line: [{functionId: 1, line: 10}],
     id: 1,
   }),
-  new Location({
+  new perftools.profiles.Location({
     line: [{functionId: 2, line: 20}],
     id: 2,
   }),
-  new Location({
+  new perftools.profiles.Location({
     line: [{functionId: 3, line: 10}],
     id: 3,
   }),
-  new Location({
+  new perftools.profiles.Location({
     line: [{functionId: 4, line: 5}],
     id: 4,
   }),
 ];
 
-export const timeSourceProfile = new Profile({
+export const timeSourceProfile: perftools.profiles.IProfile = Object.freeze({
   sampleType: [
-    new ValueType({type: 1, unit: 2}),
-    new ValueType({type: 3, unit: 4}),
+    new perftools.profiles.ValueType({type: 1, unit: 2}),
+    new perftools.profiles.ValueType({type: 3, unit: 4}),
   ],
   sample: [
-    new Sample({
+    new perftools.profiles.Sample({
       locationId: [2, 1],
       value: [5, 5000000],
       label: [],
     }),
-    new Sample({
+    new perftools.profiles.Sample({
       locationId: [4, 3, 1],
       value: [10, 10000000],
       label: [],
@@ -1094,6 +1128,7 @@ export const timeSourceProfile = new Profile({
   location: timeSourceLocations,
   function: timeSourceFunctions,
   stringTable: [
+    '',
     'sample',
     'count',
     'wall',
@@ -1108,6 +1143,6 @@ export const timeSourceProfile = new Profile({
   ],
   timeNanos: 0,
   durationNanos: 10 * 1000 * 1000 * 1000,
-  periodType: new ValueType({type: 3, unit: 4}),
+  periodType: new perftools.profiles.ValueType({type: 3, unit: 4}),
   period: 1000,
 });

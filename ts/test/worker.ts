@@ -1,7 +1,7 @@
 // eslint-disable-next-line node/no-unsupported-features/node-builtins
 import {Worker, isMainThread} from 'worker_threads';
 import {time} from '../src/index';
-import {Profile, ValueType} from 'pprof-format';
+import {perftools} from '../../proto/profile';
 
 const assert = require('assert');
 
@@ -11,13 +11,19 @@ if (isMainThread) {
   new Worker(__filename);
 }
 
-function valueName(profile: Profile, vt: ValueType) {
+function valueName(
+  profile: perftools.profiles.IProfile,
+  vt: perftools.profiles.IValueType
+) {
   const type = getAndVerifyString(profile.stringTable!, vt, 'type');
   const unit = getAndVerifyString(profile.stringTable!, vt, 'unit');
   return `${type}/${unit}`;
 }
 
-function sampleName(profile: Profile, sampleType: ValueType[]) {
+function sampleName(
+  profile: perftools.profiles.IProfile,
+  sampleType: perftools.profiles.IValueType[]
+) {
   return sampleType.map(valueName.bind(null, profile));
 }
 
