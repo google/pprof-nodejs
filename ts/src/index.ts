@@ -42,8 +42,8 @@ if (module.parent && module.parent.id === 'internal/preload') {
       // The process is going to terminate imminently. All work here needs to
       // be synchronous.
 
-      // TODO: this code no longer works because stop() cannot be run synchronously. Maybe
-      // beforeExit event would be a decent middleground, or can run this in a signal handler.
+      // TODO #234: this code no longer works because stop() cannot be run synchronously.
+      // Remove this feature.
       const profile = await stop();
       const buffer = encodeSync(profile);
       writeFileSync(`pprof-profile-${process.pid}.pb.gz`, buffer);
