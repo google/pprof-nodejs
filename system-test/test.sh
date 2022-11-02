@@ -2,8 +2,8 @@
 
 SRCDIR="/cloned_src"
 
-# trap "cd $SRCDIR && npm run clean" EXIT
-# trap "echo '** TEST FAILED **'" ERR
+trap "cd $SRCDIR && npm run clean" EXIT
+trap "echo '** TEST FAILED **'" ERR
 
 function timeout_after() {
   # timeout on Node 11 alpine image requires -t to specify time.
@@ -57,7 +57,6 @@ fi
 
 node -v
 node --trace-warnings "$BENCHPATH" 10 $VERIFY_TIME_LINE_NUMBERS
-ls
 
 if [[ "$VERIFY_TIME_LINE_NUMBERS" == "true" ]]; then
   pprof -lines -top -nodecount=2 time.pb.gz | tee $tty | \
