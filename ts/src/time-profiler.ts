@@ -15,6 +15,7 @@
  */
 
 import delay from 'delay';
+import type {perftools} from '../../proto/profile';
 
 import {serializeTimeProfile} from './profile-serializer';
 import {SourceMapper} from './sourcemapper/sourcemapper';
@@ -39,7 +40,9 @@ export interface TimeProfilerOptions {
   sourceMapper?: SourceMapper;
 }
 
-export async function profile(options: TimeProfilerOptions) {
+export async function profile(
+  options: TimeProfilerOptions
+): Promise<perftools.profiles.IProfile> {
   const stop = await start(
     options.intervalMicros || DEFAULT_INTERVAL_MICROS,
     options.sourceMapper
@@ -51,7 +54,7 @@ export async function profile(options: TimeProfilerOptions) {
 export async function start(
   intervalMicros: Microseconds = DEFAULT_INTERVAL_MICROS,
   sourceMapper?: SourceMapper
-) {
+): Promise<() => Promise<perftools.profiles.IProfile>> {
   if (profiling) {
     throw new Error('already profiling');
   }
