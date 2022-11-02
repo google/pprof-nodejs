@@ -37,15 +37,6 @@ export interface TimeProfilerOptions {
   /** average time in microseconds between samples */
   intervalMicros?: Microseconds;
   sourceMapper?: SourceMapper;
-  name?: string;
-
-  /**
-   * This configuration option is experimental.
-   * When set to true, functions will be aggregated at the line level, rather
-   * than at the function level.
-   * This defaults to false.
-   */
-  lineNumbers?: boolean;
 }
 
 export async function profile(options: TimeProfilerOptions) {
