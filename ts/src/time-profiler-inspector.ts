@@ -77,9 +77,10 @@ function translateToTimeProfile(
     callFrame: {columnNumber, functionName, lineNumber, scriptId, url},
   }: inspector.Profiler.ProfileNode): TimeProfileNode {
     const parsedScriptId = parseInt(scriptId);
+    const scriptName = url.startsWith('file:/') ? url.slice(6) : url;
     return {
       name: functionName,
-      scriptName: url,
+      scriptName,
 
       // Add 1 because these are zero-based
       columnNumber: columnNumber + 1,
