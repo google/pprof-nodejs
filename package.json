@@ -40,7 +40,7 @@
     "split": "^1.0.1"
   },
   "devDependencies": {
-    "@types/mocha": "^9.0.0",
+    "@types/mocha": "^10.0.0",
     "@types/node": "^16.0.0",
     "@types/p-limit": "^2.0.0",
     "@types/pretty-ms": "^4.0.0",
