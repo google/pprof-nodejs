@@ -189,7 +189,7 @@ export const timeProfile: perftools.profiles.IProfile = Object.freeze({
   timeNanos: 0,
   durationNanos: 10 * 1000 * 1000 * 1000,
   periodType: new perftools.profiles.ValueType({type: 3, unit: 4}),
-  period: 1000,
+  period: 1000000,
 });
 
 // timeProfile is encoded then decoded to convert numbers to longs, in
@@ -607,7 +607,7 @@ export const anonymousFunctionTimeProfile: perftools.profiles.IProfile =
     timeNanos: 0,
     durationNanos: 10 * 1000 * 1000 * 1000,
     periodType: new perftools.profiles.ValueType({type: 3, unit: 4}),
-    period: 1000,
+    period: 1000000,
   });
 
 const heapWithPathLeaf1 = {
@@ -1144,5 +1144,5 @@ export const timeSourceProfile: perftools.profiles.IProfile = Object.freeze({
   timeNanos: 0,
   durationNanos: 10 * 1000 * 1000 * 1000,
   periodType: new perftools.profiles.ValueType({type: 3, unit: 4}),
-  period: 1000,
+  period: 1000000,
 });

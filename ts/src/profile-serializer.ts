@@ -310,7 +310,7 @@ export function serializeTimeProfile(
     timeNanos: Date.now() * 1000 * 1000,
     durationNanos: (prof.endTime - prof.startTime) * 1000,
     periodType: timeValueType,
-    period: intervalMicros,
+    period: intervalNanos,
   };
 
   serialize(
@@ -400,7 +400,7 @@ export function serializeCpuProfile(
     timeNanos: Date.now() * 1000 * 1000,
     durationNanos: prof.endTime - prof.startTime,
     periodType: cpuValueType,
-    period: intervalMicros,
+    period: intervalNanos,
   };
 
   serialize(

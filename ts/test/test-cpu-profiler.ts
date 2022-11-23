@@ -153,7 +153,7 @@ describe('CPU Profiler', () => {
       // verifySampleType(profile, 2, 'wall/nanoseconds');
       verifyPeriodType(profile, 'cpu/nanoseconds');
 
-      assert.strictEqual(profile.period, 1000 / 99);
+      assert.strictEqual(profile.period, 1e9 / 99);
       assert.ok(profile.durationNanos! > 0);
       assert.ok(profile.timeNanos! > 0);
 
