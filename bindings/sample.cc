@@ -30,7 +30,7 @@ std::vector<uintptr_t> MakeFrames(v8::Isolate* isolate) {
   std::vector<uintptr_t> output(n);
 
   for (size_t i = 0; i < n; i++) {
-    output.push_back(reinterpret_cast<uintptr_t>(frames[i]));
+    output[i] = reinterpret_cast<uintptr_t>(frames[i]);
   }
 
   return output;
