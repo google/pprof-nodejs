@@ -45,11 +45,16 @@ void test_samples(Tap& t) {
 
   // Make a synthetic sample to set as the "last sample"
   auto label_wrap = std::make_shared<dd::LabelWrap>(labels);
-  std::vector<uintptr_t> frames = {1234};
-  uint64_t cpu_time = 12345;
+  std::vector<uintptr_t> frames1 = {1234};
+  uint64_t cpu_time1 = 12345;
 
-  std::unique_ptr<dd::Sample> sample(
-    new dd::Sample(isolate, label_wrap, frames, cpu_time));
+  std::unique_ptr<dd::Sample> sample1(
+    new dd::Sample(isolate, label_wrap, frames1, cpu_time1));
+
+  std::vector<uintptr_t> frames2 = {5678};
+  uint64_t cpu_time2 = 56789;
+  std::unique_ptr<dd::Sample> sample2(
+    new dd::Sample(isolate, label_wrap, frames2, cpu_time2));
 
   auto record = std::make_shared<dd::CodeEventRecord>(
     1234, 0, 5678, 1, 2, "fnA");
@@ -58,14 +63,15 @@ void test_samples(Tap& t) {
   map->Clear();
   map->Add(1234, record);
 
-  cpu.SetLastSample(std::move(sample));
+  cpu.SetLastSample(std::move(sample1));
+  cpu.SetLastSample(std::move(sample2));
   cpu.ProcessSample();
 
-  t.equal(1U, cpu.GetSampleCount(),
+  t.equal(2U, cpu.GetSampleCount(),
     "has processed sample after capture/process");
 
   auto samples = cpu.GetSamples();
-  t.equal(1U, samples->Length(),
+  t.equal(2U, samples->Length(),
     "should have one processed sample in samples array");
 
   auto firstSample = Nan::Get(samples, 0).ToLocalChecked().As<v8::Object>();

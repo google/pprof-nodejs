@@ -13,10 +13,13 @@
 
 namespace dd {
 
+static constexpr size_t k_sample_buffer_size = 100;
+
 CpuProfiler::CpuProfiler()
   : isolate_(v8::Isolate::GetCurrent()),
     async(new uv_async_t()),
     code_map(CodeMap::For(isolate_)),
+    last_samples(k_sample_buffer_size),
     samples(Nan::New<v8::Array>()),
     sampler_running(false) {
   // TODO: Move symbolizer worker to a separate class?
@@ -61,12 +64,14 @@ v8::Local<v8::Number> CpuProfiler::GetFrequency() {
 // the JavaScript thread which creates a corresponding handle object,
 // making it garbage-collectable.
 void CpuProfiler::SetLastSample(std::unique_ptr<Sample> sample) {
-  lastSample = std::move(sample);
+  if (!last_samples.full()) {
+    last_samples.push_back(std::move(sample));
+  }
 }
 
 // NOTE: For test/debug purposes only
 Sample* CpuProfiler::GetLastSample() {
-  return lastSample.get();
+  return last_samples.empty() ? nullptr : last_samples.front().get();
 }
 
 void CpuProfiler::CaptureSample(v8::Isolate* isolate) {
@@ -96,22 +101,28 @@ void CpuProfiler::SamplerThread(double hz) {
 void CpuProfiler::ProcessSample() {
   v8::HandleScope scope(isolate_);
 
-  Sample* sample;
-  {
-    const std::lock_guard<std::mutex> lock(mutex);
-    sample = lastSample.release();
-  }
+  while (true) {
+    Sample* sample;
+    {
+      const std::lock_guard<std::mutex> lock(mutex);
+      if (last_samples.empty()) {
+        return;
+      }
+      auto last_sample = last_samples.pop_front();
+      sample = last_sample.release();
+    }
 
-  if (!sample) return;
-  if (!sample->Symbolize(code_map)->Length()) {
-    delete sample;
-    return;
-  }
+    if (!sample) continue;
+    if (!sample->Symbolize(code_map)->Length()) {
+      delete sample;
+      continue;
+    }
 
-  // Append the newly processed sample to the samples array
-  auto arr = samples.Get(isolate_);
-  arr->Set(isolate_->GetCurrentContext(), arr->Length(),
-    sample->ToObject(isolate_)).Check();
+    // Append the newly processed sample to the samples array
+    auto arr = samples.Get(isolate_);
+    arr->Set(isolate_->GetCurrentContext(), arr->Length(),
+      sample->ToObject(isolate_)).Check();
+  }
 }
 
 void CpuProfiler::Run(uv_async_t* handle) {
