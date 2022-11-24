@@ -67,10 +67,15 @@ export interface LabelSet {
   [key: string]: string | number;
 }
 
+export interface LabelsCpu {
+  labels: LabelSet;
+  cpuTime: number;
+}
+
 export interface CpuProfileNode extends ProfileNode {
   hitCount: number;
   cpuTime: number;
-  labelSets: LabelSet[];
+  labelSets: LabelsCpu[];
 }
 
 export interface CpuProfileSample {

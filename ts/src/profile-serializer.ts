@@ -366,25 +366,19 @@ export function serializeCpuProfile(
     entry: Entry<CpuProfileNode>,
     samples: perftools.profiles.Sample[]
   ) => {
-    for (const labelSet of entry.node.labelSets) {
+    for (const labelCpu of entry.node.labelSets) {
       const sample = new perftools.profiles.Sample({
         locationId: entry.stack,
-        value: [1, intervalNanos],
-        label: buildLabels(labelSet, stringTable),
+        value: [1, labelCpu.cpuTime],
+        label: buildLabels(labelCpu.labels, stringTable),
       });
 
       samples.push(sample);
     }
-
-    const unknownEntryCount = entry.node.hitCount - entry.node.labelSets.length;
-    if (unknownEntryCount > 0) {
+    if (entry.node.hitCount > 0) {
       const sample = new perftools.profiles.Sample({
         locationId: entry.stack,
-        value: [
-          unknownEntryCount,
-          entry.node.cpuTime,
-          // unknownEntryCount * intervalNanos,
-        ],
+        value: [entry.node.hitCount, entry.node.cpuTime],
       });
       samples.push(sample);
     }

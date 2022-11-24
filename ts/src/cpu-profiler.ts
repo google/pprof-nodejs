@@ -87,10 +87,14 @@ export default class CpuProfiler extends NativeCpuProfiler {
         targetNode = node;
       }
 
-      targetNode.cpuTime += sample.cpuTime;
-      targetNode.hitCount++;
-      if (sample.labels) {
-        targetNode.labelSets.push(sample.labels);
+      if (sample.labels && Object.keys(sample.labels).length > 0) {
+        targetNode.labelSets.push({
+          labels: sample.labels,
+          cpuTime: sample.cpuTime,
+        });
+      } else {
+        targetNode.cpuTime += sample.cpuTime;
+        targetNode.hitCount++;
       }
 
       targetNode = timeProfile.topDownRoot;
