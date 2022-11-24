@@ -16,8 +16,7 @@
 namespace dd {
 
 std::vector<uintptr_t> MakeFrames(v8::Isolate* isolate) {
-  static const size_t frames_limit = 255;
-  void* frames[frames_limit];
+  void* frames[Sample::frames_limit];
 
   v8::SampleInfo sample_info;
   v8::RegisterState register_state;
@@ -25,7 +24,7 @@ std::vector<uintptr_t> MakeFrames(v8::Isolate* isolate) {
   register_state.fp = &register_state;
   register_state.sp = &register_state;
 
-  isolate->GetStackSample(register_state, frames, frames_limit, &sample_info);
+  isolate->GetStackSample(register_state, frames, Sample::frames_limit, &sample_info);
 
   size_t n = sample_info.frames_count;
   std::vector<uintptr_t> output(n);

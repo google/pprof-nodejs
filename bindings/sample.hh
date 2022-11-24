@@ -14,7 +14,6 @@ namespace dd {
 
 class Sample : public Nan::ObjectWrap {
  private:
-  static const size_t frames_limit = 255;
 
   std::shared_ptr<LabelWrap> labels_;
   uint64_t timestamp;
@@ -47,6 +46,8 @@ class Sample : public Nan::ObjectWrap {
   static NAN_GETTER(GetLocations);
 
   static NAN_MODULE_INIT(Init);
+
+  static const size_t frames_limit = 255;
 };
 
 } // namespace dd
