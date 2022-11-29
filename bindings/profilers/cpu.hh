@@ -3,7 +3,6 @@
 #include <cstdint>
 #include <memory>
 #include <atomic>
-#include <mutex>
 
 #include <nan.h>
 #include <uv.h>
@@ -90,7 +89,6 @@ class CpuProfiler : public Nan::ObjectWrap {
   std::shared_ptr<LabelWrap> labels_;
   double frequency = 0;
   Nan::Global<v8::Array> samples;
-  std::mutex mutex;
   uint64_t start_time;
   uv_sem_t sampler_thread_done;
   uv_thread_t sampler_thread;

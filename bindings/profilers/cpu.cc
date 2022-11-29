@@ -1,6 +1,4 @@
-#include <queue>
 #include <thread>
-#include <chrono>
 
 #include <v8-profiler.h>
 #include <v8.h>
@@ -75,7 +73,6 @@ Sample* CpuProfiler::GetLastSample() {
 }
 
 void CpuProfiler::CaptureSample(v8::Isolate* isolate) {
-  const std::lock_guard<std::mutex> lock(mutex);
   auto diff = cpu_time.Diff();
   SetLastSample(
     std::make_unique<Sample>(isolate, labels_, diff));
@@ -101,16 +98,9 @@ void CpuProfiler::SamplerThread(double hz) {
 void CpuProfiler::ProcessSample() {
   v8::HandleScope scope(isolate_);
 
-  while (true) {
-    Sample* sample;
-    {
-      const std::lock_guard<std::mutex> lock(mutex);
-      if (last_samples.empty()) {
-        return;
-      }
-      auto last_sample = last_samples.pop_front();
-      sample = last_sample.release();
-    }
+  while (!last_samples.empty()) {
+    auto last_sample = last_samples.pop_front();
+    Sample* sample = last_sample.release();
 
     if (!sample) continue;
     if (!sample->Symbolize(code_map)->Length()) {
@@ -153,13 +143,11 @@ void CpuProfiler::Stop() {
 }
 
 v8::Local<v8::Value> CpuProfiler::GetLabels() {
-  const std::lock_guard<std::mutex> lock(mutex);
   if (!labels_) return Nan::Undefined();
   return labels_->handle();
 }
 
 void CpuProfiler::SetLabels(v8::Local<v8::Value> value) {
-  const std::lock_guard<std::mutex> lock(mutex);
   labels_ = std::make_shared<LabelWrap>(value);
 }
 
