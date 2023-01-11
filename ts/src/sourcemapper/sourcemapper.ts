@@ -34,8 +34,6 @@ if (desc) {
   Object.defineProperty(globalThis, 'fetch', desc);
 }
 
-import * as scanner from '../../third_party/cloud-debug-nodejs/src/agent/io/scanner';
-
 const pify = require('pify');
 const pLimit = require('p-limit');
 const readFile = pify(fs.readFile);
@@ -249,8 +247,56 @@ async function createFromMapFiles(mapFiles: string[]): Promise<SourceMapper> {
   return mapper;
 }
 
+function isErrnoException(e: unknown): e is NodeJS.ErrnoException {
+  return e instanceof Error && 'code' in e;
+}
+
+function isNonFatalError(error: unknown) {
+  const nonFatalErrors = ['ENOENT', 'EPERM', 'EACCES', 'ELOOP'];
+
+  return (
+    isErrnoException(error) && error.code && nonFatalErrors.includes(error.code)
+  );
+}
+
+async function* walk(
+  dir: string,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  fileFilter = (filename: string) => true,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  directoryFilter = (root: string, dirname: string) => true
+): AsyncIterable<string> {
+  async function* walkRecursive(dir: string): AsyncIterable<string> {
+    try {
+      for await (const d of await fs.promises.opendir(dir)) {
+        const entry = path.join(dir, d.name);
+        if (d.isDirectory() && directoryFilter(dir, d.name)) {
+          yield* walkRecursive(entry);
+        } else if (d.isFile() && fileFilter(d.name)) {
+          // check that the file is readable
+          await fs.promises.access(entry, fs.constants.R_OK);
+          yield entry;
+        }
+      }
+    } catch (error) {
+      if (!isNonFatalError(error)) {
+        throw error;
+      }
+    }
+  }
+
+  yield* walkRecursive(dir);
+}
+
 async function getMapFiles(baseDir: string): Promise<string[]> {
-  const fileStats = await scanner.scan(false, baseDir, /.js.map$/);
-  const mapFiles = fileStats.selectFiles(/.js.map$/, process.cwd());
+  const mapFiles: string[] = [];
+  for await (const entry of walk(
+    baseDir,
+    filename => filename.endsWith('.js.map'),
+    (root, dirname) =>
+      root !== '/proc' && dirname !== '.git' && dirname !== 'node_modules'
+  )) {
+    mapFiles.push(path.relative(baseDir, entry));
+  }
   return mapFiles;
 }

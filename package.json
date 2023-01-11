@@ -28,7 +28,6 @@
   "license": "Apache-2.0",
   "dependencies": {
     "delay": "^5.0.0",
-    "findit2": "^2.2.3",
     "node-gyp-build": "^3.9.0",
     "p-limit": "^3.1.0",
     "pify": "^5.0.0",
