@@ -14,7 +14,17 @@
  * limitations under the License.
  */
 
-import {perftools} from '../../proto/profile';
+import {
+  Function,
+  Label,
+  Line,
+  Location,
+  Profile,
+  Sample,
+  ValueType,
+  StringTable,
+  ProfileInput,
+} from 'pprof-format';
 import {
   GeneratedLocation,
   SourceLocation,
@@ -41,7 +51,7 @@ type Stack = number[];
  */
 type AppendEntryToSamples<T extends ProfileNode> = (
   entry: Entry<T>,
-  samples: perftools.profiles.Sample[]
+  samples: Sample[]
 ) => void;
 
 /**
@@ -63,35 +73,6 @@ function isGeneratedLocation(
 }
 
 /**
- * Used to build string table and access strings and their ids within the table
- * when serializing a profile.
- */
-class StringTable {
-  strings: string[];
-  stringsMap: Map<string, number>;
-
-  constructor() {
-    this.strings = [];
-    this.stringsMap = new Map<string, number>();
-    this.getIndexOrAdd('');
-  }
-
-  /**
-   * @return index of str within the table. Also adds str to string table if
-   * str is not in the table already.
-   */
-  getIndexOrAdd(str: string): number {
-    let idx = this.stringsMap.get(str);
-    if (idx !== undefined) {
-      return idx;
-    }
-    idx = this.strings.push(str) - 1;
-    this.stringsMap.set(str, idx);
-    return idx;
-  }
-}
-
-/**
  * Takes v8 profile and populates sample, location, and function fields of
  * profile.proto.
  *
@@ -104,16 +85,16 @@ class StringTable {
  * @param stringTable - string table for the existing profile.
  */
 function serialize<T extends ProfileNode>(
-  profile: perftools.profiles.IProfile,
+  profile: ProfileInput,
   root: T,
   appendToSamples: AppendEntryToSamples<T>,
   stringTable: StringTable,
   ignoreSamplesPath?: string,
   sourceMapper?: SourceMapper
 ) {
-  const samples: perftools.profiles.Sample[] = [];
-  const locations: perftools.profiles.Location[] = [];
-  const functions: perftools.profiles.Function[] = [];
+  const samples: Sample[] = [];
+  const locations: Location[] = [];
+  const functions: Function[] = [];
   const functionIdMap = new Map<string, number>();
   const locationIdMap = new Map<string, number>();
 
@@ -140,12 +121,12 @@ function serialize<T extends ProfileNode>(
   profile.sample = samples;
   profile.location = locations;
   profile.function = functions;
-  profile.stringTable = stringTable.strings;
+  profile.stringTable = stringTable;
 
   function getLocation(
     node: ProfileNode,
     sourceMapper?: SourceMapper
-  ): perftools.profiles.Location {
+  ): Location {
     let profLoc: SourceLocation = {
       file: node.scriptName || '',
       line: node.lineNumber,
@@ -172,7 +153,7 @@ function serialize<T extends ProfileNode>(
       profLoc.name,
       profLoc.line
     );
-    const location = new perftools.profiles.Location({id, line: [line]});
+    const location = new Location({id, line: [line]});
     locations.push(location);
     return location;
   }
@@ -182,8 +163,8 @@ function serialize<T extends ProfileNode>(
     scriptName?: string,
     name?: string,
     line?: number
-  ): perftools.profiles.Line {
-    return new perftools.profiles.Line({
+  ): Line {
+    return new Line({
       functionId: getFunction(scriptId, scriptName, name).id,
       line,
     });
@@ -193,7 +174,7 @@ function serialize<T extends ProfileNode>(
     scriptId?: number,
     scriptName?: string,
     name?: string
-  ): perftools.profiles.Function {
+  ): Function {
     const keyStr = `${scriptId}:${name}`;
     let id = functionIdMap.get(keyStr);
     if (id !== undefined) {
@@ -202,12 +183,12 @@ function serialize<T extends ProfileNode>(
     }
     id = functions.length + 1;
     functionIdMap.set(keyStr, id);
-    const nameId = stringTable.getIndexOrAdd(name || '(anonymous)');
-    const f = new perftools.profiles.Function({
+    const nameId = stringTable.dedup(name || '(anonymous)');
+    const f = new Function({
       id,
       name: nameId,
       systemName: nameId,
-      filename: stringTable.getIndexOrAdd(scriptName || ''),
+      filename: stringTable.dedup(scriptName || ''),
     });
     functions.push(f);
     return f;
@@ -218,12 +199,10 @@ function serialize<T extends ProfileNode>(
  * @return value type for sample counts (type:sample, units:count), and
  * adds strings used in this value type to the table.
  */
-function createSampleCountValueType(
-  table: StringTable
-): perftools.profiles.ValueType {
-  return new perftools.profiles.ValueType({
-    type: table.getIndexOrAdd('sample'),
-    unit: table.getIndexOrAdd('count'),
+function createSampleCountValueType(table: StringTable): ValueType {
+  return new ValueType({
+    type: table.dedup('sample'),
+    unit: table.dedup('count'),
   });
 }
 
@@ -231,10 +210,10 @@ function createSampleCountValueType(
  * @return value type for time samples (type:wall, units:nanoseconds), and
  * adds strings used in this value type to the table.
  */
-function createTimeValueType(table: StringTable): perftools.profiles.ValueType {
-  return new perftools.profiles.ValueType({
-    type: table.getIndexOrAdd('wall'),
-    unit: table.getIndexOrAdd('nanoseconds'),
+function createTimeValueType(table: StringTable): ValueType {
+  return new ValueType({
+    type: table.dedup('wall'),
+    unit: table.dedup('nanoseconds'),
   });
 }
 
@@ -242,10 +221,10 @@ function createTimeValueType(table: StringTable): perftools.profiles.ValueType {
  * @return value type for cpu samples (type:cpu, units:nanoseconds), and
  * adds strings used in this value type to the table.
  */
-function createCpuValueType(table: StringTable): perftools.profiles.ValueType {
-  return new perftools.profiles.ValueType({
-    type: table.getIndexOrAdd('cpu'),
-    unit: table.getIndexOrAdd('nanoseconds'),
+function createCpuValueType(table: StringTable): ValueType {
+  return new ValueType({
+    type: table.dedup('cpu'),
+    unit: table.dedup('nanoseconds'),
   });
 }
 
@@ -253,12 +232,10 @@ function createCpuValueType(table: StringTable): perftools.profiles.ValueType {
  * @return value type for object counts (type:objects, units:count), and
  * adds strings used in this value type to the table.
  */
-function createObjectCountValueType(
-  table: StringTable
-): perftools.profiles.ValueType {
-  return new perftools.profiles.ValueType({
-    type: table.getIndexOrAdd('objects'),
-    unit: table.getIndexOrAdd('count'),
+function createObjectCountValueType(table: StringTable): ValueType {
+  return new ValueType({
+    type: table.dedup('objects'),
+    unit: table.dedup('count'),
   });
 }
 
@@ -266,12 +243,10 @@ function createObjectCountValueType(
  * @return value type for memory allocations (type:space, units:bytes), and
  * adds strings used in this value type to the table.
  */
-function createAllocationValueType(
-  table: StringTable
-): perftools.profiles.ValueType {
-  return new perftools.profiles.ValueType({
-    type: table.getIndexOrAdd('space'),
-    unit: table.getIndexOrAdd('bytes'),
+function createAllocationValueType(table: StringTable): ValueType {
+  return new ValueType({
+    type: table.dedup('space'),
+    unit: table.dedup('bytes'),
   });
 }
 
@@ -286,14 +261,14 @@ export function serializeTimeProfile(
   prof: TimeProfile,
   intervalMicros: number,
   sourceMapper?: SourceMapper
-): perftools.profiles.IProfile {
+): Profile {
   const intervalNanos = intervalMicros * 1000;
   const appendTimeEntryToSamples: AppendEntryToSamples<TimeProfileNode> = (
     entry: Entry<TimeProfileNode>,
-    samples: perftools.profiles.Sample[]
+    samples: Sample[]
   ) => {
     if (entry.node.hitCount > 0) {
-      const sample = new perftools.profiles.Sample({
+      const sample = new Sample({
         locationId: entry.stack,
         value: [entry.node.hitCount, entry.node.hitCount * intervalNanos],
       });
@@ -322,23 +297,20 @@ export function serializeTimeProfile(
     sourceMapper
   );
 
-  return profile;
+  return new Profile(profile);
 }
 
-function buildLabels(
-  labelSet: LabelSet,
-  stringTable: StringTable
-): perftools.profiles.Label[] {
-  const labels: perftools.profiles.Label[] = [];
+function buildLabels(labelSet: LabelSet, stringTable: StringTable): Label[] {
+  const labels: Label[] = [];
 
   for (const [key, value] of Object.entries(labelSet)) {
     if (typeof value === 'number' || typeof value === 'string') {
-      const label = new perftools.profiles.Label({
-        key: stringTable.getIndexOrAdd(key),
+      const label = new Label({
+        key: stringTable.dedup(key),
         num: typeof value === 'number' ? value : undefined,
         str:
           typeof value === 'string'
-            ? stringTable.getIndexOrAdd(value as string)
+            ? stringTable.dedup(value as string)
             : undefined,
       });
 
@@ -360,14 +332,14 @@ export function serializeCpuProfile(
   prof: CpuProfile,
   intervalMicros: number,
   sourceMapper?: SourceMapper
-): perftools.profiles.IProfile {
+): Profile {
   const intervalNanos = intervalMicros * 1000;
   const appendCpuEntryToSamples: AppendEntryToSamples<CpuProfileNode> = (
     entry: Entry<CpuProfileNode>,
-    samples: perftools.profiles.Sample[]
+    samples: Sample[]
   ) => {
     for (const labelCpu of entry.node.labelSets) {
-      const sample = new perftools.profiles.Sample({
+      const sample = new Sample({
         locationId: entry.stack,
         value: [1, labelCpu.cpuTime],
         label: buildLabels(labelCpu.labels, stringTable),
@@ -376,7 +348,7 @@ export function serializeCpuProfile(
       samples.push(sample);
     }
     if (entry.node.hitCount > 0) {
-      const sample = new perftools.profiles.Sample({
+      const sample = new Sample({
         locationId: entry.stack,
         value: [entry.node.hitCount, entry.node.cpuTime],
       });
@@ -406,7 +378,7 @@ export function serializeCpuProfile(
     sourceMapper
   );
 
-  return profile;
+  return new Profile(profile);
 }
 
 /**
@@ -425,16 +397,13 @@ export function serializeHeapProfile(
   intervalBytes: number,
   ignoreSamplesPath?: string,
   sourceMapper?: SourceMapper
-): perftools.profiles.IProfile {
+): Profile {
   const appendHeapEntryToSamples: AppendEntryToSamples<
     AllocationProfileNode
-  > = (
-    entry: Entry<AllocationProfileNode>,
-    samples: perftools.profiles.Sample[]
-  ) => {
+  > = (entry: Entry<AllocationProfileNode>, samples: Sample[]) => {
     if (entry.node.allocations.length > 0) {
       for (const alloc of entry.node.allocations) {
-        const sample = new perftools.profiles.Sample({
+        const sample = new Sample({
           locationId: entry.stack,
           value: [alloc.count, alloc.sizeBytes * alloc.count],
           // TODO: add tag for allocation size
@@ -463,5 +432,6 @@ export function serializeHeapProfile(
     ignoreSamplesPath,
     sourceMapper
   );
-  return profile;
+
+  return new Profile(profile);
 }

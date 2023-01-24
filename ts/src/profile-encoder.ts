@@ -17,18 +17,14 @@
 import * as pify from 'pify';
 import {gzip, gzipSync} from 'zlib';
 
-import {perftools} from '../../proto/profile';
+import {Profile} from 'pprof-format';
 
 const gzipPromise = pify(gzip);
 
-export async function encode(
-  profile: perftools.profiles.IProfile
-): Promise<Buffer> {
-  const buffer = perftools.profiles.Profile.encode(profile).finish();
-  return gzipPromise(buffer);
+export async function encode(profile: Profile): Promise<Buffer> {
+  return gzipPromise(profile.encode());
 }
 
-export function encodeSync(profile: perftools.profiles.IProfile): Buffer {
-  const buffer = perftools.profiles.Profile.encode(profile).finish();
-  return gzipSync(buffer);
+export function encodeSync(profile: Profile): Buffer {
+  return gzipSync(profile.encode());
 }

@@ -36,8 +36,8 @@ describe('Time Profiler', () => {
       assert.ok(profile.stringTable);
       assert.deepEqual(
         [
-          profile.stringTable!.indexOf('(program)'),
-          profile.stringTable!.indexOf('(idle)'),
+          profile.stringTable.strings!.indexOf('(program)'),
+          profile.stringTable.strings!.indexOf('(idle)'),
         ],
         [-1, -1]
       );
