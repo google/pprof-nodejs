@@ -13,6 +13,10 @@ namespace dd {
 
 static constexpr size_t k_sample_buffer_size = 100;
 
+static void cleanupProfiler(void* data) {
+   delete static_cast<CpuProfiler *>(data);
+}
+
 CpuProfiler::CpuProfiler()
   : isolate_(v8::Isolate::GetCurrent()),
     async(new uv_async_t()),
@@ -30,6 +34,11 @@ CpuProfiler::CpuProfiler()
   // the pending sample and the vector to push symbolized samples to.
   async->data = static_cast<void*>(this);
   uv_sem_init(&sampler_thread_done, 1);
+
+  // Add cleanup hook to stop profiler upon Node process exit, otherwise
+  // SamplingThread could cause crashes by calling `Isolate::RequestInterrupt`
+  // during shutdown.
+  node::AddEnvironmentCleanupHook(isolate_, &cleanupProfiler, this);
 }
 
 CpuProfiler::~CpuProfiler() {
@@ -37,19 +46,16 @@ CpuProfiler::~CpuProfiler() {
     [](uv_handle_t* handle){
       delete reinterpret_cast<uv_handle_t*>(handle);
     });
-  Stop();
-
-  uv_sem_wait(&sampler_thread_done);
+  StopAndWaitThread();
   uv_sem_destroy(&sampler_thread_done);
+
+  // Remove hook to avoid calling cleanup function on a destroyed object
+  node::RemoveEnvironmentCleanupHook(isolate_, &cleanupProfiler, this);
 }
 
-CpuProfiler* CpuProfiler::New() {
-  auto isolate = v8::Isolate::GetCurrent();
-  auto per_isolate = PerIsolateData::For(isolate);
-  v8::Local<v8::Function> cons = Nan::New(
-      per_isolate->CpuProfilerConstructor());
-  auto inst = Nan::NewInstance(cons, 0, {}).ToLocalChecked();
-  return Nan::ObjectWrap::Unwrap<CpuProfiler>(inst);
+void CpuProfiler::StopAndWaitThread() {
+  Stop();
+  uv_sem_wait(&sampler_thread_done);
 }
 
 v8::Local<v8::Number> CpuProfiler::GetFrequency() {

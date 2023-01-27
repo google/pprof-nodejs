@@ -97,7 +97,6 @@ class CpuProfiler : public Nan::ObjectWrap {
  public:
   CpuProfiler();
   ~CpuProfiler();
-  static CpuProfiler* New();
 
   // Disable copies and moves
   CpuProfiler(const CpuProfiler& other) = delete;
@@ -119,6 +118,7 @@ class CpuProfiler : public Nan::ObjectWrap {
   void SetLabels(v8::Local<v8::Value>);
   void Start(double hz);
   void Stop();
+  void StopAndWaitThread();
   uint32_t GetSampleCount();
   v8::Local<v8::Array> GetSamples();
   v8::Local<v8::Value> GetProfile();
