@@ -29,9 +29,9 @@ function getAndVerifyPresence(list: any[], id: number, zeroIndex = false) {
   return list[index];
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function getAndVerifyString(
   stringTable: StringTable,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   source: any,
   field: string
 ) {

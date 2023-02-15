@@ -85,7 +85,7 @@ export function start(
     if (restart) {
       runName = start();
     }
-    return serializeTimeProfile(result, intervalMicros, sourceMapper);
+    return serializeTimeProfile(result, intervalMicros, sourceMapper, true);
   }
 
   // For Node.js v16+, we want to start the next profile before we stop the
@@ -101,6 +101,6 @@ export function start(
       runName = nextRunName;
     }
     if (!restart) profiler.dispose();
-    return serializeTimeProfile(result, intervalMicros, sourceMapper);
+    return serializeTimeProfile(result, intervalMicros, sourceMapper, true);
   }
 }

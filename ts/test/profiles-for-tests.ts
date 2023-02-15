@@ -105,7 +105,7 @@ const timeRoot = {
 
 export const v8TimeProfile: TimeProfile = Object.freeze({
   startTime: 0,
-  endTime: 10 * 1000 * 1000,
+  endTime: 7 * 1000,
   topDownRoot: timeRoot,
 });
 
@@ -196,7 +196,7 @@ export const timeProfile = new Profile({
     'script1',
   ]),
   timeNanos: 0,
-  durationNanos: 10 * 1000 * 1000 * 1000,
+  durationNanos: 7 * 1000 * 1000,
   periodType: new ValueType({type: 3, unit: 4}),
   period: 1000000,
 });

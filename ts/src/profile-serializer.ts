@@ -250,6 +250,16 @@ function createAllocationValueType(table: StringTable): ValueType {
   });
 }
 
+function computeTotalHitCount(root: TimeProfileNode): number {
+  return (
+    root.hitCount +
+    (root.children as TimeProfileNode[]).reduce(
+      (sum, node) => sum + computeTotalHitCount(node),
+      0
+    )
+  );
+}
+
 /**
  * Converts v8 time profile into into a profile proto.
  * (https://github.com/google/pprof/blob/master/proto/profile.proto)
@@ -260,8 +270,21 @@ function createAllocationValueType(table: StringTable): ValueType {
 export function serializeTimeProfile(
   prof: TimeProfile,
   intervalMicros: number,
-  sourceMapper?: SourceMapper
+  sourceMapper?: SourceMapper,
+  recomputeSamplingInterval = false
 ): Profile {
+  // If requested, recompute sampling interval it from profile duration and total number of hits,
+  // since profile duration should be #hits x interval
+  // Recomputing an average interval is more accurate, since in practice intervals between
+  // samples are larger than the requested sampling interval (eg. 12.5ms vs 10ms requested).
+  if (recomputeSamplingInterval) {
+    const totalHitCount = computeTotalHitCount(prof.topDownRoot);
+    if (totalHitCount > 0) {
+      intervalMicros = Math.floor(
+        (prof.endTime - prof.startTime) / computeTotalHitCount(prof.topDownRoot)
+      );
+    }
+  }
   const intervalNanos = intervalMicros * 1000;
   const appendTimeEntryToSamples: AppendEntryToSamples<TimeProfileNode> = (
     entry: Entry<TimeProfileNode>,
