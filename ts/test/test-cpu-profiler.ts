@@ -14,9 +14,7 @@
  * limitations under the License.
  */
 
-import * as sinon from 'sinon';
 import CpuProfiler from '../src/cpu-profiler';
-import * as v8CpuProfiler from '../src/cpu-profiler-bindings';
 import {Profile, ValueType} from 'pprof-format';
 
 const assert = require('assert');
@@ -111,31 +109,12 @@ function busyWait(ms: number) {
 }
 
 describe('CPU Profiler', () => {
-  describe('profile (w/ stubs)', () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const sinonStubs: Array<sinon.SinonStub<any, any>> = [];
-    const cpuProfilerStub = {
-      start: sinon.stub(),
-      stop: sinon.stub().returns({}),
-    };
-
-    before(() => {
-      sinonStubs.push(
-        sinon.stub(v8CpuProfiler, 'CpuProfiler').returns(cpuProfilerStub)
-      );
-    });
-
-    after(() => {
-      sinonStubs.forEach(stub => {
-        stub.restore();
-      });
-    });
-
+  describe('profile', () => {
     it('should have valid basic structure', async () => {
       const data = {str: 'foo', num: 123};
       const cpu = new CpuProfiler();
-      cpu.start(99);
       cpu.labels = data;
+      cpu.start(99);
       await busyWait(100);
       const profile = cpu.profile()!;
       cpu.stop();
