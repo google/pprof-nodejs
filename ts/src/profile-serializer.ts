@@ -273,15 +273,24 @@ export function serializeTimeProfile(
   sourceMapper?: SourceMapper,
   recomputeSamplingInterval = false
 ): Profile {
-  // If requested, recompute sampling interval it from profile duration and total number of hits,
-  // since profile duration should be #hits x interval
+  // If requested, recompute sampling interval from profile duration and total number of hits,
+  // since profile duration should be #hits x interval.
   // Recomputing an average interval is more accurate, since in practice intervals between
   // samples are larger than the requested sampling interval (eg. 12.5ms vs 10ms requested).
+  // For very short durations, computation becomes meaningless (eg. if there is only one hit),
+  // therefore keep intervalMicros as a lower bound and 2 * intervalMicros as upper bound.
   if (recomputeSamplingInterval) {
     const totalHitCount = computeTotalHitCount(prof.topDownRoot);
     if (totalHitCount > 0) {
-      intervalMicros = Math.floor(
-        (prof.endTime - prof.startTime) / computeTotalHitCount(prof.topDownRoot)
+      intervalMicros = Math.min(
+        Math.max(
+          Math.floor(
+            (prof.endTime - prof.startTime) /
+              computeTotalHitCount(prof.topDownRoot)
+          ),
+          intervalMicros
+        ),
+        2 * intervalMicros
       );
     }
   }
