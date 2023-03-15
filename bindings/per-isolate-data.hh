@@ -1,16 +1,20 @@
 #pragma once
 
+#include <memory>
 #include <nan.h>
 #include <node.h>
 #include <v8.h>
 
 namespace dd {
 
+struct HeapProfilerState;
+
 class PerIsolateData {
  private:
   Nan::Global<v8::Function> cpu_profiler_constructor;
   Nan::Global<v8::Function> location_constructor;
   Nan::Global<v8::Function> sample_constructor;
+  std::shared_ptr<HeapProfilerState> heap_profiler_state;
 
   PerIsolateData() {}
 
@@ -20,6 +24,7 @@ class PerIsolateData {
   Nan::Global<v8::Function>& CpuProfilerConstructor();
   Nan::Global<v8::Function>& LocationConstructor();
   Nan::Global<v8::Function>& SampleConstructor();
+  std::shared_ptr<HeapProfilerState>& GetHeapProfilerState();
 };
 
 } // namespace dd

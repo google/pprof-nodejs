@@ -40,3 +40,23 @@ export function stopSamplingHeapProfiler() {
 export function getAllocationProfile(): AllocationProfileNode {
   return profiler.heapProfiler.getAllocationProfile();
 }
+
+export type NearHeapLimitCallback = (profile: AllocationProfileNode) => void;
+
+export function monitorOutOfMemory(
+  heapLimitExtensionSize: number,
+  maxHeapLimitExtensionCount: number,
+  dumpHeapProfileOnSdterr: boolean,
+  exportCommand: Array<String> | undefined,
+  callback: NearHeapLimitCallback | undefined,
+  callbackMode: number
+) {
+  profiler.heapProfiler.monitorOutOfMemory(
+    heapLimitExtensionSize,
+    maxHeapLimitExtensionCount,
+    dumpHeapProfileOnSdterr,
+    exportCommand,
+    callback,
+    callbackMode
+  );
+}

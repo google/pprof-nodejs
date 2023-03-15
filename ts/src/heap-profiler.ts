@@ -20,6 +20,7 @@ import {
   getAllocationProfile,
   startSamplingHeapProfiler,
   stopSamplingHeapProfiler,
+  monitorOutOfMemory as monitorOutOfMemoryImported,
 } from './heap-profiler-bindings';
 import {serializeHeapProfile} from './profile-serializer';
 import {SourceMapper} from './sourcemapper/sourcemapper';
@@ -53,8 +54,15 @@ export function profile(
   ignoreSamplePath?: string,
   sourceMapper?: SourceMapper
 ): Profile {
+  return convertProfile(v8Profile(), ignoreSamplePath, sourceMapper);
+}
+
+export function convertProfile(
+  rootNode: AllocationProfileNode,
+  ignoreSamplePath?: string,
+  sourceMapper?: SourceMapper
+): Profile {
   const startTimeNanos = Date.now() * 1000 * 1000;
-  const result = v8Profile();
   // Add node for external memory usage.
   // Current type definitions do not have external.
   // TODO: remove any once type definition is updated to include external.
@@ -67,10 +75,10 @@ export function profile(
       children: [],
       allocations: [{sizeBytes: external, count: 1}],
     };
-    result.children.push(externalNode);
+    rootNode.children.push(externalNode);
   }
   return serializeHeapProfile(
-    result,
+    rootNode,
     startTimeNanos,
     heapIntervalBytes,
     ignoreSamplePath,
@@ -104,4 +112,68 @@ export function stop() {
     enabled = false;
     stopSamplingHeapProfiler();
   }
+}
+
+export type NearHeapLimitCallback = (profile: Profile) => void;
+
+export const CallbackMode = {
+  Async: 1,
+  Interrupt: 2,
+  Both: 3,
+};
+
+/**
+ * Add monitoring for v8 heap, heap profiler must already be started.
+ * When an out of heap memory event occurs:
+ *  - an extension of heap memory of |heapLimitExtensionSize| bytes is
+ *    requested to v8. This extension can occur |maxHeapLimitExtensionCount|
+ *    number of times. If the extension amount is not enough to satisfy
+ *    memory allocation that triggers GC and OOM, process will abort.
+ *  - heap profile is dumped as folded stacks on stderr if
+ *    |dumpHeapProfileOnSdterr| is true
+ *  - heap profile is dumped in temporary file and a new process is spawned
+ *    with |exportCommand| arguments and profile path appended at the end.
+ *  - |callback| is called. Callback can be invoked only if
+ *    heapLimitExtensionSize is enough for the process to continue. Invocation
+ *    will be done by a RequestInterrupt if |callbackMode| is Interrupt or Both,
+ *    this might be unsafe since Isolate should not be reentered
+ *    from RequestInterrupt, but this allows to interrupt synchronous code.
+ *    Otherwise the callback is scheduled to be called asynchronously.
+ * @param heapLimitExtensionSize - amount of bytes heap should be expanded
+ *  with upon OOM
+ * @param maxHeapLimitExtensionCount - maximum number of times heap size
+ *  extension can occur
+ * @param dumpHeapProfileOnSdterr - dump heap profile on stderr upon OOM
+ * @param exportCommand - command to execute upon OOM, filepath of a
+ *  temporary file containing heap profile will be appended
+ * @param callback - callback to call when OOM occurs
+ * @param callbackMode
+ */
+export function monitorOutOfMemory(
+  heapLimitExtensionSize: number,
+  maxHeapLimitExtensionCount: number,
+  dumpHeapProfileOnSdterr: boolean,
+  exportCommand?: Array<String>,
+  callback?: NearHeapLimitCallback,
+  callbackMode?: number
+) {
+  if (!enabled) {
+    throw new Error(
+      'Heap profiler must already be started to call monitorOutOfMemory'
+    );
+  }
+  let newCallback;
+  if (typeof callback !== 'undefined') {
+    newCallback = (profile: AllocationProfileNode) => {
+      callback(convertProfile(profile));
+    };
+  }
+  monitorOutOfMemoryImported(
+    heapLimitExtensionSize,
+    maxHeapLimitExtensionCount,
+    dumpHeapProfileOnSdterr,
+    exportCommand || [],
+    newCallback,
+    typeof callbackMode !== 'undefined' ? callbackMode : CallbackMode.Async
+  );
 }

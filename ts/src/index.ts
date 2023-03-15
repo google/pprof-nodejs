@@ -35,7 +35,10 @@ export const heap = {
   start: heapProfiler.start,
   stop: heapProfiler.stop,
   profile: heapProfiler.profile,
+  convertProfile: heapProfiler.convertProfile,
   v8Profile: heapProfiler.v8Profile,
+  monitorOutOfMemory: heapProfiler.monitorOutOfMemory,
+  CallbackMode: heapProfiler.CallbackMode,
 };
 
 // If loaded with --require, start profiling.

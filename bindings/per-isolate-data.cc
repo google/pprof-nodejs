@@ -37,4 +37,8 @@ Nan::Global<v8::Function>& PerIsolateData::SampleConstructor() {
   return sample_constructor;
 }
 
+std::shared_ptr<HeapProfilerState>& PerIsolateData::GetHeapProfilerState() {
+  return heap_profiler_state;
+}
+
 } // namespace dd
