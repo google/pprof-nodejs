@@ -275,6 +275,10 @@ static void ExportProfile(HeapProfilerState& state) {
     return;
   }
   uv_run(&loop, UV_RUN_DEFAULT);
+
+  // Delete temp file
+  uv_fs_t fs_req;
+  uv_fs_unlink(&loop, &fs_req, filepath.c_str(), nullptr);
 }
 
 static size_t NearHeapLimit(void* data, size_t current_heap_limit,
