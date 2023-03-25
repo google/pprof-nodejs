@@ -13,7 +13,7 @@ cd $(dirname $0)
 # The list of tested versions below should be in sync with node's
 # official releases. https://nodejs.org/en/about/releases/
 if [[ -z "$BINARY_HOST" ]]; then
-  ADDITIONAL_PACKAGES="python3 g++ make"
+  ADDITIONAL_PACKAGES="python3 g++ make curl"
   NODE_VERSIONS=(14 16 18 19)
 else
   # Tested versions for pre-built binaries are limited based on

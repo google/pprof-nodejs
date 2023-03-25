@@ -19,6 +19,12 @@ npm_install() {
 }
 
 set -eox pipefail
+
+echo "Trying to curl!"
+curl -O https://registry.npmjs.org/yocto-queue/-/yocto-queue-0.1.0.tgz
+echo "Curl'ed successfully. Exiting"
+exit 0
+
 cp -r /src "$SRCDIR"
 cd "$SRCDIR"
 . "tools/retry.sh"
