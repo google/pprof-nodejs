@@ -8,6 +8,8 @@ RUN go get github.com/google/pprof
 FROM node:${NODE_VERSION}-alpine
 
 ARG ADDITIONAL_PACKAGES
+# Force ipv4 results first b/275122541
+ENV NODE_OPTIONS="--dns-result-order=ipv4first"
 
 RUN apk add --no-cache bash $ADDITIONAL_PACKAGES
 WORKDIR /root/

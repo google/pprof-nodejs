@@ -15,6 +15,8 @@ RUN apt-get update && apt-get install -y curl $ADDITIONAL_PACKAGES \
     && rm -rf /var/lib/apt/lists/*
 
 ENV NVM_DIR /bin/.nvm
+# Force ipv4 results first b/275122541
+ENV NODE_OPTIONS="--dns-result-order=ipv4first"
 RUN mkdir -p $NVM_DIR
 
 
