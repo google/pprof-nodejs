@@ -9,7 +9,10 @@ FROM node:${NODE_VERSION}-alpine
 
 ARG ADDITIONAL_PACKAGES
 
-RUN apk add --no-cache bash $ADDITIONAL_PACKAGES
+RUN apk add --no-cache bash $ADDITIONAL_PACKAGES \
+	# workaround needed to force ipv4 on kokoro
+	&& echo "precedence ::ffff:0:0/96 100" >> /etc/gai.conf
+
 WORKDIR /root/
 COPY --from=builder /go/bin/pprof /bin
 RUN chmod a+x /bin/pprof

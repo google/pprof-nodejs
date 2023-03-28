@@ -25,6 +25,10 @@ cd "$SRCDIR"
 
 NODEDIR=$(dirname $(dirname $(which node)))
 
+echo "------------- DEBUGGGGG test.sh"
+cat /etc/gai.conf
+node -e 'const dns = require("dns"); dns.lookup("registry.npmjs.org", (err, address, family) => {console.log(err, address, family);});'
+
 retry npm_install --nodedir="$NODEDIR" \
     ${BINARY_HOST:+--pprof_binary_host_mirror=$BINARY_HOST} >/dev/null
 

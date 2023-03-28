@@ -1,7 +1,7 @@
 FROM golang:1.17-stretch as builder
 RUN apt-get update && apt-get install -y \
     git \
- && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/*
 WORKDIR /root/
 RUN go get github.com/google/pprof
 
@@ -12,7 +12,9 @@ ARG ADDITIONAL_PACKAGES
 ARG VERIFY_TIME_LINE_NUMBERS
 
 RUN apt-get update && apt-get install -y curl $ADDITIONAL_PACKAGES \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \
+    # workaround needed to force ipv4 on kokoro
+    && echo "precedence ::ffff:0:0/96 100" >> /etc/gai.conf
 
 ENV NVM_DIR /bin/.nvm
 RUN mkdir -p $NVM_DIR
