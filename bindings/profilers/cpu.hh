@@ -46,7 +46,10 @@ public:
       {
         return;
       }
+      // overwrite buffer head
+      samples_[back_index_] = std::move(ptr);
       increment(back_index_);
+      // move buffer head
       front_index_ = back_index_;
     }
     else
