@@ -18,8 +18,8 @@
 #include <memory>
 #include <vector>
 
-#include <node.h>
 #include <nan.h>
+#include <node.h>
 #include <v8-profiler.h>
 
 #include "wall.hh"
@@ -28,19 +28,22 @@ using namespace v8;
 
 namespace dd {
 
-Local<Object> CreateTimeNode(Local<String> name, Local<String> scriptName,
-                             Local<Integer> scriptId, Local<Integer> lineNumber,
+Local<Object> CreateTimeNode(Local<String> name,
+                             Local<String> scriptName,
+                             Local<Integer> scriptId,
+                             Local<Integer> lineNumber,
                              Local<Integer> columnNumber,
-                             Local<Integer> hitCount, Local<Array> children) {
+                             Local<Integer> hitCount,
+                             Local<Array> children) {
   Local<Object> js_node = Nan::New<Object>();
   Nan::Set(js_node, Nan::New<String>("name").ToLocalChecked(), name);
-  Nan::Set(js_node, Nan::New<String>("scriptName").ToLocalChecked(),
-           scriptName);
+  Nan::Set(
+      js_node, Nan::New<String>("scriptName").ToLocalChecked(), scriptName);
   Nan::Set(js_node, Nan::New<String>("scriptId").ToLocalChecked(), scriptId);
-  Nan::Set(js_node, Nan::New<String>("lineNumber").ToLocalChecked(),
-           lineNumber);
-  Nan::Set(js_node, Nan::New<String>("columnNumber").ToLocalChecked(),
-           columnNumber);
+  Nan::Set(
+      js_node, Nan::New<String>("lineNumber").ToLocalChecked(), lineNumber);
+  Nan::Set(
+      js_node, Nan::New<String>("columnNumber").ToLocalChecked(), columnNumber);
   Nan::Set(js_node, Nan::New<String>("hitCount").ToLocalChecked(), hitCount);
   Nan::Set(js_node, Nan::New<String>("children").ToLocalChecked(), children);
 
@@ -63,30 +66,36 @@ Local<Array> GetLineNumberTimeProfileChildren(const CpuProfileNode* parent,
     node->GetLineTicks(&entries[0], hitLineCount);
     children = Nan::New<Array>(count + hitLineCount);
     for (const CpuProfileNode::LineTick entry : entries) {
-      Nan::Set(children, index++,
-               CreateTimeNode(
-                   node->GetFunctionName(), node->GetScriptResourceName(),
-                   Nan::New<Integer>(node->GetScriptId()),
-                   Nan::New<Integer>(entry.line), Nan::New<Integer>(0),
-                   Nan::New<Integer>(entry.hit_count), Nan::New<Array>(0)));
+      Nan::Set(children,
+               index++,
+               CreateTimeNode(node->GetFunctionName(),
+                              node->GetScriptResourceName(),
+                              Nan::New<Integer>(node->GetScriptId()),
+                              Nan::New<Integer>(entry.line),
+                              Nan::New<Integer>(0),
+                              Nan::New<Integer>(entry.hit_count),
+                              Nan::New<Array>(0)));
     }
   } else if (hitCount > 0) {
     // Handle nodes for pseudo-functions like "process" and "garbage collection"
     // which do not have hit line counts.
     children = Nan::New<Array>(count + 1);
-    Nan::Set(
-        children, index++,
-        CreateTimeNode(node->GetFunctionName(), node->GetScriptResourceName(),
-                       Nan::New<Integer>(node->GetScriptId()),
-                       Nan::New<Integer>(node->GetLineNumber()),
-                       Nan::New<Integer>(node->GetColumnNumber()),
-                       Nan::New<Integer>(hitCount), Nan::New<Array>(0)));
+    Nan::Set(children,
+             index++,
+             CreateTimeNode(node->GetFunctionName(),
+                            node->GetScriptResourceName(),
+                            Nan::New<Integer>(node->GetScriptId()),
+                            Nan::New<Integer>(node->GetLineNumber()),
+                            Nan::New<Integer>(node->GetColumnNumber()),
+                            Nan::New<Integer>(hitCount),
+                            Nan::New<Array>(0)));
   } else {
     children = Nan::New<Array>(count);
   }
 
   for (int32_t i = 0; i < count; i++) {
-    Nan::Set(children, index++,
+    Nan::Set(children,
+             index++,
              TranslateLineNumbersTimeProfileNode(node, node->GetChild(i)));
   };
 
@@ -95,12 +104,13 @@ Local<Array> GetLineNumberTimeProfileChildren(const CpuProfileNode* parent,
 
 Local<Object> TranslateLineNumbersTimeProfileNode(const CpuProfileNode* parent,
                                                   const CpuProfileNode* node) {
-  return CreateTimeNode(
-      parent->GetFunctionName(), parent->GetScriptResourceName(),
-      Nan::New<Integer>(parent->GetScriptId()),
-      Nan::New<Integer>(node->GetLineNumber()),
-      Nan::New<Integer>(node->GetColumnNumber()), Nan::New<Integer>(0),
-      GetLineNumberTimeProfileChildren(parent, node));
+  return CreateTimeNode(parent->GetFunctionName(),
+                        parent->GetScriptResourceName(),
+                        Nan::New<Integer>(parent->GetScriptId()),
+                        Nan::New<Integer>(node->GetLineNumber()),
+                        Nan::New<Integer>(node->GetColumnNumber()),
+                        Nan::New<Integer>(0),
+                        GetLineNumberTimeProfileChildren(parent, node));
 }
 
 // In profiles with line level accurate line numbers, a node's line number
@@ -126,11 +136,13 @@ Local<Value> TranslateLineNumbersTimeProfileRoot(const CpuProfileNode* node) {
     }
   }
 
-  return CreateTimeNode(node->GetFunctionName(), node->GetScriptResourceName(),
+  return CreateTimeNode(node->GetFunctionName(),
+                        node->GetScriptResourceName(),
                         Nan::New<Integer>(node->GetScriptId()),
                         Nan::New<Integer>(node->GetLineNumber()),
                         Nan::New<Integer>(node->GetColumnNumber()),
-                        Nan::New<Integer>(0), children);
+                        Nan::New<Integer>(0),
+                        children);
 }
 
 Local<Value> TranslateTimeProfileNode(const CpuProfileNode* node) {
@@ -140,42 +152,49 @@ Local<Value> TranslateTimeProfileNode(const CpuProfileNode* node) {
     Nan::Set(children, i, TranslateTimeProfileNode(node->GetChild(i)));
   }
 
-  return CreateTimeNode(node->GetFunctionName(), node->GetScriptResourceName(),
+  return CreateTimeNode(node->GetFunctionName(),
+                        node->GetScriptResourceName(),
                         Nan::New<Integer>(node->GetScriptId()),
                         Nan::New<Integer>(node->GetLineNumber()),
                         Nan::New<Integer>(node->GetColumnNumber()),
-                        Nan::New<Integer>(node->GetHitCount()), children);
+                        Nan::New<Integer>(node->GetHitCount()),
+                        children);
 }
 
 Local<Value> TranslateTimeProfile(const CpuProfile* profile,
                                   bool includeLineInfo) {
   Local<Object> js_profile = Nan::New<Object>();
-  Nan::Set(js_profile, Nan::New<String>("title").ToLocalChecked(),
+  Nan::Set(js_profile,
+           Nan::New<String>("title").ToLocalChecked(),
            profile->GetTitle());
 
 #if NODE_MODULE_VERSION > NODE_11_0_MODULE_VERSION
   if (includeLineInfo) {
-    Nan::Set(js_profile, Nan::New<String>("topDownRoot").ToLocalChecked(),
+    Nan::Set(js_profile,
+             Nan::New<String>("topDownRoot").ToLocalChecked(),
              TranslateLineNumbersTimeProfileRoot(profile->GetTopDownRoot()));
   } else {
-    Nan::Set(js_profile, Nan::New<String>("topDownRoot").ToLocalChecked(),
+    Nan::Set(js_profile,
+             Nan::New<String>("topDownRoot").ToLocalChecked(),
              TranslateTimeProfileNode(profile->GetTopDownRoot()));
   }
 #else
-  Nan::Set(js_profile, Nan::New<String>("topDownRoot").ToLocalChecked(),
+  Nan::Set(js_profile,
+           Nan::New<String>("topDownRoot").ToLocalChecked(),
            TranslateTimeProfileNode(profile->GetTopDownRoot()));
 #endif
-  Nan::Set(js_profile, Nan::New<String>("startTime").ToLocalChecked(),
+  Nan::Set(js_profile,
+           Nan::New<String>("startTime").ToLocalChecked(),
            Nan::New<Number>(profile->GetStartTime()));
-  Nan::Set(js_profile, Nan::New<String>("endTime").ToLocalChecked(),
+  Nan::Set(js_profile,
+           Nan::New<String>("endTime").ToLocalChecked(),
            Nan::New<Number>(profile->GetEndTime()));
   return js_profile;
 }
 
 static Nan::Persistent<v8::Function> constructor;
 
-WallProfiler::WallProfiler(int interval)
-  : samplingInterval(interval) {}
+WallProfiler::WallProfiler(int interval) : samplingInterval(interval) {}
 
 WallProfiler::~WallProfiler() {
   Dispose();
@@ -204,8 +223,9 @@ NAN_METHOD(WallProfiler::New) {
   }
 
   if (info.IsConstructCall()) {
-    int interval =
-        Nan::MaybeLocal<Integer>(info[0].As<Integer>()).ToLocalChecked()->Value();
+    int interval = Nan::MaybeLocal<Integer>(info[0].As<Integer>())
+                       .ToLocalChecked()
+                       ->Value();
 
     WallProfiler* obj = new WallProfiler(interval);
     obj->Wrap(info.This());
@@ -214,7 +234,8 @@ NAN_METHOD(WallProfiler::New) {
     const int argc = 1;
     v8::Local<v8::Value> argv[argc] = {info[0]};
     v8::Local<v8::Function> cons = Nan::New(constructor);
-    info.GetReturnValue().Set(Nan::NewInstance(cons, argc, argv).ToLocalChecked());
+    info.GetReturnValue().Set(
+        Nan::NewInstance(cons, argc, argv).ToLocalChecked());
   }
 }
 
@@ -245,8 +266,8 @@ NAN_METHOD(WallProfiler::Start) {
   const bool recordSamples = false;
 
   if (includeLines) {
-    profiler->StartProfiling(name, CpuProfilingMode::kCallerLineNumbers,
-                                  recordSamples);
+    profiler->StartProfiling(
+        name, CpuProfilingMode::kCallerLineNumbers, recordSamples);
   } else {
     profiler->StartProfiling(name, recordSamples);
   }
@@ -306,4 +327,4 @@ v8::CpuProfiler* WallProfiler::GetProfiler() {
   return cpuProfiler;
 }
 
-} // namespace dd
+}  // namespace dd

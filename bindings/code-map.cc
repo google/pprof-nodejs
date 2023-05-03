@@ -2,17 +2,15 @@
 
 #include <node.h>
 
-#include "profilers/cpu.hh"
 #include "code-map.hh"
+#include "profilers/cpu.hh"
 
 namespace dd {
 
 static std::unordered_map<v8::Isolate*, std::shared_ptr<CodeMap>> code_maps_;
 
 CodeMap::CodeMap(v8::Isolate* isolate, CodeEntries entries)
-  : CodeEventHandler(isolate),
-    code_entries_(entries),
-    isolate_(isolate) {}
+    : CodeEventHandler(isolate), code_entries_(entries), isolate_(isolate) {}
 
 CodeMap::~CodeMap() {
   Disable();
@@ -36,7 +34,7 @@ void CodeMap::Enable() {
   if (++refs == 1) {
     CodeEventHandler::Enable();
     isolate_->SetJitCodeEventHandler(v8::kJitCodeEventDefault,
-                                    StaticHandleJitEvent);
+                                     StaticHandleJitEvent);
   }
 }
 
@@ -55,8 +53,8 @@ void CodeMap::HandleJitEvent(const v8::JitCodeEvent* event) {
     return;
   }
 
-  CodeEntries::iterator it = code_entries_.find(
-      reinterpret_cast<uintptr_t>(event->code_start));
+  CodeEntries::iterator it =
+      code_entries_.find(reinterpret_cast<uintptr_t>(event->code_start));
 
   if (it != code_entries_.end() && !event->script.IsEmpty()) {
     it->second->SetScriptId(event->script->GetId());
@@ -74,15 +72,15 @@ void CodeMap::StaticHandleJitEvent(const v8::JitCodeEvent* event) {
 void CodeMap::Handle(v8::CodeEvent* code_event) {
 #if NODE_MODULE_VERSION > 79
   if (code_event->GetCodeType() == v8::CodeEventType::kRelocationType) {
-    CodeEntries::iterator it = code_entries_.find(
-      code_event->GetPreviousCodeStartAddress());
+    CodeEntries::iterator it =
+        code_entries_.find(code_event->GetPreviousCodeStartAddress());
     if (it != code_entries_.end()) {
       code_entries_.erase(it);
     }
   }
 #endif
 
-  Add(code_event->GetCodeStartAddress(), 
+  Add(code_event->GetCodeStartAddress(),
       std::make_shared<CodeEventRecord>(isolate_, code_event));
 }
 
@@ -109,4 +107,4 @@ std::shared_ptr<CodeEventRecord> CodeMap::Lookup(uintptr_t address) {
   return entry;
 }
 
-}; // namespace dd
+};  // namespace dd

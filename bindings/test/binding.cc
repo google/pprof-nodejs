@@ -1,19 +1,19 @@
-#include <unordered_map>
-#include <sstream>
 #include <cstdlib>
+#include <sstream>
+#include <unordered_map>
 
-#include "node.h"
-#include "v8.h"
 #include "nan.h"
+#include "node.h"
 #include "tap.h"
+#include "v8.h"
 
 #include "../profilers/cpu.hh"
 
-#include "profilers/cpu.test.hh"
 #include "code-event-record.test.hh"
 #include "code-map.test.hh"
 #include "cpu-time.test.hh"
 #include "location.test.hh"
+#include "profilers/cpu.test.hh"
 #include "sample.test.hh"
 
 NODE_MODULE_INIT(/* exports, module, context */) {
@@ -25,12 +25,12 @@ NODE_MODULE_INIT(/* exports, module, context */) {
   std::string name(env_var == nullptr ? "" : env_var);
 
   std::unordered_map<std::string, std::function<void(Tap&)>> tests = {
-    {"profilers/cpu", test_profilers_cpu_profiler},
-    {"code-event-record", test_code_event_record},
-    {"code-map", test_code_map},
-    {"cpu-time", test_cpu_time},
-    {"location", test_location},
-    {"sample", test_sample},
+      {"profilers/cpu", test_profilers_cpu_profiler},
+      {"code-event-record", test_code_event_record},
+      {"code-map", test_code_map},
+      {"cpu-time", test_cpu_time},
+      {"location", test_location},
+      {"sample", test_sample},
   };
 
   if (name.empty()) {
@@ -54,6 +54,6 @@ NODE_MODULE_INIT(/* exports, module, context */) {
   auto processKey = Nan::New<v8::String>("process").ToLocalChecked();
   auto process = Nan::Get(context->Global(), processKey).ToLocalChecked();
   Nan::Set(process.As<v8::Object>(),
-      Nan::New<v8::String>("exitCode").ToLocalChecked(),
-      Nan::New<v8::Number>(exitCode));
+           Nan::New<v8::String>("exitCode").ToLocalChecked(),
+           Nan::New<v8::Number>(exitCode));
 }

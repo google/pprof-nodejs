@@ -25,8 +25,7 @@ CpuTime::CpuTime(struct timespec time) : last_(time) {
 #endif
 }
 
-CpuTime::CpuTime()
-  : CpuTime(Now()) {}
+CpuTime::CpuTime() : CpuTime(Now()) {}
 
 int64_t CpuTime::Diff(struct timespec now) {
   int64_t current = now.tv_sec * INT64_C(1000000000) + now.tv_nsec;
@@ -53,17 +52,17 @@ struct timespec CpuTime::Now() {
   mach_msg_type_number_t count = THREAD_BASIC_INFO_COUNT;
   thread_basic_info_data_t info;
   kern_return_t kr =
-    thread_info(thread_, THREAD_BASIC_INFO, (thread_info_t)&info, &count);
+      thread_info(thread_, THREAD_BASIC_INFO, (thread_info_t)&info, &count);
 
   if (kr != KERN_SUCCESS) {
     return cpu_time;
   }
 
   cpu_time = {
-    // tv_sec
-    info.user_time.seconds + info.system_time.seconds,
-    // tv_nsec
-    (info.user_time.microseconds + info.system_time.microseconds) * 1000,
+      // tv_sec
+      info.user_time.seconds + info.system_time.seconds,
+      // tv_nsec
+      (info.user_time.microseconds + info.system_time.microseconds) * 1000,
   };
 #elif _WIN32
   FILETIME a, b, c, d;
@@ -72,18 +71,18 @@ struct timespec CpuTime::Now() {
   }
 
   // Convert 100-ns interval to nanooseconds
-  uint64_t us = (((uint64_t)d.dwHighDateTime << 32) |
-                (uint64_t)d.dwLowDateTime) * 100;
+  uint64_t us =
+      (((uint64_t)d.dwHighDateTime << 32) | (uint64_t)d.dwLowDateTime) * 100;
 
   cpu_time = {
-    // tv_sec
-    (time_t)(us / 1000000000),
-    // tv_nsec
-    (long)(us % 1000000000),
+      // tv_sec
+      (time_t)(us / 1000000000),
+      // tv_nsec
+      (long)(us % 1000000000),
   };
 #endif
 
   return cpu_time;
 }
 
-}
+}  // namespace dd

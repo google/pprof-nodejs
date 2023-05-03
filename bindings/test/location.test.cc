@@ -6,15 +6,15 @@ void test_location(Tap& t) {
 
   auto isolate = v8::Isolate::GetCurrent();
 
-  auto record = std::make_shared<dd::CodeEventRecord>(
-      1234, 0, 5678, 1, 2, "a", "b", "c");
+  auto record =
+      std::make_shared<dd::CodeEventRecord>(1234, 0, 5678, 1, 2, "a", "b", "c");
   record->SetScriptId(123);
 
   auto obj = dd::Location::New(isolate, record)->handle();
 
   // Type helpers
-  auto Get = [isolate](v8::Local<v8::Object> obj, std::string key)
-    -> v8::Local<v8::Value> {
+  auto Get = [isolate](v8::Local<v8::Object> obj,
+                       std::string key) -> v8::Local<v8::Value> {
     auto context = isolate->GetCurrentContext();
     return obj->Get(context, Nan::New(key).ToLocalChecked()).ToLocalChecked();
   };

@@ -36,7 +36,7 @@ class CodeEventRecord {
 
   void SetScriptId(int _id);
 
-  v8::Local<v8::Integer> GetScriptId(v8::Isolate *isolate);
+  v8::Local<v8::Integer> GetScriptId(v8::Isolate* isolate);
   v8::Local<v8::Integer> GetAddress(v8::Isolate* isolate);
   v8::Local<v8::Integer> GetPreviousAddress(v8::Isolate* isolate);
   v8::Local<v8::Integer> GetSize(v8::Isolate* isolate);
@@ -46,9 +46,9 @@ class CodeEventRecord {
   v8::Local<v8::Value> GetScriptName(v8::Isolate* isolate);
   v8::Local<v8::Value> GetComment(v8::Isolate* isolate);
 
-  bool Equal(const CodeEventRecord *rhs) const;
+  bool Equal(const CodeEventRecord* rhs) const;
 
   friend class CodeMap;
 };
 
-}; // namespace dd
+};  // namespace dd

@@ -15,6 +15,7 @@ class WallProfiler : public Nan::ObjectWrap {
   // A new CPU profiler object will be created each time profiling is started
   // to work around https://bugs.chromium.org/p/v8/issues/detail?id=11051.
   v8::CpuProfiler* GetProfiler();
+
  public:
   explicit WallProfiler(int interval);
 
@@ -25,4 +26,4 @@ class WallProfiler : public Nan::ObjectWrap {
   static NAN_MODULE_INIT(Init);
 };
 
-} // namespace dd
+}  // namespace dd

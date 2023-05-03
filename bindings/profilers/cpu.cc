@@ -1,12 +1,12 @@
 #include <thread>
 
-#include <v8-profiler.h>
-#include <v8.h>
 #include <node.h>
 #include <uv.h>
+#include <v8-profiler.h>
+#include <v8.h>
 
-#include "../per-isolate-data.hh"
 #include "../location.hh"
+#include "../per-isolate-data.hh"
 #include "cpu.hh"
 
 namespace dd {
@@ -14,16 +14,16 @@ namespace dd {
 static constexpr size_t k_sample_buffer_size = 100;
 
 static void cleanupProfiler(void* data) {
-   delete static_cast<CpuProfiler *>(data);
+  delete static_cast<CpuProfiler*>(data);
 }
 
 CpuProfiler::CpuProfiler()
-  : isolate_(v8::Isolate::GetCurrent()),
-    async(new uv_async_t()),
-    code_map(CodeMap::For(isolate_)),
-    last_samples(k_sample_buffer_size),
-    samples(Nan::New<v8::Array>()),
-    sampler_running(false) {
+    : isolate_(v8::Isolate::GetCurrent()),
+      async(new uv_async_t()),
+      code_map(CodeMap::For(isolate_)),
+      last_samples(k_sample_buffer_size),
+      samples(Nan::New<v8::Array>()),
+      sampler_running(false) {
   // TODO: Move symbolizer worker to a separate class?
   // Initialize libuv async worker to process samples when JS thread is idle
   uv_async_init(Nan::GetCurrentEventLoop(), async, Run);
@@ -42,10 +42,9 @@ CpuProfiler::CpuProfiler()
 }
 
 CpuProfiler::~CpuProfiler() {
-  uv_close(reinterpret_cast<uv_handle_t*>(async),
-    [](uv_handle_t* handle){
-      delete reinterpret_cast<uv_handle_t*>(handle);
-    });
+  uv_close(reinterpret_cast<uv_handle_t*>(async), [](uv_handle_t* handle) {
+    delete reinterpret_cast<uv_handle_t*>(handle);
+  });
   StopAndWaitThread();
   uv_sem_destroy(&sampler_thread_done);
 
@@ -80,21 +79,22 @@ Sample* CpuProfiler::GetLastSample() {
 
 void CpuProfiler::CaptureSample(v8::Isolate* isolate) {
   auto diff = cpu_time.Diff();
-  SetLastSample(
-    std::make_unique<Sample>(isolate, labels_, diff));
+  SetLastSample(std::make_unique<Sample>(isolate, labels_, diff));
 }
 
 // TODO: Make sampler thread a separate class?
 void CpuProfiler::SamplerThread(double hz) {
   std::chrono::duration<double> interval(1.0 / hz);
   while (sampler_running) {
-    isolate_->RequestInterrupt([](v8::Isolate* isolate, void* data) {
-      auto profiler = static_cast<CpuProfiler*>(data);
-      profiler->CaptureSample(isolate);
+    isolate_->RequestInterrupt(
+        [](v8::Isolate* isolate, void* data) {
+          auto profiler = static_cast<CpuProfiler*>(data);
+          profiler->CaptureSample(isolate);
 
-      // Notify symbolizer worker that we have a new sample
-      uv_async_send(profiler->async);
-    }, this);
+          // Notify symbolizer worker that we have a new sample
+          uv_async_send(profiler->async);
+        },
+        this);
 
     std::this_thread::sleep_for(interval);
   }
@@ -116,8 +116,10 @@ void CpuProfiler::ProcessSample() {
 
     // Append the newly processed sample to the samples array
     auto arr = samples.Get(isolate_);
-    arr->Set(isolate_->GetCurrentContext(), arr->Length(),
-      sample->ToObject(isolate_)).Check();
+    arr->Set(isolate_->GetCurrentContext(),
+             arr->Length(),
+             sample->ToObject(isolate_))
+        .Check();
   }
 }
 
@@ -132,10 +134,13 @@ void CpuProfiler::Start(double hz) {
   frequency = hz;
   sampler_running = true;
   uv_sem_init(&sampler_thread_done, 0);
-  uv_thread_create(&sampler_thread, [](void* arg) {
-    auto profiler = static_cast<CpuProfiler*>(arg);
-    profiler->SamplerThread(profiler->frequency);
-  }, this);
+  uv_thread_create(
+      &sampler_thread,
+      [](void* arg) {
+        auto profiler = static_cast<CpuProfiler*>(arg);
+        profiler->SamplerThread(profiler->frequency);
+      },
+      this);
   start_time = uv_hrtime();
   code_map->Enable();
 }
@@ -175,16 +180,17 @@ v8::Local<v8::Value> CpuProfiler::GetProfile() {
 
   Nan::Set(profile,
            Nan::New("name").ToLocalChecked(),
-           Nan::New("(root)").ToLocalChecked()).Check();
+           Nan::New("(root)").ToLocalChecked())
+      .Check();
   Nan::Set(profile,
            Nan::New("startTime").ToLocalChecked(),
-           v8::BigInt::New(isolate_, start_time)).Check();
+           v8::BigInt::New(isolate_, start_time))
+      .Check();
   Nan::Set(profile,
            Nan::New("endTime").ToLocalChecked(),
-           v8::BigInt::New(isolate_, end_time)).Check();
-  Nan::Set(profile,
-           Nan::New("samples").ToLocalChecked(),
-           GetSamples()).Check();
+           v8::BigInt::New(isolate_, end_time))
+      .Check();
+  Nan::Set(profile, Nan::New("samples").ToLocalChecked(), GetSamples()).Check();
 
   start_time = end_time;
 
@@ -198,8 +204,8 @@ NAN_METHOD(CpuProfiler::New) {
     info.GetReturnValue().Set(info.This());
   } else {
     auto per_isolate = PerIsolateData::For(info.GetIsolate());
-    v8::Local<v8::Function> cons = Nan::New(
-        per_isolate->CpuProfilerConstructor());
+    v8::Local<v8::Function> cons =
+        Nan::New(per_isolate->CpuProfilerConstructor());
     info.GetReturnValue().Set(Nan::NewInstance(cons, 0, {}).ToLocalChecked());
   }
 }
@@ -258,22 +264,17 @@ NAN_MODULE_INIT(CpuProfiler::Init) {
   Location::Init(target);
   Sample::Init(target);
 
-  auto class_name = Nan::New<v8::String>("CpuProfiler")
-      .ToLocalChecked();
+  auto class_name = Nan::New<v8::String>("CpuProfiler").ToLocalChecked();
 
   auto tpl = Nan::New<v8::FunctionTemplate>(New);
   tpl->SetClassName(class_name);
-  tpl->InstanceTemplate()
-      ->SetInternalFieldCount(1);
+  tpl->InstanceTemplate()->SetInternalFieldCount(1);
 
   auto inst = tpl->InstanceTemplate();
-  Nan::SetAccessor(inst,
-    Nan::New("labels").ToLocalChecked(),
-    GetLabels, SetLabels);
+  Nan::SetAccessor(
+      inst, Nan::New("labels").ToLocalChecked(), GetLabels, SetLabels);
 
-  Nan::SetAccessor(inst,
-    Nan::New("frequency").ToLocalChecked(),
-    GetFrequency);
+  Nan::SetAccessor(inst, Nan::New("frequency").ToLocalChecked(), GetFrequency);
 
   Nan::SetPrototypeMethod(tpl, "start", Start);
   Nan::SetPrototypeMethod(tpl, "stop", Stop);
@@ -288,4 +289,4 @@ NAN_MODULE_INIT(CpuProfiler::Init) {
   per_isolate->CpuProfilerConstructor().Reset(fn);
 }
 
-} // namespace dd
+}  // namespace dd

@@ -1,8 +1,8 @@
 #pragma once
 
-#include <vector>
-#include <memory>
 #include <cstdint>
+#include <memory>
+#include <vector>
 
 #include "code-map.hh"
 #include "wrap.hh"
@@ -14,7 +14,6 @@ namespace dd {
 
 class Sample : public Nan::ObjectWrap {
  private:
-
   std::shared_ptr<LabelWrap> labels_;
   uint64_t timestamp;
   std::vector<uintptr_t> frames;
@@ -32,8 +31,7 @@ class Sample : public Nan::ObjectWrap {
          int64_t cpu_time);
 
   std::vector<uintptr_t> GetFrames();
-  v8::Local<v8::Array> Symbolize(
-    std::shared_ptr<CodeMap> code_map);
+  v8::Local<v8::Array> Symbolize(std::shared_ptr<CodeMap> code_map);
 
   v8::Local<v8::Integer> GetCpuTime(v8::Isolate* isolate);
   v8::Local<v8::Value> GetLabels(v8::Isolate* isolate);
@@ -50,4 +48,4 @@ class Sample : public Nan::ObjectWrap {
   static const size_t frames_limit = 255;
 };
 
-} // namespace dd
+}  // namespace dd

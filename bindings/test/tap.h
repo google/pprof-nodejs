@@ -3,7 +3,7 @@
  * @author Stephen Belanger
  * @date Apr 13, 2022
  * @brief C and C++ API for TAP testing
- * 
+ *
  * @todo TODO directives
  * @todo YAML blocks?
  */
@@ -11,10 +11,10 @@
 #ifndef _INCLUDE_TAP_H_
 #define _INCLUDE_TAP_H_
 
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
 #include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 /**
  * @brief This is the TAP document every function will interact with
@@ -33,7 +33,7 @@ typedef struct tap_s {
 
 /**
  * @brief Sub-test function signature
- * 
+ *
  * @param t TAP document
  */
 typedef void (*tap_test_fn)(tap_t* t);
@@ -42,7 +42,7 @@ typedef void (*tap_test_fn)(tap_t* t);
  * @private
  * @brief Print indentation level for sub-tests
  * @note Internal use only!
- * 
+ *
  * @param t TAP document
  */
 static inline void _tap_print_indent(tap_t* t) {
@@ -60,15 +60,15 @@ static inline void _tap_print_indent(tap_t* t) {
  */
 static inline tap_t _tap_init(FILE* out, int indent) {
   return {
-    out, // out
-    0, // plan_count
-    0, // count
-    0, // failures
-    0, // skip_count
-    0, // skipped
-    indent,
-    NULL, // skip_reason
-    NULL // data
+      out,  // out
+      0,    // plan_count
+      0,    // count
+      0,    // failures
+      0,    // skip_count
+      0,    // skipped
+      indent,
+      NULL,  // skip_reason
+      NULL   // data
   };
 }
 
@@ -99,7 +99,7 @@ static inline tap_t tap(FILE* out) {
  * ```c
  * tap_on(&t, "strict");
  * ```
- * 
+ *
  * ```tap
  * pragma +strict
  * ```
@@ -137,7 +137,7 @@ static inline void tap_off(tap_t* t, const char* pragma) {
  * ```c
  * tap_bail_out(&t, "Oh no!");
  * ```
- * 
+ *
  * ```tap
  * Bail out! Oh No!
  * ```
@@ -153,7 +153,7 @@ static inline void tap_bail_out(tap_t* t, const char* reason) {
 /**
  * @brief Inform the TAP document to expect a set number of test completions
  * when ended.
- * 
+ *
  * Setting the plan multiple times is invalid. If not specified it will
  * be set automatically from the total test count when the test is ended.
  *
@@ -239,7 +239,7 @@ static inline void tap_skip_n(tap_t* t, int n, const char* reason) {
  * tap_skip(&t);
  * tap_pass(&t, "just skipping");
  * ```
- * 
+ *
  * ```tap
  * ok 1 - not done yet # SKIP unimplemented
  * ok 2 - just skipping # SKIP
@@ -256,8 +256,7 @@ static inline void tap_skip(tap_t* t, const char* reason, ...) {
  * @internal
  * Hack to make reason optional
  */
-#define tap_skip(t, ...) \
-  tap_skip(t, ##__VA_ARGS__, NULL)
+#define tap_skip(t, ...) tap_skip(t, ##__VA_ARGS__, NULL)
 
 /**
  * @brief Check if a given value is truthy.
@@ -316,8 +315,7 @@ static inline void tap_ok(tap_t* t, bool pass, const char* description, ...) {
  * @internal
  * Hack to make descriptions optional
  */
-#define tap_ok(t, value, ...) \
-  tap_ok(t, value, ##__VA_ARGS__, "")
+#define tap_ok(t, value, ...) tap_ok(t, value, ##__VA_ARGS__, "")
 
 /**
  * @brief Check if the value is falsy.
@@ -337,8 +335,7 @@ static inline void tap_ok(tap_t* t, bool pass, const char* description, ...) {
  * @param value Value to check if it is falsy
  * @param description Optional description of what was checked
  */
-#define tap_not_ok(t, value, ...) \
-  tap_ok(t, !((bool)value), __VA_ARGS__)
+#define tap_not_ok(t, value, ...) tap_ok(t, !((bool)value), __VA_ARGS__)
 
 /**
  * @brief Mark a passed check.
@@ -357,8 +354,7 @@ static inline void tap_ok(tap_t* t, bool pass, const char* description, ...) {
  * @param t TAP document
  * @param description Optional description of what was checked
  */
-#define tap_pass(t, ...) \
-  tap_ok(t, true, __VA_ARGS__)
+#define tap_pass(t, ...) tap_ok(t, true, __VA_ARGS__)
 
 /**
  * @brief Mark a failed check.
@@ -377,8 +373,7 @@ static inline void tap_ok(tap_t* t, bool pass, const char* description, ...) {
  * @param t TAP document
  * @param description Optional description of what was checked
  */
-#define tap_fail(t, ...) \
-  tap_ok(t, false, __VA_ARGS__)
+#define tap_fail(t, ...) tap_ok(t, false, __VA_ARGS__)
 
 /**
  * @brief Check if values are equal.
@@ -399,8 +394,7 @@ static inline void tap_ok(tap_t* t, bool pass, const char* description, ...) {
  * @param b Second balue to compare
  * @param description Optional description of what was checked
  */
-#define tap_equal(t, a, b, ...) \
-  tap_ok(t, a == b, __VA_ARGS__)
+#define tap_equal(t, a, b, ...) tap_ok(t, a == b, __VA_ARGS__)
 
 /**
  * @brief Check if values are not equal.
@@ -421,8 +415,7 @@ static inline void tap_ok(tap_t* t, bool pass, const char* description, ...) {
  * @param b Second balue to compare
  * @param description Optional description of what was checked
  */
-#define tap_not_equal(t, a, b, ...) \
-  tap_ok(t, a != b, __VA_ARGS__)
+#define tap_not_equal(t, a, b, ...) tap_ok(t, a != b, __VA_ARGS__)
 
 /**
  * @brief End the test document. Will record the plan range if not already set.
@@ -474,7 +467,8 @@ static inline int tap_end(tap_t* t) {
  * @param fn Test function
  * @param ptr Optional pointer to attach to tap_t given to test function
  */
-static inline void tap_test(tap_t *t, const char *name, tap_test_fn fn, void *ptr, ...) {
+static inline void tap_test(
+    tap_t* t, const char* name, tap_test_fn fn, void* ptr, ...) {
   _tap_print_indent(t);
   fprintf(t->out, "# Subtest: %s\n", name);
   tap_t t2 = _tap_init(t->out, t->indent + 4);
@@ -487,13 +481,12 @@ static inline void tap_test(tap_t *t, const char *name, tap_test_fn fn, void *pt
  * @internal
  * Hack to make ptr optional
  */
-#define tap_test(t, name, fn, ...) \
-  tap_test(t, name, fn, ##__VA_ARGS__, NULL)
+#define tap_test(t, name, fn, ...) tap_test(t, name, fn, ##__VA_ARGS__, NULL)
 
 #if __cplusplus >= 201103L || (defined(_MSC_VER) && _MSC_VER >= 1900)
 
-#include <string>
 #include <functional>
+#include <string>
 
 /**
  * @brief This is a TAP document
@@ -502,7 +495,7 @@ class Tap : private tap_t {
  public:
   /**
    * @brief Construct a new TAP document
-   * 
+   *
    * @param out FILE stream to write TAP document to. Defaults to stdout.
    */
   Tap(FILE* out = stdout) : tap_t(tap(out)) {}
@@ -520,9 +513,7 @@ class Tap : private tap_t {
    *
    * @param pragma Key to enable
    */
-  void on(const std::string& pragma) {
-    tap_on(this, pragma.c_str());
-  }
+  void on(const std::string& pragma) { tap_on(this, pragma.c_str()); }
 
   /**
    * @brief Disable given pragma key
@@ -537,9 +528,7 @@ class Tap : private tap_t {
    *
    * @param pragma Key to disable
    */
-  void off(const std::string& pragma) {
-    tap_off(this, pragma.c_str());
-  }
+  void off(const std::string& pragma) { tap_off(this, pragma.c_str()); }
 
   /**
    * @brief Bail out of the test
@@ -564,16 +553,14 @@ class Tap : private tap_t {
    * ```cpp
    * t.plan(123);
    * ```
-   * 
+   *
    * ```tap
    * 1..123
    * ```
    *
    * @param n number of expected checks
    */
-  void plan(int n) {
-    tap_plan(this, n);
-  }
+  void plan(int n) { tap_plan(this, n); }
 
   /**
    * @brief Add a comment line to the tap document. Useful for separating
@@ -637,9 +624,7 @@ class Tap : private tap_t {
    *
    * @param reason Optional reason for skipping
    */
-  void skip(const std::string& reason = "") {
-    skip(1, reason);
-  }
+  void skip(const std::string& reason = "") { skip(1, reason); }
 
   /**
    * @brief Check if a given value is truthy.
@@ -660,7 +645,7 @@ class Tap : private tap_t {
    * @param pass Mark if the checked value is truthy
    * @param description Optional description of what was checked
    */
-  template<typename T>
+  template <typename T>
   void ok(T pass, const std::string& description = "") {
     tap_ok(this, pass, description.c_str());
   }
@@ -682,7 +667,7 @@ class Tap : private tap_t {
    * @param value Value to check if it is falsy
    * @param description Optional description of what was checked
    */
-  template<typename T>
+  template <typename T>
   void not_ok(T value, const std::string& description = "") {
     ok(!value, description);
   }
@@ -703,9 +688,7 @@ class Tap : private tap_t {
    *
    * @param description Optional description of what was checked
    */
-  void pass(const std::string& description = "") {
-    ok(true, description);
-  }
+  void pass(const std::string& description = "") { ok(true, description); }
 
   /**
    * @brief Mark a failed check.
@@ -723,9 +706,7 @@ class Tap : private tap_t {
    *
    * @param description Optional description of what was checked
    */
-  void fail(const std::string& description = "") {
-    ok(false, description);
-  }
+  void fail(const std::string& description = "") { ok(false, description); }
 
   /**
    * @brief Check if values are equal.
@@ -745,7 +726,7 @@ class Tap : private tap_t {
    * @param b Second balue to compare
    * @param description Optional description of what was checked
    */
-  template<typename A, typename B>
+  template <typename A, typename B>
   void equal(A a, B b, const std::string& description = "") {
     ok(a == b, description);
   }
@@ -768,13 +749,14 @@ class Tap : private tap_t {
    * @param b Second balue to compare
    * @param description Optional description of what was checked
    */
-  template<typename A, typename B>
+  template <typename A, typename B>
   void not_equal(A a, B b, const std::string& description = "") {
     ok(a != b, description);
   }
 
   /**
-   * @brief End the test document. Will record the plan range if not already set.
+   * @brief End the test document. Will record the plan range if not already
+   * set.
    *
    * ```cpp
    * Tap t;
@@ -790,9 +772,7 @@ class Tap : private tap_t {
    *
    * @return int Return 1 if unskipped failures or count does not match plan
    */
-  int end() {
-    return tap_end(this);
-  }
+  int end() { return tap_end(this); }
 
   /**
    * @brief Add a named sub-test
@@ -818,13 +798,17 @@ class Tap : private tap_t {
       std::function<void(Tap&)> fn;
     };
     callback wrap = {fn};
-    tap_test(this, name.c_str(), [](tap_t* t) {
-      callback* wrap = static_cast<callback*>(t->data);
-      wrap->fn(*static_cast<Tap*>(t));
-    }, &wrap);
+    tap_test(
+        this,
+        name.c_str(),
+        [](tap_t* t) {
+          callback* wrap = static_cast<callback*>(t->data);
+          wrap->fn(*static_cast<Tap*>(t));
+        },
+        &wrap);
   }
 };
 
-#endif // __cplusplus >= 201103L
+#endif  // __cplusplus >= 201103L
 
-#endif // _INCLUDE_TAP_H_
+#endif  // _INCLUDE_TAP_H_

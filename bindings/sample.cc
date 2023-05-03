@@ -1,13 +1,13 @@
 #include <algorithm>
-#include <iterator>
 #include <deque>
+#include <iterator>
 
 #include <nan.h>
 
+#include "code-map.hh"
+#include "location.hh"
 #include "per-isolate-data.hh"
 #include "sample.hh"
-#include "location.hh"
-#include "code-map.hh"
 
 #include <iostream>
 
@@ -24,7 +24,8 @@ std::vector<uintptr_t> MakeFrames(v8::Isolate* isolate) {
   register_state.fp = &register_state;
   register_state.sp = &register_state;
 
-  isolate->GetStackSample(register_state, frames, Sample::frames_limit, &sample_info);
+  isolate->GetStackSample(
+      register_state, frames, Sample::frames_limit, &sample_info);
 
   size_t n = sample_info.frames_count;
   std::vector<uintptr_t> output(n);
@@ -40,35 +41,34 @@ Sample::Sample(v8::Isolate* isolate,
                std::shared_ptr<LabelWrap> labels,
                std::vector<uintptr_t> frames,
                int64_t cpu_time)
-  : labels_(std::move(labels)),
-    frames(frames),
-    cpu_time(cpu_time) {
+    : labels_(std::move(labels)), frames(frames), cpu_time(cpu_time) {
   timestamp = uv_hrtime();
 }
 
 Sample::Sample(v8::Isolate* isolate,
                std::shared_ptr<LabelWrap> labels,
                int64_t cpu_time)
-  : Sample(isolate, std::move(labels), MakeFrames(isolate), cpu_time) {}
+    : Sample(isolate, std::move(labels), MakeFrames(isolate), cpu_time) {}
 
 std::vector<uintptr_t> Sample::GetFrames() {
   return frames;
 }
 
-v8::Local<v8::Array> Sample::Symbolize(
-  std::shared_ptr<CodeMap> code_map) {
+v8::Local<v8::Array> Sample::Symbolize(std::shared_ptr<CodeMap> code_map) {
   auto isolate = v8::Isolate::GetCurrent();
   if (!locations_.IsEmpty()) return locations_.Get(isolate);
 
   auto locations = Nan::New<v8::Array>();
 
-  auto ToCodeEventRecord = [code_map](uintptr_t address)
-    -> std::shared_ptr<CodeEventRecord> {
+  auto ToCodeEventRecord =
+      [code_map](uintptr_t address) -> std::shared_ptr<CodeEventRecord> {
     return code_map->Lookup(address);
   };
 
   std::deque<std::shared_ptr<CodeEventRecord>> records;
-  std::transform(frames.begin(), frames.end(), std::front_inserter(records),
+  std::transform(frames.begin(),
+                 frames.end(),
+                 std::front_inserter(records),
                  ToCodeEventRecord);
 
   for (auto record : records) {
@@ -119,8 +119,7 @@ v8::Local<v8::Object> Sample::ToObject(v8::Isolate* isolate) {
   }
 
   auto per_isolate = PerIsolateData::For(isolate);
-  v8::Local<v8::Function> cons = Nan::New(
-      per_isolate->SampleConstructor());
+  v8::Local<v8::Function> cons = Nan::New(per_isolate->SampleConstructor());
   auto inst = Nan::NewInstance(cons, 0, {}).ToLocalChecked();
 
   Wrap(inst);
@@ -129,33 +128,22 @@ v8::Local<v8::Object> Sample::ToObject(v8::Isolate* isolate) {
 }
 
 NAN_MODULE_INIT(Sample::Init) {
-  auto class_name = Nan::New<v8::String>("Sample")
-      .ToLocalChecked();
+  auto class_name = Nan::New<v8::String>("Sample").ToLocalChecked();
 
   auto tpl = Nan::New<v8::FunctionTemplate>(nullptr);
   tpl->SetClassName(class_name);
-  tpl->InstanceTemplate()
-      ->SetInternalFieldCount(1);
+  tpl->InstanceTemplate()->SetInternalFieldCount(1);
 
   // auto proto = tpl->PrototypeTemplate();
   auto proto = tpl->InstanceTemplate();
 
-  Nan::SetAccessor(
-      proto,
-      Nan::New("cpuTime").ToLocalChecked(),
-      GetCpuTime);
-  Nan::SetAccessor(
-      proto,
-      Nan::New("labels").ToLocalChecked(),
-      GetLabels);
-  Nan::SetAccessor(
-      proto,
-      Nan::New("locations").ToLocalChecked(),
-      GetLocations);
+  Nan::SetAccessor(proto, Nan::New("cpuTime").ToLocalChecked(), GetCpuTime);
+  Nan::SetAccessor(proto, Nan::New("labels").ToLocalChecked(), GetLabels);
+  Nan::SetAccessor(proto, Nan::New("locations").ToLocalChecked(), GetLocations);
 
   auto fn = Nan::GetFunction(tpl).ToLocalChecked();
   auto per_isolate = PerIsolateData::For(target->GetIsolate());
   per_isolate->SampleConstructor().Reset(fn);
 }
 
-} // namespace dd
+}  // namespace dd

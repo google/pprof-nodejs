@@ -1,10 +1,10 @@
 #pragma once
 
 #include <cstdint>
-#include <memory>
 #include <map>
+#include <memory>
 
-#include <node_object_wrap.h> // cppcheck-suppress missingIncludeSystem
+#include <node_object_wrap.h>  // cppcheck-suppress missingIncludeSystem
 #if NODE_MODULE_VERSION >= 102
 #include <v8-callbacks.h>
 #endif
@@ -45,4 +45,4 @@ class CodeMap : public v8::CodeEventHandler {
   std::shared_ptr<CodeEventRecord> Lookup(uintptr_t address);
 };
 
-}; // namespace dd
+};  // namespace dd

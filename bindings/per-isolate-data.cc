@@ -18,9 +18,12 @@ PerIsolateData* PerIsolateData::For(v8::Isolate* isolate) {
   auto pair = per_isolate_data_.find(isolate);
   auto perIsolateData = &pair->second;
 
-  node::AddEnvironmentCleanupHook(isolate, [](void* data) {
-    per_isolate_data_.erase(static_cast<v8::Isolate*>(data));
-  }, isolate);
+  node::AddEnvironmentCleanupHook(
+      isolate,
+      [](void* data) {
+        per_isolate_data_.erase(static_cast<v8::Isolate*>(data));
+      },
+      isolate);
 
   return perIsolateData;
 }
@@ -41,4 +44,4 @@ std::shared_ptr<HeapProfilerState>& PerIsolateData::GetHeapProfilerState() {
   return heap_profiler_state;
 }
 
-} // namespace dd
+}  // namespace dd

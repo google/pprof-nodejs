@@ -1,16 +1,15 @@
-#include <unordered_map>
 #include <sstream>
+#include <unordered_map>
 
-#include "code-event-record.test.hh"
 #include "../code-event-record.hh"
+#include "code-event-record.test.hh"
 
 void test_code_event_record(Tap& t) {
   t.plan(19);
 
   auto isolate = v8::Isolate::GetCurrent();
 
-  auto record = new dd::CodeEventRecord(
-      1234, 0, 5678, 1, 2, "a", "b", "c");
+  auto record = new dd::CodeEventRecord(1234, 0, 5678, 1, 2, "a", "b", "c");
   record->SetScriptId(123);
 
   // Type helpers
@@ -32,41 +31,39 @@ void test_code_event_record(Tap& t) {
   t.equal("b", Str(record->GetFunctionName(isolate)), "function name");
   t.equal("c", Str(record->GetScriptName(isolate)), "script name");
 
-  auto same = new dd::CodeEventRecord(
-      1234, 0, 5678, 1, 2, "a", "b", "c");
+  auto same = new dd::CodeEventRecord(1234, 0, 5678, 1, 2, "a", "b", "c");
   same->SetScriptId(123);
   t.ok(record->Equal(same), "should be equal to itself");
 
   using TestPair = std::pair<dd::CodeEventRecord*, dd::CodeEventRecord*>;
   std::unordered_map<std::string, TestPair> non_matching = {
-    {"id",
-      {new dd::CodeEventRecord(1, 1, 1, 1, 1, "a", "a", "a"),
+      {"id",
+       {new dd::CodeEventRecord(1, 1, 1, 1, 1, "a", "a", "a"),
         new dd::CodeEventRecord(1, 1, 1, 1, 1, "a", "a", "a")}},
-    {"address",
-      {new dd::CodeEventRecord(1, 1, 1, 1, 1, "a", "a", "a"),
+      {"address",
+       {new dd::CodeEventRecord(1, 1, 1, 1, 1, "a", "a", "a"),
         new dd::CodeEventRecord(2, 1, 1, 1, 1, "a", "a", "a")}},
-    {"previousAddress",
-      {new dd::CodeEventRecord(1, 1, 1, 1, 1, "a", "a", "a"),
+      {"previousAddress",
+       {new dd::CodeEventRecord(1, 1, 1, 1, 1, "a", "a", "a"),
         new dd::CodeEventRecord(1, 2, 1, 1, 1, "a", "a", "a")}},
-    {"size",
-      {new dd::CodeEventRecord(1, 1, 1, 1, 1, "a", "a", "a"),
+      {"size",
+       {new dd::CodeEventRecord(1, 1, 1, 1, 1, "a", "a", "a"),
         new dd::CodeEventRecord(1, 1, 2, 1, 1, "a", "a", "a")}},
-    {"line",
-      {new dd::CodeEventRecord(1, 1, 1, 1, 1, "a", "a", "a"),
+      {"line",
+       {new dd::CodeEventRecord(1, 1, 1, 1, 1, "a", "a", "a"),
         new dd::CodeEventRecord(1, 1, 1, 2, 1, "a", "a", "a")}},
-    {"column",
-      {new dd::CodeEventRecord(1, 1, 1, 1, 1, "a", "a", "a"),
+      {"column",
+       {new dd::CodeEventRecord(1, 1, 1, 1, 1, "a", "a", "a"),
         new dd::CodeEventRecord(1, 1, 1, 1, 2, "a", "a", "a")}},
-    {"comment",
-      {new dd::CodeEventRecord(1, 1, 1, 1, 1, "a", "a", "a"),
+      {"comment",
+       {new dd::CodeEventRecord(1, 1, 1, 1, 1, "a", "a", "a"),
         new dd::CodeEventRecord(1, 1, 1, 1, 1, "b", "a", "a")}},
-    {"functionName",
-      {new dd::CodeEventRecord(1, 1, 1, 1, 1, "a", "a", "a"),
+      {"functionName",
+       {new dd::CodeEventRecord(1, 1, 1, 1, 1, "a", "a", "a"),
         new dd::CodeEventRecord(1, 1, 1, 1, 1, "a", "b", "a")}},
-    {"scriptName",
-      {new dd::CodeEventRecord(1, 1, 1, 1, 1, "a", "a", "a"),
-        new dd::CodeEventRecord(1, 1, 1, 1, 1, "a", "a", "b")}}
-  };
+      {"scriptName",
+       {new dd::CodeEventRecord(1, 1, 1, 1, 1, "a", "a", "a"),
+        new dd::CodeEventRecord(1, 1, 1, 1, 1, "a", "a", "b")}}};
 
   // Script Id is not a constructor argument
   non_matching["id"].second->SetScriptId(123);

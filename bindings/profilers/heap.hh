@@ -39,4 +39,4 @@ class HeapProfiler {
   static NAN_MODULE_INIT(Init);
 };
 
-} // namespace dd
+}  // namespace dd

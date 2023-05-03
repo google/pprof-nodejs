@@ -1,7 +1,7 @@
 #pragma once
 
 #include <nan.h>
-#include <node_object_wrap.h> // cppcheck-suppress missingIncludeSystem
+#include <node_object_wrap.h>  // cppcheck-suppress missingIncludeSystem
 
 #include "code-event-record.hh"
 
@@ -38,4 +38,4 @@ class Location : public Nan::ObjectWrap {
   using Nan::ObjectWrap::Unref;
 };
 
-}; // namespace dd
+};  // namespace dd

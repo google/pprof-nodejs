@@ -1,8 +1,8 @@
 #pragma once
 
+#include <atomic>
 #include <cstdint>
 #include <memory>
-#include <atomic>
 
 #include <nan.h>
 #include <uv.h>
@@ -14,36 +14,27 @@
 
 namespace dd {
 
-class SampleBuffer
-{
-public:
+class SampleBuffer {
+ public:
   using SamplePtr = std::unique_ptr<Sample>;
 
-  explicit SampleBuffer(size_t size) : samples_(std::make_unique<SamplePtr[]>(size)),
-                                        capacity_(size),
-                                        size_(0),
-                                        back_index_(0),
-                                        front_index_(0) {}
+  explicit SampleBuffer(size_t size)
+      : samples_(std::make_unique<SamplePtr[]>(size)),
+        capacity_(size),
+        size_(0),
+        back_index_(0),
+        front_index_(0) {}
 
   bool full() const { return size_ == capacity_; }
   bool empty() const { return size_ == 0; }
 
-  SamplePtr &front()
-  {
-    return samples_[front_index_];
-  }
+  SamplePtr& front() { return samples_[front_index_]; }
 
-  const SamplePtr &front() const
-  {
-    return samples_[front_index_];
-  }
+  const SamplePtr& front() const { return samples_[front_index_]; }
 
-  void push_back(SamplePtr ptr)
-  {
-    if (full())
-    {
-      if (empty())
-      {
+  void push_back(SamplePtr ptr) {
+    if (full()) {
+      if (empty()) {
         return;
       }
       // overwrite buffer head
@@ -51,26 +42,22 @@ public:
       increment(back_index_);
       // move buffer head
       front_index_ = back_index_;
-    }
-    else
-    {
+    } else {
       samples_[back_index_] = std::move(ptr);
       increment(back_index_);
       ++size_;
     }
   }
 
-  SamplePtr pop_front()
-  {
+  SamplePtr pop_front() {
     auto idx = front_index_;
     increment(front_index_);
     --size_;
     return std::move(samples_[idx]);
   }
 
-private:
-  void increment(size_t &idx) const
-  {
+ private:
+  void increment(size_t& idx) const {
     idx = idx + 1 == capacity_ ? 0 : idx + 1;
   }
   std::unique_ptr<SamplePtr[]> samples_;
@@ -140,4 +127,4 @@ class CpuProfiler : public Nan::ObjectWrap {
   static NAN_MODULE_INIT(Init);
 };
 
-} // namespace dd
+}  // namespace dd

@@ -32,4 +32,4 @@ class CpuTime {
   struct timespec Now();
 };
 
-} // namespace dd
+}  // namespace dd

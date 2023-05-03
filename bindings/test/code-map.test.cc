@@ -12,35 +12,33 @@ void test_code_map(Tap& t) {
     t.equal(map.Lookup(1234), nullptr, "should not find record in empty map");
   }
 
-  auto record = std::make_shared<dd::CodeEventRecord>(
-    1234, 0, 5678, 1, 2, "fn");
+  auto record =
+      std::make_shared<dd::CodeEventRecord>(1234, 0, 5678, 1, 2, "fn");
 
   // Lookup with record at matching address should return record
   {
-    dd::CodeMap map(isolate, {
-      { 1234, record }
-    });
+    dd::CodeMap map(isolate, {{1234, record}});
 
-    t.ok(record->Equal(map.Lookup(1234).get()), "should find record by exact address");
+    t.ok(record->Equal(map.Lookup(1234).get()),
+         "should find record by exact address");
   }
 
   // Lookup with address in size range of matching record should return record
   {
-    dd::CodeMap map(isolate, {
-      { 1234, record }
-    });
+    dd::CodeMap map(isolate, {{1234, record}});
 
-    t.ok(record->Equal(map.Lookup(2000).get()), "should find record in size range");
+    t.ok(record->Equal(map.Lookup(2000).get()),
+         "should find record in size range");
   }
 
   // Lookup with address outside size range should return nullptr
   {
-    dd::CodeMap map(isolate, {
-      { 1234, record }
-    });
+    dd::CodeMap map(isolate, {{1234, record}});
 
-    t.equal(map.Lookup(1000), nullptr, "should not find record below size range");
-    t.equal(map.Lookup(9001), nullptr, "should not find record above size range");
+    t.equal(
+        map.Lookup(1000), nullptr, "should not find record below size range");
+    t.equal(
+        map.Lookup(9001), nullptr, "should not find record above size range");
   }
 
   // Add a new record
@@ -48,14 +46,13 @@ void test_code_map(Tap& t) {
     dd::CodeMap map(isolate);
     map.Add(1234, record);
 
-    t.ok(record->Equal(map.Lookup(1234).get()), "should find record after added");
+    t.ok(record->Equal(map.Lookup(1234).get()),
+         "should find record after added");
   }
 
   // Remove an existing record
   {
-    dd::CodeMap map(isolate, {
-      { 1234, record }
-    });
+    dd::CodeMap map(isolate, {{1234, record}});
     map.Remove(1234);
 
     t.ok(!map.Lookup(1234), "should not find record after removal");

@@ -1,9 +1,9 @@
 #pragma once
 
-#include <memory>
 #include <nan.h>
 #include <node.h>
 #include <v8.h>
+#include <memory>
 
 namespace dd {
 
@@ -27,4 +27,4 @@ class PerIsolateData {
   std::shared_ptr<HeapProfilerState>& GetHeapProfilerState();
 };
 
-} // namespace dd
+}  // namespace dd
