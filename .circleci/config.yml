@@ -108,7 +108,7 @@ workflows:
             - linux-x64-12
           matrix:
             parameters:
-              node-version: ["12", "14", "16", "18"]
+              node-version: ["12-buster", "14", "16", "18"]
       - node-bench-sirun-sampling: *matrix-exact-supported-node-versions
   nightly:
     triggers:
