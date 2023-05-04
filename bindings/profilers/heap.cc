@@ -28,6 +28,12 @@
 
 namespace dd {
 
+static size_t NearHeapLimit(void* data,
+                            size_t current_heap_limit,
+                            size_t initial_heap_limit);
+static void InterruptCallback(v8::Isolate* isolate, void* data);
+static void AsyncCallback(uv_async_t* handle);
+
 struct Node {
   using Allocation = v8::AllocationProfile::Allocation;
   std::string name;
@@ -46,15 +52,63 @@ enum CallbackMode {
 };
 
 struct HeapProfilerState {
-  uint32_t heap_extension_size;
-  uint32_t max_heap_extension_count;
-  uint32_t current_heap_extension_count;
-  uv_async_t async;
+  explicit HeapProfilerState(v8::Isolate* isolate) : isolate(isolate) {}
+
+  ~HeapProfilerState() {
+    UninstallNearHeapLimitCallback();
+    if (async) {
+      // defer deletion of async when uv_close callback is invoked
+      uv_close(reinterpret_cast<uv_handle_t*>(async), [](uv_handle_t* handle) {
+        delete reinterpret_cast<uv_async_t*>(handle);
+      });
+      async = nullptr;
+    }
+  }
+
+  void UninstallNearHeapLimitCallback() {
+    if (isolate && callbackInstalled) {
+      isolate->RemoveNearHeapLimitCallback(&NearHeapLimit, 0);
+      callbackInstalled = false;
+    }
+  }
+
+  void InstallNearHeapLimitCallback() {
+    if (isolate) {
+      isolate->AddNearHeapLimitCallback(&NearHeapLimit, nullptr);
+      callbackInstalled = true;
+    }
+  }
+
+  void RegisterAsyncCallback() {
+    if (async) {
+      return;
+    }
+    // async is dynamically allocated so that its lifetime can be different
+    // from the one of HeapProfilerState since uv_close is asynchronous
+    async = new uv_async_t();
+    uv_async_init(Nan::GetCurrentEventLoop(), async, AsyncCallback);
+    uv_unref(reinterpret_cast<uv_handle_t*>(async));
+  }
+
+  void OnNewProfile() {
+    profile.reset();
+    if (!callbackInstalled) {
+      // Reinstall NearHeapLimit callback if it was removed before
+      InstallNearHeapLimitCallback();
+    }
+  }
+
+  v8::Isolate* isolate = nullptr;
+  uint32_t heap_extension_size = 0;
+  uint32_t max_heap_extension_count = 0;
+  uint32_t current_heap_extension_count = 0;
+  uv_async_t* async = nullptr;
   std::shared_ptr<Node> profile;
   std::vector<std::string> export_command;
-  bool dumpProfileOnStderr;
+  bool dumpProfileOnStderr = false;
   Nan::Callback callback;
-  uint32_t callbackMode;
+  uint32_t callbackMode = 0;
+  bool callbackInstalled = false;
 };
 
 std::shared_ptr<Node> TranslateAllocationProfileToCpp(
@@ -188,19 +242,11 @@ static void dumpAllocationProfileAsJSON(FILE* file, Node* node) {
   fputs("]}", file);
 }
 
-static void InterruptCallback(v8::Isolate* isolate, void* data);
-static void AsyncCallback(uv_async_t* handle);
-
 static void OnExit(uv_process_t* req, int64_t, int) {
   if (req->data) {
     uv_timer_stop(reinterpret_cast<uv_timer_t*>(req->data));
   }
   uv_close((uv_handle_t*)req, nullptr);
-}
-
-static void TimerCallback(uv_timer_t* handle) {
-  uv_process_t* proc = reinterpret_cast<uv_process_t*>(handle->data);
-  uv_process_kill(proc, SIGKILL);
 }
 
 static void CloseLoop(uv_loop_t& loop) {
@@ -301,7 +347,14 @@ static void ExportProfile(HeapProfilerState& state) {
     fprintf(stderr, "Failed to init timer: %s\n", uv_strerror(r));
     return;
   }
-  if ((r = uv_timer_start(&timer, &TimerCallback, timeoutMs, 0))) {
+  if ((r = uv_timer_start(
+           &timer,
+           [](uv_timer_t* handle) {
+             uv_process_kill(reinterpret_cast<uv_process_t*>(handle->data),
+                             SIGKILL);
+           },
+           timeoutMs,
+           0))) {
     fprintf(stderr, "Failed to start timer: %s\n", uv_strerror(r));
     return;
   }
@@ -312,9 +365,9 @@ static void ExportProfile(HeapProfilerState& state) {
   uv_fs_unlink(&loop, &fs_req, filepath.c_str(), nullptr);
 }
 
-static size_t NearHeapLimit(void* data,
-                            size_t current_heap_limit,
-                            size_t initial_heap_limit) {
+size_t NearHeapLimit(void* data,
+                     size_t current_heap_limit,
+                     size_t initial_heap_limit) {
   auto isolate = v8::Isolate::GetCurrent();
   auto state = PerIsolateData::For(isolate)->GetHeapProfilerState();
   ++state->current_heap_extension_count;
@@ -346,23 +399,33 @@ static size_t NearHeapLimit(void* data,
     dumpAllocationProfile(stderr, state->profile.get());
   }
 
+  if (!state->export_command.empty()) {
+    ExportProfile(*state);
+  }
+
   if (!state->callback.IsEmpty()) {
     if (state->callbackMode & kInterruptCallback) {
       isolate->RequestInterrupt(InterruptCallback, nullptr);
     }
     if (state->callbackMode & kAsyncCallback) {
-      uv_async_send(&state->async);
+      uv_async_send(state->async);
     }
+  } else {
+    state->profile.reset();
   }
 
-  if (!state->export_command.empty()) {
-    ExportProfile(*state);
+  size_t new_heap_limit =
+      current_heap_limit +
+      ((state->current_heap_extension_count <= state->max_heap_extension_count)
+           ? state->heap_extension_size
+           : 0);
+  if (state->current_heap_extension_count >= state->max_heap_extension_count) {
+    // On Node 14, NearLimitCallback is sometimes called many times, without the
+    // process aborting, even when returned limit is not increased. Disable
+    // callback until next call to GetAllocationProfile()
+    state->UninstallNearHeapLimitCallback();
   }
-
-  return current_heap_limit + ((state->current_heap_extension_count <=
-                                state->max_heap_extension_count)
-                                   ? state->heap_extension_size
-                                   : 0);
+  return new_heap_limit;
 }
 
 v8::Local<v8::Value> TranslateAllocationProfile(
@@ -437,19 +500,20 @@ NAN_METHOD(HeapProfiler::StartSamplingHeapProfiler) {
 NAN_METHOD(HeapProfiler::StopSamplingHeapProfiler) {
   auto isolate = info.GetIsolate();
   isolate->GetHeapProfiler()->StopSamplingHeapProfiler();
-  auto state = PerIsolateData::For(isolate)->GetHeapProfilerState();
-  if (state) {
-    isolate->RemoveNearHeapLimitCallback(&NearHeapLimit, 0);
-    state.reset();
-  }
+  PerIsolateData::For(isolate)->GetHeapProfilerState().reset();
 }
 
 // Signature:
 // getAllocationProfile(): AllocationProfileNode
 NAN_METHOD(HeapProfiler::GetAllocationProfile) {
+  auto isolate = info.GetIsolate();
   std::unique_ptr<v8::AllocationProfile> profile(
-      info.GetIsolate()->GetHeapProfiler()->GetAllocationProfile());
+      isolate->GetHeapProfiler()->GetAllocationProfile());
   v8::AllocationProfile::Node* root = profile->GetRootNode();
+  auto state = PerIsolateData::For(isolate)->GetHeapProfilerState();
+  if (state) {
+    state->OnNewProfile();
+  }
   info.GetReturnValue().Set(TranslateAllocationProfile(root));
 }
 
@@ -478,15 +542,15 @@ NAN_METHOD(HeapProfiler::MonitorOutOfMemory) {
   }
 
   auto isolate = v8::Isolate::GetCurrent();
-  isolate->AddNearHeapLimitCallback(&NearHeapLimit, nullptr);
 
   auto& state = PerIsolateData::For(isolate)->GetHeapProfilerState();
-  state = std::make_shared<HeapProfilerState>();
+  state = std::make_shared<HeapProfilerState>(isolate);
+
   state->heap_extension_size = info[0].As<v8::Integer>()->Value();
   state->max_heap_extension_count = info[1].As<v8::Integer>()->Value();
   state->dumpProfileOnStderr = info[2].As<v8::Boolean>()->Value();
   state->callbackMode = info[5].As<v8::Integer>()->Value();
-
+  state->InstallNearHeapLimitCallback();
   if (!info[4]->IsNullOrUndefined() && state->callbackMode != kNoCallback) {
     state->callback.Reset(Nan::To<v8::Function>(info[4]).ToLocalChecked());
   }
@@ -501,8 +565,7 @@ NAN_METHOD(HeapProfiler::MonitorOutOfMemory) {
   }
 
   if (!state->callback.IsEmpty() && (state->callbackMode & kAsyncCallback)) {
-    uv_async_init(Nan::GetCurrentEventLoop(), &state->async, AsyncCallback);
-    uv_unref(reinterpret_cast<uv_handle_t*>(&state->async));
+    state->RegisterAsyncCallback();
   }
 }
 
@@ -522,6 +585,9 @@ NAN_MODULE_INIT(HeapProfiler::Init) {
 void InterruptCallback(v8::Isolate* isolate, void* data) {
   v8::HandleScope scope(isolate);
   auto state = PerIsolateData::For(isolate)->GetHeapProfilerState();
+  if (!state->profile) {
+    return;
+  }
   v8::Local<v8::Value> argv[1] = {
       dd::TranslateAllocationProfile(state->profile.get())};
   Nan::AsyncResource resource("NearHeapLimit");
