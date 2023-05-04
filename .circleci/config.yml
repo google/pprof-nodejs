@@ -40,6 +40,9 @@ node-bench-sirun-base: &node-bench-sirun-base
     node-version:
       type: string
       default: "latest"
+    benchmark-type:
+      type: string
+      default: "sampling"
   docker:
     - image: node:<< parameters.node-version >>
   resource_class: medium+
@@ -57,8 +60,8 @@ node-bench-sirun-base: &node-bench-sirun-base
     - run:
         name: Run sirun
         command: |
-          cd benchmark/sirun/$(node -p "process.env.CIRCLE_JOB.replace('node-bench-sirun-', '').replace('-latest', '').replace(/-\d*$/, '')")
-          node /root/dd-pprof/benchmark/sirun/run-all-variants.js | tee ../$CIRCLE_JOB-sirun-output.ndjson
+          cd benchmark/sirun/<< parameters.benchmark-type >>
+          node /root/dd-pprof/benchmark/sirun/run-all-variants.js | tee ../$CIRCLE_JOB-<< parameters.benchmark-type >>-sirun-output.ndjson
     - persist_to_workspace:
         root: ~/dd-pprof
         paths:
@@ -77,8 +80,7 @@ prebuild-linux-base: &prebuild-linux-base
     - persist-prebuilds
 
 jobs:
-  node-bench-sirun-cpu-profiler: *node-bench-sirun-base
-  node-bench-sirun-sampling: *node-bench-sirun-base
+  node-bench-sirun: *node-bench-sirun-base
 
   linux-x64-18:
     <<: *prebuild-linux-base
@@ -102,14 +104,14 @@ workflows:
       # Linux x64
       - linux-x64-18
       - linux-x64-12
-      - node-bench-sirun-cpu-profiler: &matrix-exact-supported-node-versions
+      - node-bench-sirun:
           requires:
             - linux-x64-18
             - linux-x64-12
           matrix:
             parameters:
-              node-version: ["12", "14", "16", "18"]
-      - node-bench-sirun-sampling: *matrix-exact-supported-node-versions
+              node-version: ["12-buster", "14", "16", "18"]
+              benchmark-type: ["sampling", "cpu-profiler"]
   nightly:
     triggers:
       - schedule:
