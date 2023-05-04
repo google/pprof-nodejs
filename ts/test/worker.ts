@@ -8,7 +8,11 @@ const assert = require('assert');
 const {hasOwnProperty} = Object.prototype;
 
 if (isMainThread) {
-  new Worker(__filename);
+  new Worker(__filename).on('exit', () => {
+    // Run a second worker after the first one exited to test for proper
+    // cleanup after first worker. This used to segfault.
+    new Worker(__filename);
+  });
 }
 
 function valueName(profile: Profile, vt: ValueType) {

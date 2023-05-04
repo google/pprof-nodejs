@@ -22,6 +22,7 @@
 #include <node.h>
 #include <v8-profiler.h>
 
+#include "../per-isolate-data.hh"
 #include "wall.hh"
 
 using namespace v8;
@@ -192,8 +193,6 @@ Local<Value> TranslateTimeProfile(const CpuProfile* profile,
   return js_profile;
 }
 
-static Nan::Persistent<v8::Function> constructor;
-
 WallProfiler::WallProfiler(int interval) : samplingInterval(interval) {}
 
 WallProfiler::~WallProfiler() {
@@ -233,7 +232,8 @@ NAN_METHOD(WallProfiler::New) {
   } else {
     const int argc = 1;
     v8::Local<v8::Value> argv[argc] = {info[0]};
-    v8::Local<v8::Function> cons = Nan::New(constructor);
+    v8::Local<v8::Function> cons = Nan::New(
+        PerIsolateData::For(info.GetIsolate())->WallProfilerConstructor());
     info.GetReturnValue().Set(
         Nan::NewInstance(cons, argc, argv).ToLocalChecked());
   }
@@ -311,7 +311,9 @@ NAN_MODULE_INIT(WallProfiler::Init) {
   Nan::SetPrototypeMethod(tpl, "dispose", Dispose);
   Nan::SetPrototypeMethod(tpl, "stop", Stop);
 
-  constructor.Reset(Nan::GetFunction(tpl).ToLocalChecked());
+  PerIsolateData::For(Isolate::GetCurrent())
+      ->WallProfilerConstructor()
+      .Reset(Nan::GetFunction(tpl).ToLocalChecked());
   Nan::Set(target, className, Nan::GetFunction(tpl).ToLocalChecked());
 }
 

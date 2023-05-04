@@ -3,21 +3,18 @@
 #include <node.h>
 
 #include "location.hh"
-#include "per-isolate-data.hh"
 
 namespace dd {
 
-Location::Location(v8::Isolate* isolate,
-                   std::shared_ptr<CodeEventRecord> code_event_record)
+Location::Location(std::shared_ptr<CodeEventRecord> code_event_record)
     : code_event_record(std::move(code_event_record)) {}
 
-Location* Location::New(v8::Isolate* isolate,
+Location* Location::New(PerIsolateData* per_isolate,
                         std::shared_ptr<CodeEventRecord> code_event_record) {
-  auto per_isolate = PerIsolateData::For(isolate);
   v8::Local<v8::Function> cons = Nan::New(per_isolate->LocationConstructor());
   auto inst = Nan::NewInstance(cons, 0, {}).ToLocalChecked();
 
-  auto location = new Location(isolate, std::move(code_event_record));
+  auto location = new Location(std::move(code_event_record));
   location->Wrap(inst);
   return location;
 }

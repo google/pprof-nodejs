@@ -10,7 +10,8 @@ void test_location(Tap& t) {
       std::make_shared<dd::CodeEventRecord>(1234, 0, 5678, 1, 2, "a", "b", "c");
   record->SetScriptId(123);
 
-  auto obj = dd::Location::New(isolate, record)->handle();
+  auto obj =
+      dd::Location::New(dd::PerIsolateData::For(isolate), record)->handle();
 
   // Type helpers
   auto Get = [isolate](v8::Local<v8::Object> obj,

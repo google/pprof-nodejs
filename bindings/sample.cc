@@ -71,9 +71,10 @@ v8::Local<v8::Array> Sample::Symbolize(std::shared_ptr<CodeMap> code_map) {
                  std::front_inserter(records),
                  ToCodeEventRecord);
 
+  auto per_isolate = PerIsolateData::For(isolate);
   for (auto record : records) {
     if (record) {
-      auto location = Location::New(isolate, record);
+      auto location = Location::New(per_isolate, record);
       Nan::Set(locations, locations->Length(), location->handle()).Check();
     }
   }

@@ -4,6 +4,7 @@
 #include <node_object_wrap.h>  // cppcheck-suppress missingIncludeSystem
 
 #include "code-event-record.hh"
+#include "per-isolate-data.hh"
 
 namespace dd {
 
@@ -12,10 +13,9 @@ class Location : public Nan::ObjectWrap {
   std::shared_ptr<CodeEventRecord> code_event_record;
 
  public:
-  explicit Location(v8::Isolate* isolate,
-                    std::shared_ptr<CodeEventRecord> code_event_record);
+  explicit Location(std::shared_ptr<CodeEventRecord> code_event_record);
 
-  static Location* New(v8::Isolate* isolate,
+  static Location* New(PerIsolateData* per_isolate,
                        std::shared_ptr<CodeEventRecord> code_event_record);
 
   std::shared_ptr<CodeEventRecord> GetCodeEventRecord();
