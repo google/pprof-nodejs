@@ -18,7 +18,7 @@
     "format": "clang-format --style file -i --glob='bindings/**/*.{h,hh,cpp,cc}'",
     "prebuild": "node scripts/prebuild.js",
     "prebuilds": "node scripts/prebuilds.js",
-    "prepare": "npm run compile",
+    "prepare": "npm run compile && npm run rebuild",
     "pretest": "npm run compile && npm run rebuild"
   },
   "author": {
