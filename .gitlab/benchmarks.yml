@@ -1,0 +1,60 @@
+variables:
+  BASE_CI_IMAGE: 486234852809.dkr.ecr.us-east-1.amazonaws.com/ci/benchmarking-platform:pprof-nodejs
+
+.benchmark_base:
+  tags: ["runner:apm-k8s-tweaked-metal"]
+  image: $BASE_CI_IMAGE
+  stage: benchmarks
+  when: on_success
+  variables:
+    UPSTREAM_PROJECT_ID: $CI_PROJECT_ID
+    UPSTREAM_PROJECT_NAME: $CI_PROJECT_NAME
+    UPSTREAM_BRANCH: $CI_COMMIT_REF_NAME
+    UPSTREAM_COMMIT_SHA: $CI_COMMIT_SHA
+
+    KUBERNETES_SERVICE_ACCOUNT_OVERWRITE: pprof-nodejs
+    FF_USE_LEGACY_KUBERNETES_EXECUTION_STRATEGY: "true"
+  before_script:
+    - git config --global url."https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.ddbuild.io/DataDog/".insteadOf "https://github.com/DataDog/"
+    - git clone --branch pprof-nodejs https://github.com/DataDog/benchmarking-platform /platform
+
+benchmarks:
+  extends: .benchmark_base
+  interruptible: true
+  timeout: 1h
+  script:
+    - export ARTIFACTS_DIR="$(pwd)/reports/${CI_JOB_ID}" && (mkdir -p "${ARTIFACTS_DIR}" || :)
+    - cd /platform
+    - ./steps/capture-hardware-software-info.sh
+    - ./steps/run-benchmarks.sh
+  parallel:
+    matrix:
+      - MAJOR_NODE_VERSION: 16
+      - MAJOR_NODE_VERSION: 18
+      - MAJOR_NODE_VERSION: 20
+  artifacts:
+    name: "reports"
+    paths:
+      - reports/
+    expire_in: 3 months
+
+benchmarks-pr-comment:
+  extends: .benchmark_base
+  needs:
+    - job: benchmarks
+      artifacts: true
+  script:
+    - export ARTIFACTS_DIR="$(pwd)/reports"
+    - cd /platform
+    - find "$ARTIFACTS_DIR"
+    - ./steps/aggregate-results.sh
+    - find "$ARTIFACTS_DIR"
+    - source "$ARTIFACTS_DIR/.env"
+    - ./steps/analyze-results.sh
+    - "./steps/upload-results-to-s3.sh || :"
+    - "./steps/post-pr-comment.sh || :"
+  artifacts:
+    name: "reports"
+    paths:
+      - reports/
+    expire_in: 3 months

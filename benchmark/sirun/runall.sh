@@ -9,14 +9,15 @@ if [ -n "${MAJOR_NODE_VERSION:-}" ]; then
         source "${NVM_DIR:-usr/local/nvm}/nvm.sh"
     fi
 
-    nvm use "${MAJOR_NODE_VERSION:-18}"
-    VERSION=$(nvm current)
-    echo "using Node.js ${VERSION}"
+    nvm use "${MAJOR_NODE_VERSION}"
 
     pushd ../../
     npm install
     popd
 fi
+
+VERSION=$(node -v)
+echo "using Node.js ${VERSION}"
 
 for d in *; do
     if [ -d "${d}" ]; then
