@@ -1,7 +1,7 @@
 # pprof support for Node.js
 
 [![NPM Version][npm-image]][npm-url]
-[![Build Status][circle-image]][circle-url]
+[![Build Status][build-image]][build-url]
 [![Known Vulnerabilities][snyk-image]][snyk-url]
 
 [pprof][pprof-url] support for Node.js.
@@ -108,8 +108,8 @@ Install [`pprof`][npm-url] with `npm` or add to your `package.json`.
           const profile = await pprof.heap.v8Profile();
         ``` 
 
-[circle-image]: https://circleci.com/gh/google/pprof-nodejs.svg?style=svg
-[circle-url]: https://circleci.com/gh/google/pprof-nodejs
+[build-image]: https://github.com/Datadog/pprof-nodejs/actions/workflows/build.yml/badge.svg?branch=main
+[build-url]: https://github.com/Datadog/pprof-nodejs/actions/workflows/build.yml
 [coveralls-image]: https://coveralls.io/repos/google/pprof-nodejs/badge.svg?branch=main&service=github
 [npm-image]: https://badge.fury.io/js/pprof.svg
 [npm-url]: https://npmjs.org/package/pprof
