@@ -212,21 +212,13 @@ export class SourceMapper {
       return location;
     }
 
-    const generatedPos = {
-      line: location.line,
-      column: location.column,
-      bias: sourceMap.SourceMapConsumer.LEAST_UPPER_BOUND,
-    };
+    const generatedPos = {line: location.line, column: location.column};
 
     // TODO: Determine how to remove the explicit cast here.
     const consumer: sourceMap.SourceMapConsumer =
       entry.mapConsumer as {} as sourceMap.SourceMapConsumer;
 
-    let pos = consumer.originalPositionFor(generatedPos);
-    if (pos.source === null) {
-      generatedPos.bias = sourceMap.SourceMapConsumer.GREATEST_LOWER_BOUND;
-      pos = consumer.originalPositionFor(generatedPos);
-    }
+    const pos = consumer.originalPositionFor(generatedPos);
     if (pos.source === null) {
       return location;
     }
