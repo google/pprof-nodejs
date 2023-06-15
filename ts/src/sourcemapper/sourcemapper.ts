@@ -232,7 +232,10 @@ export class SourceMapper {
       return location;
     }
 
-    const generatedPos = {line: location.line, column: location.column};
+    const generatedPos = {
+      line: location.line,
+      column: location.column > 0 ? location.column - 1 : 0, // SourceMapConsumer expects column to be 0-based
+    };
 
     // TODO: Determine how to remove the explicit cast here.
     const consumer: sourceMap.SourceMapConsumer =
@@ -251,7 +254,7 @@ export class SourceMapper {
       file: path.resolve(entry.mapFileDir, pos.source),
       line: pos.line || undefined,
       name: pos.name || location.name,
-      column: pos.column || undefined,
+      column: pos.column === null ? undefined : pos.column + 1, // convert column back to 1-based
     };
 
     debug(

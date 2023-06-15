@@ -869,7 +869,7 @@ const heapGeneratedLeaf1 = {
   scriptName: path.join(mapDirPath, 'foo.js'),
   scriptId: 1,
   lineNumber: 5,
-  columnNumber: 5,
+  columnNumber: 6,
   allocations: [{count: 3, sizeBytes: 2}],
   children: [],
 };
@@ -879,7 +879,7 @@ const heapGeneratedLeaf2 = {
   scriptName: path.join(mapDirPath, 'baz.js'),
   scriptId: 3,
   lineNumber: 3,
-  columnNumber: 0,
+  columnNumber: 1,
   allocations: [{count: 5, sizeBytes: 5}],
   children: [],
 };
@@ -889,7 +889,7 @@ const heapGeneratedNode2 = {
   scriptName: path.join(mapDirPath, 'bar.js'),
   scriptId: 2,
   lineNumber: 10,
-  columnNumber: 0,
+  columnNumber: 1,
   allocations: [],
   children: [heapGeneratedLeaf2],
 };
@@ -899,7 +899,7 @@ const heapGeneratedNode1 = {
   scriptName: path.join(mapDirPath, 'foo.js'),
   scriptId: 1,
   lineNumber: 1,
-  columnNumber: 3,
+  columnNumber: 4,
   allocations: [],
   children: [heapGeneratedNode2, heapGeneratedLeaf1],
 };
@@ -1002,7 +1002,7 @@ const timeGeneratedLeaf1 = {
   scriptName: path.join(mapDirPath, 'foo.js'),
   scriptId: 1,
   lineNumber: 5,
-  columnNumber: 5,
+  columnNumber: 6,
   hitCount: 5,
   children: [],
 };
@@ -1012,7 +1012,7 @@ const timeGeneratedLeaf2 = {
   scriptName: path.join(mapDirPath, 'baz.js'),
   scriptId: 3,
   lineNumber: 3,
-  columnNumber: 0,
+  columnNumber: 1,
   hitCount: 10,
   children: [],
 };
@@ -1022,7 +1022,7 @@ const timeGeneratedNode2 = {
   scriptName: path.join(mapDirPath, 'bar.js'),
   scriptId: 2,
   lineNumber: 10,
-  columnNumber: 0,
+  columnNumber: 1,
   children: [timeGeneratedLeaf2],
 };
 
@@ -1031,7 +1031,7 @@ const timeGeneratedNode1 = {
   scriptName: path.join(mapDirPath, 'foo.js'),
   scriptId: 1,
   lineNumber: 1,
-  columnNumber: 3,
+  columnNumber: 4,
   hitCount: 0,
   children: [timeGeneratedNode2, timeGeneratedLeaf1],
 };
