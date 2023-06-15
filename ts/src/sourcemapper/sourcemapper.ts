@@ -41,6 +41,17 @@ const readFile = pify(fs.readFile);
 const CONCURRENCY = 10;
 const MAP_EXT = '.map';
 
+const debug = process.env.DD_PROFILING_DEBUG_SOURCE_MAPS
+  ? (msg: string | Function) => {
+      console.log(typeof msg === 'function' ? msg() : msg);
+    }
+  : () => {};
+
+function error(msg: string) {
+  debug(`Error: ${msg}`);
+  return new Error(msg);
+}
+
 export interface MapInfoCompiled {
   mapFileDir: string;
   mapConsumer: sourceMap.RawSourceMap;
@@ -74,7 +85,7 @@ async function processSourceMap(
   // this handles the case when the path is undefined, null, or
   // the empty string
   if (!mapPath || !mapPath.endsWith(MAP_EXT)) {
-    throw new Error(`The path "${mapPath}" does not specify a source map file`);
+    throw error(`The path "${mapPath}" does not specify a source map file`);
   }
   mapPath = path.normalize(mapPath);
 
@@ -82,7 +93,7 @@ async function processSourceMap(
   try {
     contents = await readFile(mapPath, 'utf8');
   } catch (e) {
-    throw new Error('Could not read source map file ' + mapPath + ': ' + e);
+    throw error('Could not read source map file ' + mapPath + ': ' + e);
   }
 
   let consumer: sourceMap.RawSourceMap;
@@ -97,7 +108,7 @@ async function processSourceMap(
       contents as {} as sourceMap.RawSourceMap
     )) as {} as sourceMap.RawSourceMap;
   } catch (e) {
-    throw new Error(
+    throw error(
       'An error occurred while reading the ' +
         'sourceMap file ' +
         mapPath +
@@ -119,12 +130,16 @@ async function processSourceMap(
   const generatedPath = path.resolve(dir, generatedBase);
 
   infoMap.set(generatedPath, {mapFileDir: dir, mapConsumer: consumer});
+  debug(`Loaded source map for ${generatedPath} => ${mapPath}`);
 }
 
 export class SourceMapper {
   infoMap: Map<string, MapInfoCompiled>;
 
   static async create(searchDirs: string[]): Promise<SourceMapper> {
+    debug(
+      () => `Looking for source map files in dirs: [${searchDirs.join(', ')}]`
+    );
     const mapFiles: string[] = [];
     for (const dir of searchDirs) {
       try {
@@ -133,9 +148,10 @@ export class SourceMapper {
           mapFiles.push(path.resolve(dir, mapFile));
         });
       } catch (e) {
-        throw new Error(`failed to get source maps from ${dir}: ${e}`);
+        throw error(`failed to get source maps from ${dir}: ${e}`);
       }
     }
+    debug(() => `Found source map files: [${mapFiles.join(', ')}]`);
     return createFromMapFiles(mapFiles);
   }
 
@@ -209,6 +225,10 @@ export class SourceMapper {
     const inputPath = path.normalize(location.file);
     const entry = this.getMappingInfo(inputPath);
     if (entry === null) {
+      debug(
+        () =>
+          `Source map lookup failed: no map found for ${location.file} (normalized: ${inputPath})`
+      );
       return location;
     }
 
@@ -220,14 +240,25 @@ export class SourceMapper {
 
     const pos = consumer.originalPositionFor(generatedPos);
     if (pos.source === null) {
+      debug(
+        () =>
+          `Source map lookup failed for ${location.name}(${location.file}:${location.line}:${location.column})`
+      );
       return location;
     }
-    return {
+
+    const loc = {
       file: path.resolve(entry.mapFileDir, pos.source),
       line: pos.line || undefined,
       name: pos.name || location.name,
       column: pos.column || undefined,
     };
+
+    debug(
+      () =>
+        `Source map lookup succeeded for ${location.name}(${location.file}:${location.line}:${location.column}) => ${loc.name}(${loc.file}:${loc.line}:${loc.column})`
+    );
+    return loc;
   }
 }
 
@@ -240,7 +271,7 @@ async function createFromMapFiles(mapFiles: string[]): Promise<SourceMapper> {
   try {
     await Promise.all(promises);
   } catch (err) {
-    throw new Error(
+    throw error(
       'An error occurred while processing the source map files' + err
     );
   }
@@ -281,6 +312,8 @@ async function* walk(
     } catch (error) {
       if (!isNonFatalError(error)) {
         throw error;
+      } else {
+        debug(() => `Non fatal error: ${error}`);
       }
     }
   }
