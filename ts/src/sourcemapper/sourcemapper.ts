@@ -102,20 +102,52 @@ async function processSourceMap(
     );
   }
 
-  /*
-   * If the source map file defines a "file" attribute, use it as
+  /* If the source map file defines a "file" attribute, use it as
    * the output file where the path is relative to the directory
    * containing the map file.  Otherwise, use the name of the output
    * file (with the .map extension removed) as the output file.
+
+   * With nextjs/webpack, when there are subdirectories in `pages` directory,
+   * the generated source maps do not reference correctly the generated files
+   * in their `file` property.
+   * For example if the generated file / source maps have paths:
+   * <root>/pages/sub/foo.js(.map)
+   * foo.js.map will have ../pages/sub/foo.js as `file` property instead of
+   * ../../pages/sub/foo.js
+   * To workaround this, check first if file referenced in `file` property
+   * exists and if it does not, check if generated file exists alongside the
+   * source map file.
    */
   const dir = path.dirname(mapPath);
-  const generatedBase = consumer.file
-    ? consumer.file
-    : path.basename(mapPath, MAP_EXT);
-  const generatedPath = path.resolve(dir, generatedBase);
+  const generatedPathCandidates = [];
+  if (consumer.file) {
+    generatedPathCandidates.push(path.resolve(dir, consumer.file));
+  }
+  const samePath = path.resolve(dir, path.basename(mapPath, MAP_EXT));
+  if (
+    generatedPathCandidates.length === 0 ||
+    generatedPathCandidates[0] !== samePath
+  ) {
+    generatedPathCandidates.push(samePath);
+  }
 
-  infoMap.set(generatedPath, {mapFileDir: dir, mapConsumer: consumer});
-  logger.debug(`Loaded source map for ${generatedPath} => ${mapPath}`);
+  for (const generatedPath of generatedPathCandidates) {
+    try {
+      await fs.promises.access(generatedPath, fs.constants.F_OK);
+      infoMap.set(generatedPath, {mapFileDir: dir, mapConsumer: consumer});
+      if (debug) {
+        logger.debug(`Loaded source map for ${generatedPath} => ${mapPath}`);
+      }
+      return;
+    } catch (err) {
+      if (debug) {
+        logger.debug(`Generated path ${generatedPath} does not exist`);
+      }
+    }
+  }
+  if (debug) {
+    logger.debug(`Unable to find generated file for ${mapPath}`);
+  }
 }
 
 export class SourceMapper {

@@ -851,7 +851,9 @@ mapBaz.addMapping({
 });
 
 fs.writeFileSync(path.join(mapDirPath, 'foo.js.map'), mapFoo.toString());
+fs.writeFileSync(path.join(mapDirPath, 'foo.js'), '');
 fs.writeFileSync(path.join(mapDirPath, 'baz.js.map'), mapBaz.toString());
+fs.writeFileSync(path.join(mapDirPath, 'baz.js'), '');
 
 const heapGeneratedLeaf1 = {
   name: 'foo2',
