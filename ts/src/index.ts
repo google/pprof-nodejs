@@ -23,6 +23,7 @@ export {AllocationProfileNode, TimeProfileNode, ProfileNode} from './v8-types';
 
 export {encode, encodeSync} from './profile-encoder';
 export {SourceMapper} from './sourcemapper/sourcemapper';
+export {setLogger} from './logger';
 
 export const CpuProfiler = cpuProfiler;
 

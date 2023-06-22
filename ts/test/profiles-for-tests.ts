@@ -17,18 +17,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as tmp from 'tmp';
-
-// Apparently the source-map module feature-detects the browser by checking
-// if the fetch function exists. Because it now exists in Node.js v18, the
-// source-map module thinks it's running in a browser and doesn't work.
-const desc = Object.getOwnPropertyDescriptor(globalThis, 'fetch');
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
-delete globalThis.fetch;
 import {SourceMapGenerator} from 'source-map';
-if (desc) {
-  Object.defineProperty(globalThis, 'fetch', desc);
-}
 
 import {Function, Location, Profile, Sample, ValueType} from 'pprof-format';
 

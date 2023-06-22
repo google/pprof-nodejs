@@ -21,18 +21,8 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
-
-// Apparently the source-map module feature-detects the browser by checking
-// if the fetch function exists. Because it now exists in Node.js v18, the
-// source-map module thinks it's running in a browser and doesn't work.
-const desc = Object.getOwnPropertyDescriptor(globalThis, 'fetch');
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
-delete globalThis.fetch;
 import * as sourceMap from 'source-map';
-if (desc) {
-  Object.defineProperty(globalThis, 'fetch', desc);
-}
+import {logger} from '../logger';
 
 const pify = require('pify');
 const pLimit = require('p-limit');
@@ -41,14 +31,8 @@ const readFile = pify(fs.readFile);
 const CONCURRENCY = 10;
 const MAP_EXT = '.map';
 
-const debug = process.env.DD_PROFILING_DEBUG_SOURCE_MAPS
-  ? (msg: string | Function) => {
-      console.log(typeof msg === 'function' ? msg() : msg);
-    }
-  : () => {};
-
 function error(msg: string) {
-  debug(`Error: ${msg}`);
+  logger.debug(`Error: ${msg}`);
   return new Error(msg);
 }
 
@@ -80,7 +64,8 @@ export interface SourceLocation {
  */
 async function processSourceMap(
   infoMap: Map<string, MapInfoCompiled>,
-  mapPath: string
+  mapPath: string,
+  debug: boolean
 ): Promise<void> {
   // this handles the case when the path is undefined, null, or
   // the empty string
@@ -130,16 +115,22 @@ async function processSourceMap(
   const generatedPath = path.resolve(dir, generatedBase);
 
   infoMap.set(generatedPath, {mapFileDir: dir, mapConsumer: consumer});
-  debug(`Loaded source map for ${generatedPath} => ${mapPath}`);
+  logger.debug(`Loaded source map for ${generatedPath} => ${mapPath}`);
 }
 
 export class SourceMapper {
   infoMap: Map<string, MapInfoCompiled>;
+  debug: boolean;
 
-  static async create(searchDirs: string[]): Promise<SourceMapper> {
-    debug(
-      () => `Looking for source map files in dirs: [${searchDirs.join(', ')}]`
-    );
+  static async create(
+    searchDirs: string[],
+    debug = false
+  ): Promise<SourceMapper> {
+    if (debug) {
+      logger.debug(
+        `Looking for source map files in dirs: [${searchDirs.join(', ')}]`
+      );
+    }
     const mapFiles: string[] = [];
     for (const dir of searchDirs) {
       try {
@@ -151,8 +142,10 @@ export class SourceMapper {
         throw error(`failed to get source maps from ${dir}: ${e}`);
       }
     }
-    debug(() => `Found source map files: [${mapFiles.join(', ')}]`);
-    return createFromMapFiles(mapFiles);
+    if (debug) {
+      logger.debug(`Found source map files: [${mapFiles.join(', ')}]`);
+    }
+    return createFromMapFiles(mapFiles, debug);
   }
 
   /**
@@ -163,8 +156,9 @@ export class SourceMapper {
    *  processing the given source map files
    * @constructor
    */
-  constructor() {
+  constructor(debug = false) {
     this.infoMap = new Map();
+    this.debug = debug;
   }
 
   /**
@@ -225,10 +219,11 @@ export class SourceMapper {
     const inputPath = path.normalize(location.file);
     const entry = this.getMappingInfo(inputPath);
     if (entry === null) {
-      debug(
-        () =>
+      if (this.debug) {
+        logger.debug(
           `Source map lookup failed: no map found for ${location.file} (normalized: ${inputPath})`
-      );
+        );
+      }
       return location;
     }
 
@@ -243,10 +238,11 @@ export class SourceMapper {
 
     const pos = consumer.originalPositionFor(generatedPos);
     if (pos.source === null) {
-      debug(
-        () =>
+      if (this.debug) {
+        logger.debug(
           `Source map lookup failed for ${location.name}(${location.file}:${location.line}:${location.column})`
-      );
+        );
+      }
       return location;
     }
 
@@ -257,19 +253,23 @@ export class SourceMapper {
       column: pos.column === null ? undefined : pos.column + 1, // convert column back to 1-based
     };
 
-    debug(
-      () =>
+    if (this.debug) {
+      logger.debug(
         `Source map lookup succeeded for ${location.name}(${location.file}:${location.line}:${location.column}) => ${loc.name}(${loc.file}:${loc.line}:${loc.column})`
-    );
+      );
+    }
     return loc;
   }
 }
 
-async function createFromMapFiles(mapFiles: string[]): Promise<SourceMapper> {
+async function createFromMapFiles(
+  mapFiles: string[],
+  debug: boolean
+): Promise<SourceMapper> {
   const limit = pLimit(CONCURRENCY);
-  const mapper = new SourceMapper();
+  const mapper = new SourceMapper(debug);
   const promises: Array<Promise<void>> = mapFiles.map(mapPath =>
-    limit(() => processSourceMap(mapper.infoMap, mapPath))
+    limit(() => processSourceMap(mapper.infoMap, mapPath, debug))
   );
   try {
     await Promise.all(promises);
@@ -316,7 +316,7 @@ async function* walk(
       if (!isNonFatalError(error)) {
         throw error;
       } else {
-        debug(() => `Non fatal error: ${error}`);
+        logger.debug(() => `Non fatal error: ${error}`);
       }
     }
   }
