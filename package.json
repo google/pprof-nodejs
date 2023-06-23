@@ -19,7 +19,7 @@
     "prebuild": "node scripts/prebuild.js",
     "prebuilds": "node scripts/prebuilds.js",
     "prepare": "npm run compile && npm run rebuild",
-    "pretest": "npm run compile && npm run rebuild"
+    "pretest": "npm run compile"
   },
   "author": {
     "name": "Google Inc."
