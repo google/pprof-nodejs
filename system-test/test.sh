@@ -50,7 +50,7 @@ TESTDIR=$(mktemp -d)
 cp -r "$BENCHDIR" "$TESTDIR/busybench"
 cd "$TESTDIR/busybench"
 
-retry npm_install pify @types/pify typescript gts @types/node >/dev/null
+retry npm_install typescript gts @types/node >/dev/null
 retry npm_install --nodedir="$NODEDIR" \
     $([ -z "$BINARY_HOST" ] && echo "--build-from-source=pprof" \
         || echo "--pprof_binary_host_mirror=$BINARY_HOST")\

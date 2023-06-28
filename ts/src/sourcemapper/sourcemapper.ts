@@ -23,10 +23,9 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as sourceMap from 'source-map';
 import {logger} from '../logger';
+import pLimit from 'p-limit';
 
-const pify = require('pify');
-const pLimit = require('p-limit');
-const readFile = pify(fs.readFile);
+const readFile = fs.promises.readFile;
 
 const CONCURRENCY = 10;
 const MAP_EXT = '.map';

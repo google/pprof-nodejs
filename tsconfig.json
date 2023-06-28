@@ -4,7 +4,8 @@
     "rootDir": "ts",
     "outDir": "out",
     "lib": [ "es2020" ],
-    "target": "es2019"
+    "target": "es2019",
+    "esModuleInterop": true,
   },
   "include": [
     "ts/**/*.ts"

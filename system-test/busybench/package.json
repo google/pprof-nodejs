@@ -20,5 +20,8 @@
     "posttest": "npm run check"
   },
   "devDependencies": {},
-  "dependencies": {}
+  "dependencies": {},
+  "engines": {
+    "node": ">=12"
+  }
 }

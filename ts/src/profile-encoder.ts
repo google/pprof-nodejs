@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-import * as pify from 'pify';
+import {promisify} from 'util';
 import {gzip, gzipSync} from 'zlib';
 
 import {Profile} from 'pprof-format';
 
-const gzipPromise = pify(gzip);
+const gzipPromise = promisify(gzip);
 
 export async function encode(profile: Profile): Promise<Buffer> {
   return gzipPromise(profile.encode());

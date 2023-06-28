@@ -14,13 +14,9 @@
  * limitations under the License.
  */
 
-import {writeFile} from 'fs';
-// eslint-disable-next-line node/no-extraneous-import
-import * as pify from 'pify';
+import {writeFile as writeFilePromise} from 'fs/promises';
 // eslint-disable-next-line node/no-extraneous-import
 import {encode, heap, SourceMapper, time} from 'pprof';
-
-const writeFilePromise = pify(writeFile);
 
 const startTime: number = Date.now();
 const testArr: number[][] = [];
