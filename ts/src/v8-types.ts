@@ -36,6 +36,7 @@ export interface ProfileNode {
 
 export interface TimeProfileNode extends ProfileNode {
   hitCount: number;
+  labelSets?: LabelSet[]; // TODO: use LabelsCpu later
 }
 
 export interface AllocationProfileNode extends ProfileNode {

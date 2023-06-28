@@ -1,11 +1,11 @@
-/*
- * Copyright 2023 Datadog, Inc
+/**
+ * Copyright 2018 Google Inc. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,21 +16,16 @@
 
 #pragma once
 
-#include <v8.h>  // cppcheck-suppress missingIncludeSystem
+#include "labelsets.hh"
+
+#include <node.h>
+#include <v8-profiler.h>
 
 namespace dd {
 
-class LabelWrap {
- protected:
-  v8::Global<v8::Value> handle_;
+v8::Local<v8::Value> TranslateTimeProfile(
+    const v8::CpuProfile* profile,
+    bool includeLineInfo,
+    LabelSetsByNode* labelSetsByNode = nullptr);
 
- public:
-  LabelWrap(v8::Local<v8::Value> object)
-      : handle_(v8::Isolate::GetCurrent(), object) {}
-
-  v8::Local<v8::Value> handle() {
-    return handle_.Get(v8::Isolate::GetCurrent());
-  }
-};
-
-};  // namespace dd
+}  // namespace dd

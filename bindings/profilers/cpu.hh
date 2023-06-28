@@ -7,65 +7,13 @@
 #include <nan.h>
 #include <uv.h>
 
+#include "../buffer.hh"
 #include "../code-map.hh"
 #include "../cpu-time.hh"
 #include "../sample.hh"
 #include "../wrap.hh"
 
 namespace dd {
-
-class SampleBuffer {
- public:
-  using SamplePtr = std::unique_ptr<Sample>;
-
-  explicit SampleBuffer(size_t size)
-      : samples_(std::make_unique<SamplePtr[]>(size)),
-        capacity_(size),
-        size_(0),
-        back_index_(0),
-        front_index_(0) {}
-
-  bool full() const { return size_ == capacity_; }
-  bool empty() const { return size_ == 0; }
-
-  SamplePtr& front() { return samples_[front_index_]; }
-
-  const SamplePtr& front() const { return samples_[front_index_]; }
-
-  void push_back(SamplePtr ptr) {
-    if (full()) {
-      if (empty()) {
-        return;
-      }
-      // overwrite buffer head
-      samples_[back_index_] = std::move(ptr);
-      increment(back_index_);
-      // move buffer head
-      front_index_ = back_index_;
-    } else {
-      samples_[back_index_] = std::move(ptr);
-      increment(back_index_);
-      ++size_;
-    }
-  }
-
-  SamplePtr pop_front() {
-    auto idx = front_index_;
-    increment(front_index_);
-    --size_;
-    return std::move(samples_[idx]);
-  }
-
- private:
-  void increment(size_t& idx) const {
-    idx = idx + 1 == capacity_ ? 0 : idx + 1;
-  }
-  std::unique_ptr<SamplePtr[]> samples_;
-  size_t capacity_;
-  size_t size_;
-  size_t back_index_;
-  size_t front_index_;
-};
 
 class CpuProfiler : public Nan::ObjectWrap {
   friend class CodeMap;
@@ -75,7 +23,7 @@ class CpuProfiler : public Nan::ObjectWrap {
   uv_async_t* async;
   std::shared_ptr<CodeMap> code_map;
   CpuTime cpu_time;
-  SampleBuffer last_samples;
+  RingBuffer<std::unique_ptr<Sample>> last_samples;
   std::shared_ptr<LabelWrap> labels_;
   double frequency = 0;
   Nan::Global<v8::Array> samples;

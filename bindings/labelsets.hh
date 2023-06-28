@@ -16,21 +16,16 @@
 
 #pragma once
 
-#include <v8.h>  // cppcheck-suppress missingIncludeSystem
+#include <nan.h>
+#include <v8-profiler.h>
+#include <unordered_map>
 
 namespace dd {
 
-class LabelWrap {
- protected:
-  v8::Global<v8::Value> handle_;
-
- public:
-  LabelWrap(v8::Local<v8::Value> object)
-      : handle_(v8::Isolate::GetCurrent(), object) {}
-
-  v8::Local<v8::Value> handle() {
-    return handle_.Get(v8::Isolate::GetCurrent());
-  }
+struct NodeInfo {
+  v8::Local<v8::Array> labelSets;
+  uint32_t hitcount;
 };
 
-};  // namespace dd
+using LabelSetsByNode = std::unordered_map<const v8::CpuProfileNode*, NodeInfo>;
+}  // namespace dd

@@ -16,8 +16,8 @@
 
 #include "heap.hh"
 
-#include "../per-isolate-data.hh"
 #include "defer.hh"
+#include "per-isolate-data.hh"
 
 #include <chrono>
 #include <memory>

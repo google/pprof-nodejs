@@ -299,10 +299,22 @@ export function serializeTimeProfile(
     entry: Entry<TimeProfileNode>,
     samples: Sample[]
   ) => {
-    if (entry.node.hitCount > 0) {
+    let unlabelledHits = entry.node.hitCount;
+    for (const labelSet of entry.node.labelSets || []) {
+      if (Object.keys(labelSet).length > 0) {
+        const sample = new Sample({
+          locationId: entry.stack,
+          value: [1, intervalNanos],
+          label: buildLabels(labelSet, stringTable),
+        });
+        samples.push(sample);
+        unlabelledHits--;
+      }
+    }
+    if (unlabelledHits > 0) {
       const sample = new Sample({
         locationId: entry.stack,
-        value: [entry.node.hitCount, entry.node.hitCount * intervalNanos],
+        value: [unlabelledHits, unlabelledHits * intervalNanos],
       });
       samples.push(sample);
     }

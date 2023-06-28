@@ -19,21 +19,30 @@ import delay from 'delay';
 import {serializeTimeProfile} from './profile-serializer';
 import {SourceMapper} from './sourcemapper/sourcemapper';
 import {TimeProfiler} from './time-profiler-bindings';
+import {LabelSet} from './v8-types';
 
 const DEFAULT_INTERVAL_MICROS: Microseconds = 1000;
-
-const majorVersion = process.version.slice(1).split('.').map(Number)[0];
+const DEFAULT_DURATION_MILLIS: Milliseconds = 60000;
 
 type Microseconds = number;
 type Milliseconds = number;
 
+let gProfiler: InstanceType<typeof TimeProfiler> | undefined;
+let gSourceMapper: SourceMapper | undefined;
+let gIntervalMicros: Microseconds;
+
+/** Make sure to stop profiler before node shuts down, otherwise profiling
+ * signal might cause a crash if it occurs during shutdown */
+process.once('exit', () => {
+  if (isStarted()) stop();
+});
+
 export interface TimeProfilerOptions {
   /** time in milliseconds for which to collect profile. */
-  durationMillis: Milliseconds;
+  durationMillis?: Milliseconds;
   /** average time in microseconds between samples */
   intervalMicros?: Microseconds;
   sourceMapper?: SourceMapper;
-  name?: string;
 
   /**
    * This configuration option is experimental.
@@ -42,65 +51,76 @@ export interface TimeProfilerOptions {
    * This defaults to false.
    */
   lineNumbers?: boolean;
+  customLabels?: boolean;
 }
 
-export async function profile(options: TimeProfilerOptions) {
-  const stop = start(
-    options.intervalMicros || DEFAULT_INTERVAL_MICROS,
-    options.name,
-    options.sourceMapper,
-    options.lineNumbers
-  );
-  await delay(options.durationMillis);
+export async function profile({
+  intervalMicros = DEFAULT_INTERVAL_MICROS,
+  durationMillis = DEFAULT_DURATION_MILLIS,
+  sourceMapper,
+  lineNumbers = false,
+  customLabels = false,
+}: TimeProfilerOptions) {
+  start({
+    intervalMicros,
+    durationMillis,
+    sourceMapper,
+    lineNumbers,
+    customLabels,
+  });
+  await delay(durationMillis);
   return stop();
 }
 
-function ensureRunName(name?: string) {
-  return name || `pprof-${Date.now()}-${Math.random()}`;
+// Temporarily retained for backwards compatibility with older tracer
+export function start({
+  intervalMicros = DEFAULT_INTERVAL_MICROS,
+  durationMillis = DEFAULT_DURATION_MILLIS,
+  sourceMapper,
+  lineNumbers = false,
+  customLabels = false,
+}: TimeProfilerOptions) {
+  if (gProfiler) {
+    throw new Error('Wall profiler is already started');
+  }
+
+  gProfiler = new TimeProfiler(
+    intervalMicros,
+    durationMillis * 1000,
+    lineNumbers,
+    customLabels
+  );
+  gProfiler.start();
+  gSourceMapper = sourceMapper;
+  gIntervalMicros = intervalMicros;
 }
 
-// NOTE: refreshing doesn't work if giving a profile name.
-export function start(
-  intervalMicros: Microseconds = DEFAULT_INTERVAL_MICROS,
-  name?: string,
-  sourceMapper?: SourceMapper,
-  lineNumbers = true
-) {
-  const profiler = new TimeProfiler(intervalMicros);
-  let runName = start();
-  return majorVersion < 16 ? stopOld : stop;
-
-  function start() {
-    const runName = ensureRunName(name);
-    profiler.start(runName, lineNumbers);
-    return runName;
+export function stop(restart = false) {
+  if (!gProfiler) {
+    throw new Error('Wall profiler is not started');
   }
 
-  // Node.js versions prior to v16 leak memory if not disposed and recreated
-  // between each profile. As disposing deletes current profile data too,
-  // we must stop then dispose then start.
-  function stopOld(restart = false) {
-    const result = profiler.stop(runName, lineNumbers);
-    profiler.dispose();
-    if (restart) {
-      runName = start();
-    }
-    return serializeTimeProfile(result, intervalMicros, sourceMapper, true);
+  const profile = gProfiler.stop(restart);
+  const serialized_profile = serializeTimeProfile(
+    profile,
+    gIntervalMicros,
+    gSourceMapper,
+    true
+  );
+  if (!restart) {
+    gProfiler = undefined;
+    gSourceMapper = undefined;
   }
+  return serialized_profile;
+}
 
-  // For Node.js v16+, we want to start the next profile before we stop the
-  // current one as otherwise the active profile count could reach zero which
-  // means V8 might tear down the symbolizer thread and need to start it again.
-  function stop(restart = false) {
-    let nextRunName;
-    if (restart) {
-      nextRunName = start();
-    }
-    const result = profiler.stop(runName, lineNumbers);
-    if (nextRunName) {
-      runName = nextRunName;
-    }
-    if (!restart) profiler.dispose();
-    return serializeTimeProfile(result, intervalMicros, sourceMapper, true);
+export function setLabels(labels?: LabelSet) {
+  if (!gProfiler) {
+    throw new Error('Wall profiler is not started');
   }
+  gProfiler.labels = labels;
+}
+
+export function isStarted() {
+  return !!gProfiler;
 }

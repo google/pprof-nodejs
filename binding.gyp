@@ -22,9 +22,11 @@
                             "bindings/location.cc",
                             "bindings/per-isolate-data.cc",
                             "bindings/sample.cc",
+                            "bindings/translate-time-profile.cc",
                             "bindings/binding.cc"
                         ],
                         "include_dirs": [
+                            "bindings",
                             "<!(node -e \"require('nan')\")"
                         ]
                     }
@@ -47,6 +49,7 @@
                             "bindings/location.cc",
                             "bindings/per-isolate-data.cc",
                             "bindings/sample.cc",
+                            "bindings/translate-time-profile.cc",
                             "bindings/test/binding.cc",
                             "bindings/test/profilers/cpu.test.cc",
                             "bindings/test/code-event-record.test.cc",
@@ -56,6 +59,7 @@
                             "bindings/test/sample.test.cc"
                         ],
                         "include_dirs": [
+                            "bindings",
                             "<!(node -e \"require('nan')\")"
                         ]
                     }
