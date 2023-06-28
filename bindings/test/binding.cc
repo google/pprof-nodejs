@@ -23,31 +23,12 @@
 #include "tap.h"
 #include "v8.h"
 
-#include "../profilers/cpu.hh"
-
-#include "code-event-record.test.hh"
-#include "code-map.test.hh"
-#include "cpu-time.test.hh"
-#include "location.test.hh"
-#include "profilers/cpu.test.hh"
-#include "sample.test.hh"
-
 NODE_MODULE_INIT(/* exports, module, context */) {
-  // Need to do this so the class templates get constructed
-  dd::CpuProfiler::Init(exports);
-
   Tap t;
   const char* env_var = std::getenv("TEST");
   std::string name(env_var == nullptr ? "" : env_var);
 
-  std::unordered_map<std::string, std::function<void(Tap&)>> tests = {
-      {"profilers/cpu", test_profilers_cpu_profiler},
-      {"code-event-record", test_code_event_record},
-      {"code-map", test_code_map},
-      {"cpu-time", test_cpu_time},
-      {"location", test_location},
-      {"sample", test_sample},
-  };
+  std::unordered_map<std::string, std::function<void(Tap&)>> tests = {};
 
   if (name.empty()) {
     t.plan(tests.size());

@@ -20,6 +20,7 @@
 
 #include <nan.h>
 #include <v8-profiler.h>
+#include <atomic>
 #include <memory>
 #include <unordered_map>
 #include <utility>

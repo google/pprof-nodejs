@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-#include <atomic>
 #include <cinttypes>
 #include <cstdint>
 #include <memory>

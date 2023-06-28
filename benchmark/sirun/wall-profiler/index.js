@@ -1,6 +1,6 @@
 'use strict'
 
-const { default: CpuProfiler } = require('../../../out/src/cpu-profiler')
+const profiler = require('../../../out/src/time-profiler')
 const { createServer, request } = require('http')
 
 const concurrency = Number(process.env.CONCURRENCY || '10')
@@ -63,15 +63,12 @@ server.listen(8080, '0.0.0.0', async () => {
   await Promise.all(tasks)
 })
 
-let profiler
 if (sampleFrequency !== 0) {
-  profiler = new CpuProfiler()
-  profiler.start(sampleFrequency)
+  profiler.start({ intervalMicros: 1e6 / sampleFrequency })
 }
 
 setTimeout(() => {
-  if (profiler) {
-    profiler.profile()
+  if (profiler.isStarted()) {
     profiler.stop()
   }
   server.close()

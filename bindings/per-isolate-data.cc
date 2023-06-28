@@ -48,18 +48,6 @@ PerIsolateData* PerIsolateData::For(v8::Isolate* isolate) {
   return perIsolateData;
 }
 
-Nan::Global<v8::Function>& PerIsolateData::CpuProfilerConstructor() {
-  return cpu_profiler_constructor;
-}
-
-Nan::Global<v8::Function>& PerIsolateData::LocationConstructor() {
-  return location_constructor;
-}
-
-Nan::Global<v8::Function>& PerIsolateData::SampleConstructor() {
-  return sample_constructor;
-}
-
 Nan::Global<v8::Function>& PerIsolateData::WallProfilerConstructor() {
   return wall_profiler_constructor;
 }
