@@ -47,52 +47,6 @@ export interface Allocation {
   sizeBytes: number;
   count: number;
 }
-
-export interface InitialCpuProfile {
-  /** Time in nanoseconds at which profile was stopped. */
-  endTime: number;
-  samples: CpuProfileSample[];
-  /** Time in nanoseconds at which profile was started. */
-  startTime: number;
-}
-
-export interface CpuProfile {
-  /** Time in nanoseconds at which profile was stopped. */
-  endTime: number;
-  topDownRoot: CpuProfileNode;
-  /** Time in nanoseconds at which profile was started. */
-  startTime: number;
-}
-
 export interface LabelSet {
   [key: string]: string | number;
-}
-
-export interface LabelsCpu {
-  labels: LabelSet;
-  cpuTime: number;
-}
-
-export interface CpuProfileNode extends ProfileNode {
-  hitCount: number;
-  cpuTime: number;
-  labelSets: LabelsCpu[];
-}
-
-export interface CpuProfileSample {
-  labels: LabelSet;
-  locations: CodeEvent[];
-  cpuTime: number;
-}
-
-export interface CodeEvent {
-  address: number;
-  previousAddress?: number;
-  size: number;
-  comment?: string;
-  functionName?: string;
-  scriptName?: string;
-  scriptId: number;
-  line: number;
-  column: number;
 }

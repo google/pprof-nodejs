@@ -32,8 +32,6 @@ import {
 } from './sourcemapper/sourcemapper';
 import {
   AllocationProfileNode,
-  CpuProfile,
-  CpuProfileNode,
   LabelSet,
   ProfileNode,
   TimeProfile,
@@ -218,17 +216,6 @@ function createTimeValueType(table: StringTable): ValueType {
 }
 
 /**
- * @return value type for cpu samples (type:cpu, units:nanoseconds), and
- * adds strings used in this value type to the table.
- */
-function createCpuValueType(table: StringTable): ValueType {
-  return new ValueType({
-    type: table.dedup('cpu'),
-    unit: table.dedup('nanoseconds'),
-  });
-}
-
-/**
  * @return value type for object counts (type:objects, units:count), and
  * adds strings used in this value type to the table.
  */
@@ -363,66 +350,6 @@ function buildLabels(labelSet: LabelSet, stringTable: StringTable): Label[] {
   }
 
   return labels;
-}
-
-/**
- * Converts cpu profile into into a profile proto.
- * (https://github.com/google/pprof/blob/master/proto/profile.proto)
- *
- * @param prof - profile to be converted.
- * @param intervalMicros - average time (microseconds) between samples.
- */
-export function serializeCpuProfile(
-  prof: CpuProfile,
-  intervalMicros: number,
-  sourceMapper?: SourceMapper
-): Profile {
-  const intervalNanos = intervalMicros * 1000;
-  const appendCpuEntryToSamples: AppendEntryToSamples<CpuProfileNode> = (
-    entry: Entry<CpuProfileNode>,
-    samples: Sample[]
-  ) => {
-    for (const labelCpu of entry.node.labelSets) {
-      const sample = new Sample({
-        locationId: entry.stack,
-        value: [1, labelCpu.cpuTime],
-        label: buildLabels(labelCpu.labels, stringTable),
-      });
-
-      samples.push(sample);
-    }
-    if (entry.node.hitCount > 0) {
-      const sample = new Sample({
-        locationId: entry.stack,
-        value: [entry.node.hitCount, entry.node.cpuTime],
-      });
-      samples.push(sample);
-    }
-  };
-
-  const stringTable = new StringTable();
-  const sampleValueType = createSampleCountValueType(stringTable);
-  // const wallValueType = createTimeValueType(stringTable);
-  const cpuValueType = createCpuValueType(stringTable);
-
-  const profile = {
-    sampleType: [sampleValueType, cpuValueType /*, wallValueType*/],
-    timeNanos: Date.now() * 1000 * 1000,
-    durationNanos: prof.endTime - prof.startTime,
-    periodType: cpuValueType,
-    period: intervalNanos,
-  };
-
-  serialize(
-    profile,
-    prof.topDownRoot,
-    appendCpuEntryToSamples,
-    stringTable,
-    undefined,
-    sourceMapper
-  );
-
-  return new Profile(profile);
 }
 
 /**

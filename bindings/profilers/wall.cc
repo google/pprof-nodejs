@@ -133,7 +133,6 @@ class ProtectedProfilerMap {
   mutable std::atomic<ProfilerMap*> profilers_;
   std::mutex update_mutex_;
   bool init_ = false;
-  ;
 };
 
 using ProfilerMap = std::unordered_map<Isolate*, WallProfiler*>;
@@ -213,7 +212,6 @@ void SignalHandler::HandleProfilerSignal(int sig,
   if (!old_handler) {
     return;
   }
-
   auto isolate = Isolate::GetCurrent();
   WallProfiler* prof = g_profilers.GetProfiler(isolate);
 
@@ -253,8 +251,6 @@ ContextsByNode WallProfiler::GetContextsByNode(CpuProfile* profile,
   }
 
   auto isolate = Isolate::GetCurrent();
-  // auto labelKey = Nan::New<String>("label").ToLocalChecked();
-
   auto contextIt = contexts.begin();
 
   // deltaIdx is the offset of the sample to process compared to current
