@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "labelsets.hh"
+#include "contexts.hh"
 
 #include <nan.h>
 #include <v8-profiler.h>
@@ -37,7 +37,7 @@ struct Result {
 
 class WallProfiler : public Nan::ObjectWrap {
  private:
-  using ValuePtr = std::shared_ptr<v8::Global<v8::Value>>;
+  using ContextPtr = std::shared_ptr<v8::Global<v8::Value>>;
 
   int samplingPeriodMicros_ = 0;
   v8::CpuProfiler* cpuProfiler_ = nullptr;
@@ -47,18 +47,18 @@ class WallProfiler : public Nan::ObjectWrap {
 
   // We're using a pair of shared pointers and an atomic pointer-to-current as
   // a way to ensure signal safety on update.
-  ValuePtr labels1_;
-  ValuePtr labels2_;
-  std::atomic<ValuePtr*> curLabels_;
+  ContextPtr context1_;
+  ContextPtr context2_;
+  std::atomic<ContextPtr*> curContext_;
   std::atomic<bool> collectSamples_;
   std::string profileId_;
   int64_t profileIdx_ = 0;
   bool includeLines_ = false;
-  bool withLabels_ = false;
+  bool withContexts_ = false;
   bool started_ = false;
 
   struct SampleContext {
-    ValuePtr labels;
+    ContextPtr context;
     int64_t time_from;
     int64_t time_to;
   };
@@ -73,8 +73,8 @@ class WallProfiler : public Nan::ObjectWrap {
   // to work around https://bugs.chromium.org/p/v8/issues/detail?id=11051.
   v8::CpuProfiler* CreateV8CpuProfiler();
 
-  LabelSetsByNode GetLabelSetsByNode(v8::CpuProfile* profile,
-                                     ContextBuffer& contexts);
+  ContextsByNode GetContextsByNode(v8::CpuProfile* profile,
+                                   ContextBuffer& contexts);
 
  public:
   /**
@@ -87,11 +87,10 @@ class WallProfiler : public Nan::ObjectWrap {
   explicit WallProfiler(int samplingPeriodMicros,
                         int durationMicros,
                         bool includeLines,
-                        bool withLabels);
+                        bool withContexts);
 
-  v8::Local<v8::Value> GetLabels(v8::Isolate*);
-  void SetLabels(v8::Isolate*, v8::Local<v8::Value>);
-
+  v8::Local<v8::Value> GetContext(v8::Isolate*);
+  void SetContext(v8::Isolate*, v8::Local<v8::Value>);
   void PushContext(int64_t time_from, int64_t time_to);
   Result StartImpl();
   std::string StartInternal();
@@ -108,8 +107,8 @@ class WallProfiler : public Nan::ObjectWrap {
   static NAN_METHOD(Start);
   static NAN_METHOD(Stop);
   static NAN_MODULE_INIT(Init);
-  static NAN_GETTER(GetLabels);
-  static NAN_SETTER(SetLabels);
+  static NAN_GETTER(GetContext);
+  static NAN_SETTER(SetContext);
 };
 
 }  // namespace dd

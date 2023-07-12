@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "labelsets.hh"
+#include "contexts.hh"
 
 #include <node.h>
 #include <v8-profiler.h>
@@ -26,6 +26,6 @@ namespace dd {
 v8::Local<v8::Value> TranslateTimeProfile(
     const v8::CpuProfile* profile,
     bool includeLineInfo,
-    LabelSetsByNode* labelSetsByNode = nullptr);
+    ContextsByNode* contextsByNode = nullptr);
 
 }  // namespace dd

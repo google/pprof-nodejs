@@ -243,13 +243,13 @@ class SignalHandler {
 #endif
 }  // namespace
 
-LabelSetsByNode WallProfiler::GetLabelSetsByNode(CpuProfile* profile,
-                                                 ContextBuffer& contexts) {
-  LabelSetsByNode labelSetsByNode;
+ContextsByNode WallProfiler::GetContextsByNode(CpuProfile* profile,
+                                               ContextBuffer& contexts) {
+  ContextsByNode contextsByNode;
 
   auto sampleCount = profile->GetSamplesCount();
   if (contexts.empty() || sampleCount == 0) {
-    return labelSetsByNode;
+    return contextsByNode;
   }
 
   auto isolate = Isolate::GetCurrent();
@@ -299,19 +299,19 @@ LabelSetsByNode WallProfiler::GetLabelSetsByNode(CpuProfile* profile,
         break;
       } else {
         // This sample context is the closest to this sample.
-        auto it = labelSetsByNode.find(sample);
+        auto it = contextsByNode.find(sample);
         Local<Array> array;
-        if (it == labelSetsByNode.end()) {
+        if (it == contextsByNode.end()) {
           array = Nan::New<Array>();
-          assert(labelSetsByNode.find(sample) == labelSetsByNode.end());
-          labelSetsByNode[sample] = {array, 1};
+          contextsByNode[sample] = {array, 1};
         } else {
-          array = it->second.labelSets;
+          array = it->second.contexts;
           ++it->second.hitcount;
         }
-        if (sampleContext.labels) {
-          Nan::Set(
-              array, array->Length(), sampleContext.labels.get()->Get(isolate));
+        if (sampleContext.context) {
+          Nan::Set(array,
+                   array->Length(),
+                   sampleContext.context.get()->Get(isolate));
         }
 
         // Sample context was consumed, fetch the next one
@@ -321,18 +321,18 @@ LabelSetsByNode WallProfiler::GetLabelSetsByNode(CpuProfile* profile,
     }
   }
 
-  return labelSetsByNode;
+  return contextsByNode;
 }
 
 WallProfiler::WallProfiler(int samplingPeriodMicros,
                            int durationMicros,
                            bool includeLines,
-                           bool withLabels)
+                           bool withContexts)
     : samplingPeriodMicros_(samplingPeriodMicros),
       includeLines_(includeLines),
-      withLabels_(withLabels) {
+      withContexts_(withContexts) {
   contexts_.reserve(durationMicros * 2 / samplingPeriodMicros);
-  curLabels_.store(&labels1_, std::memory_order_relaxed);
+  curContext_.store(&context1_, std::memory_order_relaxed);
   collectSamples_.store(false, std::memory_order_relaxed);
 }
 
@@ -364,7 +364,7 @@ NAN_METHOD(WallProfiler::New) {
     return Nan::ThrowTypeError("includeLines must be a boolean.");
   }
   if (!info[3]->IsBoolean()) {
-    return Nan::ThrowTypeError("withLabels must be a boolean.");
+    return Nan::ThrowTypeError("withContext must be a boolean.");
   }
 
   if (info.IsConstructCall()) {
@@ -382,23 +382,23 @@ NAN_METHOD(WallProfiler::New) {
     }
 
     bool includeLines = info[2].As<v8::Boolean>()->Value();
-    bool withLabels = info[3].As<v8::Boolean>()->Value();
+    bool withContext = info[3].As<v8::Boolean>()->Value();
 
 #ifndef DD_WALL_USE_SIGPROF
-    if (withLabels) {
-      return Nan::ThrowTypeError("Labels are not supported.");
+    if (withContext) {
+      return Nan::ThrowTypeError("Contexts are not supported.");
     }
 #endif
 
-    if (includeLines && withLabels) {
-      // Currently custom labels are not compatible with caller line
-      // information, because it's not possible to associate labels with line
+    if (includeLines && withContext) {
+      // Currently custom contexts are not compatible with caller line
+      // information, because it's not possible to associate context with line
       // ticks:
-      // labels are associated to sample which itself is associated with
+      // context is associated to sample which itself is associated with
       // a CpuProfileNode, but this node has several line ticks, and we cannot
-      // determine labels <-> line ticks association. Note that line number is
+      // determine context <-> line ticks association. Note that line number is
       // present in v8 internal sample struct and would allow mapping sample to
-      // line tick, and thus labels to line tick, but this information is not
+      // line tick, and thus context to line tick, but this information is not
       // available in v8 public API.
       // More over in caller line number mode, line number of a CpuProfileNode
       // is not the line of the current function, but the line number where this
@@ -406,11 +406,11 @@ NAN_METHOD(WallProfiler::New) {
       // function (otherwise we could ignoree line ticks and replace them with
       // single hitcount for the function).
       return Nan::ThrowTypeError(
-          "Include line option is not compatible with labels.");
+          "Include line option is not compatible with contexts.");
     }
 
     WallProfiler* obj =
-        new WallProfiler(interval, duration, includeLines, withLabels);
+        new WallProfiler(interval, duration, includeLines, withContext);
     obj->Wrap(info.This());
     info.GetReturnValue().Set(info.This());
   } else {
@@ -463,10 +463,10 @@ std::string WallProfiler::StartInternal() {
                                includeLines_
                                    ? CpuProfilingMode::kCallerLineNumbers
                                    : CpuProfilingMode::kLeafNodeLineNumbers,
-                               withLabels_);
+                               withContexts_);
 
   // reinstall sighandler on each new upload period
-  if (withLabels_) {
+  if (withContexts_) {
     SignalHandler::IncreaseUseCount();
   }
 
@@ -505,7 +505,7 @@ Result WallProfiler::StopImpl(bool restart, v8::Local<v8::Value>& profile) {
   }
 
   auto oldProfileId = profileId_;
-  if (withLabels_) {
+  if (withContexts_) {
     collectSamples_.store(false, std::memory_order_relaxed);
     std::atomic_signal_fence(std::memory_order_release);
 
@@ -519,19 +519,19 @@ Result WallProfiler::StopImpl(bool restart, v8::Local<v8::Value>& profile) {
     profileId_ = StartInternal();
   }
 
-  if (withLabels_) {
+  if (withContexts_) {
     SignalHandler::DecreaseUseCount();
   }
   auto v8_profile = cpuProfiler_->StopProfiling(
       Nan::New<String>(oldProfileId).ToLocalChecked());
 
   ContextBuffer contexts;
-  if (withLabels_) {
+  if (withContexts_) {
     contexts.reserve(contexts_.capacity());
     std::swap(contexts, contexts_);
   }
 
-  if (restart && withLabels_) {
+  if (restart && withContexts_) {
     // make sure timestamp changes to avoid mixing sample taken upon start and a
     // sample from signal handler
     auto now = Now();
@@ -541,9 +541,9 @@ Result WallProfiler::StopImpl(bool restart, v8::Local<v8::Value>& profile) {
     std::atomic_signal_fence(std::memory_order_release);
   }
 
-  if (withLabels_) {
-    auto labelSetsByNode = GetLabelSetsByNode(v8_profile, contexts);
-    profile = TranslateTimeProfile(v8_profile, includeLines_, &labelSetsByNode);
+  if (withContexts_) {
+    auto contextsByNode = GetContextsByNode(v8_profile, contexts);
+    profile = TranslateTimeProfile(v8_profile, includeLines_, &contextsByNode);
 
   } else {
     profile = TranslateTimeProfile(v8_profile, includeLines_);
@@ -563,15 +563,15 @@ Result WallProfiler::StopImplOld(bool restart, v8::Local<v8::Value>& profile) {
     return Result{"Stop called on not started profiler."};
   }
 
-  if (withLabels_) {
+  if (withContexts_) {
     SignalHandler::DecreaseUseCount();
   }
   auto v8_profile = cpuProfiler_->StopProfiling(
       Nan::New<String>(profileId_).ToLocalChecked());
 
-  if (withLabels_) {
-    auto labelSetsByNode = GetLabelSetsByNode(v8_profile, contexts_);
-    profile = TranslateTimeProfile(v8_profile, includeLines_, &labelSetsByNode);
+  if (withContexts_) {
+    auto contextsByNode = GetContextsByNode(v8_profile, contexts_);
+    profile = TranslateTimeProfile(v8_profile, includeLines_, &contextsByNode);
 
   } else {
     profile = TranslateTimeProfile(v8_profile, includeLines_);
@@ -597,9 +597,9 @@ NAN_MODULE_INIT(WallProfiler::Init) {
   tpl->InstanceTemplate()->SetInternalFieldCount(1);
 
   Nan::SetAccessor(tpl->InstanceTemplate(),
-                   Nan::New("labels").ToLocalChecked(),
-                   GetLabels,
-                   SetLabels);
+                   Nan::New("context").ToLocalChecked(),
+                   GetContext,
+                   SetContext);
 
   Nan::SetPrototypeMethod(tpl, "start", Start);
   Nan::SetPrototypeMethod(tpl, "stop", Stop);
@@ -629,49 +629,49 @@ v8::CpuProfiler* WallProfiler::CreateV8CpuProfiler() {
   return cpuProfiler_;
 }
 
-v8::Local<v8::Value> WallProfiler::GetLabels(Isolate* isolate) {
-  auto labels = *curLabels_.load(std::memory_order_relaxed);
-  if (!labels) return v8::Undefined(isolate);
-  return labels->Get(isolate);
+v8::Local<v8::Value> WallProfiler::GetContext(Isolate* isolate) {
+  auto context = *curContext_.load(std::memory_order_relaxed);
+  if (!context) return v8::Undefined(isolate);
+  return context->Get(isolate);
 }
 
-void WallProfiler::SetLabels(Isolate* isolate, Local<Value> value) {
+void WallProfiler::SetContext(Isolate* isolate, Local<Value> value) {
   // Need to be careful here, because we might be interrupted by a
-  // signal handler that will make use of curLabels_.
+  // signal handler that will make use of curContext_.
   // Update of shared_ptr is not atomic, so instead we use a pointer
-  // (curLabels_) that points on two shared_ptr (labels1_ and labels2_), update
-  // the shared_ptr that is not currently in use and then atomically update
-  // curLabels_.
-  auto newCurLabels = curLabels_.load(std::memory_order_relaxed) == &labels1_
-                          ? &labels2_
-                          : &labels1_;
-  if (value->BooleanValue(isolate)) {
-    *newCurLabels = std::make_shared<Global<Value>>(isolate, value);
+  // (curContext_) that points on two shared_ptr (context1_ and context2_),
+  // update the shared_ptr that is not currently in use and then atomically
+  // update curContext_.
+  auto newCurContext = curContext_.load(std::memory_order_relaxed) == &context1_
+                           ? &context2_
+                           : &context1_;
+  if (!value->IsNullOrUndefined()) {
+    *newCurContext = std::make_shared<Global<Value>>(isolate, value);
   } else {
-    newCurLabels->reset();
+    newCurContext->reset();
   }
   std::atomic_signal_fence(std::memory_order_release);
-  curLabels_.store(newCurLabels, std::memory_order_relaxed);
+  curContext_.store(newCurContext, std::memory_order_relaxed);
 }
 
-NAN_GETTER(WallProfiler::GetLabels) {
+NAN_GETTER(WallProfiler::GetContext) {
   auto profiler = Nan::ObjectWrap::Unwrap<WallProfiler>(info.Holder());
-  info.GetReturnValue().Set(profiler->GetLabels(info.GetIsolate()));
+  info.GetReturnValue().Set(profiler->GetContext(info.GetIsolate()));
 }
 
-NAN_SETTER(WallProfiler::SetLabels) {
+NAN_SETTER(WallProfiler::SetContext) {
   auto profiler = Nan::ObjectWrap::Unwrap<WallProfiler>(info.Holder());
-  profiler->SetLabels(info.GetIsolate(), value);
+  profiler->SetContext(info.GetIsolate(), value);
 }
 
 void WallProfiler::PushContext(int64_t time_from, int64_t time_to) {
   // Be careful this is called in a signal handler context therefore all
   // operations must be async signal safe (in particular no allocations).
   // Our ring buffer avoids allocations.
-  auto labels = curLabels_.load(std::memory_order_relaxed);
+  auto context = curContext_.load(std::memory_order_relaxed);
   std::atomic_signal_fence(std::memory_order_acquire);
   if (contexts_.size() < contexts_.capacity()) {
-    contexts_.push_back({*labels, time_from, time_to});
+    contexts_.push_back({*context, time_from, time_to});
   }
 }
 

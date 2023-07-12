@@ -28,7 +28,7 @@ export const time = {
   profile: timeProfiler.profile,
   start: timeProfiler.start,
   stop: timeProfiler.stop,
-  setLabels: timeProfiler.setLabels,
+  setContext: timeProfiler.setContext,
   isStarted: timeProfiler.isStarted,
 };
 

@@ -23,9 +23,9 @@
 namespace dd {
 
 struct NodeInfo {
-  v8::Local<v8::Array> labelSets;
+  v8::Local<v8::Array> contexts;
   uint32_t hitcount;
 };
 
-using LabelSetsByNode = std::unordered_map<const v8::CpuProfileNode*, NodeInfo>;
+using ContextsByNode = std::unordered_map<const v8::CpuProfileNode*, NodeInfo>;
 }  // namespace dd

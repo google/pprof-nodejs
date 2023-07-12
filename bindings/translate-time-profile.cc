@@ -23,7 +23,7 @@ namespace dd {
 namespace {
 class ProfileTranslator {
  private:
-  LabelSetsByNode* labelSetsByNode;
+  ContextsByNode* contextsByNode;
   v8::Isolate* isolate = v8::Isolate::GetCurrent();
   v8::Local<v8::Array> emptyArray = NewArray(0);
   v8::Local<v8::Integer> zero = NewInteger(0);
@@ -36,33 +36,33 @@ class ProfileTranslator {
   X(columnNumber)                                                              \
   X(hitCount)                                                                  \
   X(children)                                                                  \
-  X(labelSets)
+  X(contexts)
 
 #define X(name) v8::Local<v8::String> str_##name = NewString(#name);
   FIELDS
 #undef X
 
-  v8::Local<v8::Array> getLabelSetsForNode(const v8::CpuProfileNode* node,
-                                           uint32_t& hitcount) {
+  v8::Local<v8::Array> getContextsForNode(const v8::CpuProfileNode* node,
+                                          uint32_t& hitcount) {
     hitcount = node->GetHitCount();
-    if (!labelSetsByNode) {
-      // custom labels are not enabled, keep the node hitcount and return empty
-      // array
+    if (!contextsByNode) {
+      // custom contexts are not enabled, keep the node hitcount and return
+      // empty array
       return emptyArray;
     }
 
-    auto it = labelSetsByNode->find(node);
-    auto labelSets = emptyArray;
-    if (it != labelSetsByNode->end()) {
+    auto it = contextsByNode->find(node);
+    auto contexts = emptyArray;
+    if (it != contextsByNode->end()) {
       hitcount = it->second.hitcount;
-      labelSets = it->second.labelSets;
+      contexts = it->second.contexts;
     } else {
       // no context found for node, discard it since every sample taken from
       // signal handler should have a matching context if it does not, it means
       // sample was captured by a deopt event
       hitcount = 0;
     }
-    return labelSets;
+    return contexts;
   }
 
   v8::Local<v8::Object> CreateTimeNode(v8::Local<v8::String> name,
@@ -72,7 +72,7 @@ class ProfileTranslator {
                                        v8::Local<v8::Integer> columnNumber,
                                        v8::Local<v8::Integer> hitCount,
                                        v8::Local<v8::Array> children,
-                                       v8::Local<v8::Array> labelSets) {
+                                       v8::Local<v8::Array> contexts) {
     v8::Local<v8::Object> js_node = Nan::New<v8::Object>();
 #define X(name) Nan::Set(js_node, str_##name, name);
     FIELDS
@@ -201,7 +201,7 @@ class ProfileTranslator {
     }
 
     uint32_t hitcount = 0;
-    auto labels = getLabelSetsForNode(node, hitcount);
+    auto contexts = getContextsForNode(node, hitcount);
 
     return CreateTimeNode(node->GetFunctionName(),
                           node->GetScriptResourceName(),
@@ -210,12 +210,12 @@ class ProfileTranslator {
                           NewInteger(node->GetColumnNumber()),
                           NewInteger(hitcount),
                           children,
-                          labels);
+                          contexts);
   }
 
  public:
-  explicit ProfileTranslator(LabelSetsByNode* nls = nullptr)
-      : labelSetsByNode(nls) {}
+  explicit ProfileTranslator(ContextsByNode* nls = nullptr)
+      : contextsByNode(nls) {}
 
   v8::Local<v8::Value> TranslateTimeProfile(const v8::CpuProfile* profile,
                                             bool includeLineInfo) {
@@ -244,8 +244,8 @@ class ProfileTranslator {
 
 v8::Local<v8::Value> TranslateTimeProfile(const v8::CpuProfile* profile,
                                           bool includeLineInfo,
-                                          LabelSetsByNode* labelSetsByNode) {
-  return ProfileTranslator(labelSetsByNode)
+                                          ContextsByNode* contextsByNode) {
+  return ProfileTranslator(contextsByNode)
       .TranslateTimeProfile(profile, includeLineInfo);
 }
 

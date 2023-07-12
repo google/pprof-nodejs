@@ -300,12 +300,12 @@ export function serializeTimeProfile(
     samples: Sample[]
   ) => {
     let unlabelledHits = entry.node.hitCount;
-    for (const labelSet of entry.node.labelSets || []) {
+    for (const context of entry.node.contexts || []) {
       if (Object.keys(labelSet).length > 0) {
         const sample = new Sample({
           locationId: entry.stack,
           value: [1, intervalNanos],
-          label: buildLabels(labelSet, stringTable),
+          label: buildLabels(context, stringTable),
         });
         samples.push(sample);
         unlabelledHits--;

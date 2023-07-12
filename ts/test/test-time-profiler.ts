@@ -44,6 +44,40 @@ describe('Time Profiler', () => {
       );
     });
 
+    it('should update state', function () {
+      if (process.platform !== 'darwin' && process.platform !== 'linux') {
+        this.skip();
+      }
+      time.start({
+        intervalMicros: 20 * 1_000,
+        durationMillis: PROFILE_OPTIONS.durationMillis,
+        withContexts: true,
+        lineNumbers: false,
+      });
+      const initialContext: {[key: string]: string} = {};
+      time.setContext(initialContext);
+      const kSampleCount = time.constants.kSampleCount;
+      const state = time.getState();
+      assert.equal(state[kSampleCount], 0, 'Initial state should be 0');
+      const deadline = Date.now() + 1000;
+      while (state[kSampleCount] === 0) {
+        if (Date.now() > deadline) {
+          assert.fail('State did not change');
+        }
+      }
+      assert(state[kSampleCount] >= 1, 'Unexpected number of samples');
+
+      let checked = false;
+      initialContext['aaa'] = 'bbb';
+
+      time.stop(false, (context: object) => {
+        assert.deepEqual(context, initialContext, 'Unexpected context');
+        checked = true;
+        return {};
+      });
+      assert(checked, 'No context found');
+    });
+
     it('should assign labels', function () {
       if (process.platform !== 'darwin' && process.platform !== 'linux') {
         this.skip();
@@ -54,15 +88,46 @@ describe('Time Profiler', () => {
       time.start({
         intervalMicros: PROFILE_OPTIONS.intervalMicros,
         durationMillis: PROFILE_OPTIONS.durationMillis,
-        customLabels: true,
+        withContexts: true,
         lineNumbers: false,
       });
       // By repeating the test few times, we also exercise the profiler
       // start-stop overlap behavior.
       const repeats = 3;
+      const rootSpanId = '1234';
+      const endPointLabel = 'trace endpoint';
+      const rootSpanIdLabel = 'local root span id';
+      const endPoint = 'foo';
+      let enableEndPoint = false;
+      const label0 = {label: 'value0'};
+      const label1 = {label: 'value1', [rootSpanIdLabel]: rootSpanId};
+
       for (let i = 0; i < repeats; ++i) {
         loop();
-        validateProfile(time.stop(i < repeats - 1));
+        enableEndPoint = i % 2 === 0;
+        validateProfile(
+          time.stop(
+            i < repeats - 1,
+            enableEndPoint ? generateLabels : undefined
+          )
+        );
+      }
+
+      function generateLabels(context: object) {
+        const labels: time.LabelSet = {};
+        for (const [key, value] of Object.entries(context)) {
+          if (typeof value === 'string') {
+            labels[key] = value;
+            if (
+              enableEndPoint &&
+              key === 'local root span id' &&
+              value === rootSpanId
+            ) {
+              labels[endPointLabel] = endPoint;
+            }
+          }
+        }
+        return labels;
       }
 
       // Each of fn0, fn1, fn2 loops busily for one or two profiling intervals.
@@ -77,7 +142,7 @@ describe('Time Profiler', () => {
       function fn0() {
         const start = hrtime.bigint();
         while (hrtime.bigint() - start < intervalNanos);
-        time.setLabels(undefined);
+        time.setContext(undefined);
       }
 
       function fn1() {
@@ -91,16 +156,14 @@ describe('Time Profiler', () => {
       }
 
       function loop() {
-        const label0 = {label: 'value0'};
-        const label1 = {label: 'value1'};
         const durationNanos = PROFILE_OPTIONS.durationMillis * 1_000_000;
         const start = hrtime.bigint();
         while (hrtime.bigint() - start < durationNanos) {
-          time.setLabels(label0);
+          time.setContext(label0);
           fn0();
-          time.setLabels(label1);
+          time.setContext(label1);
           fn1();
-          time.setLabels(undefined);
+          time.setContext(undefined);
           fn2();
         }
       }
@@ -108,19 +171,22 @@ describe('Time Profiler', () => {
       function validateProfile(profile: Profile) {
         // Get string table indices for strings we're interested in
         const stringTable = profile.stringTable;
-        const [
-          loopIdx,
-          fn0Idx,
-          fn1Idx,
-          fn2Idx,
-          labelIdx,
-          value0Idx,
-          value1Idx,
-        ] = ['loop', 'fn0', 'fn1', 'fn2', 'label', 'value0', 'value1'].map(x =>
-          stringTable.dedup(x)
-        );
-        function labelIs(l: Label, str: number) {
-          return l.key === labelIdx && l.str === str;
+        const [loopIdx, fn0Idx, fn1Idx, fn2Idx] = [
+          'loop',
+          'fn0',
+          'fn1',
+          'fn2',
+        ].map(x => stringTable.dedup(x));
+
+        function getString(n: number | bigint): string {
+          if (typeof n === 'number') {
+            return stringTable.strings[n];
+          }
+          throw new AssertionError({message: 'Expected a number'});
+        }
+
+        function labelIs(l: Label, key: string, str: string) {
+          return getString(l.key) === key && getString(l.str) === str;
         }
 
         function idx(n: number | bigint): number {
@@ -135,6 +201,14 @@ describe('Time Profiler', () => {
           return label ? stringTable.strings[idx(label.str) + 1] : 'undefined';
         }
 
+        function getLabels(labels: Label[]) {
+          const labelObj: {[key: string]: string} = {};
+          labels.forEach(label => {
+            labelObj[getString(label.key)] = getString(label.str);
+          });
+          return labelObj;
+        }
+
         let fn0ObservedWithLabel0 = false;
         let fn1ObservedWithLabel1 = false;
         let fn2ObservedWithoutLabels = false;
@@ -145,20 +219,44 @@ describe('Time Profiler', () => {
           const fn = profile.function[fnIdx];
           const fnName = fn.name;
           const labels = sample.label;
+
           switch (fnName) {
             case loopIdx:
-              assert(labels.length < 2, 'loop can have at most one label');
-              labels.forEach(label => {
+              if (enableEndPoint) {
                 assert(
-                  labelIs(label, value0Idx) || labelIs(label, value1Idx),
-                  'loop can be observed with value0 or value1'
+                  labels.length < 4,
+                  'loop can have at most one label and one endpoint'
                 );
-              });
+                labels.forEach(label => {
+                  assert(
+                    labelIs(label, 'label', 'value0') ||
+                      labelIs(label, 'label', 'value1') ||
+                      labelIs(label, endPointLabel, endPoint) ||
+                      labelIs(label, rootSpanIdLabel, rootSpanId),
+                    'loop can be observed with value0 or value1 or root span id or endpoint'
+                  );
+                });
+              } else {
+                if (labels.length >= 3) {
+                  console.log(getLabels(labels));
+                }
+
+                assert(labels.length < 3, 'loop can have at most one label');
+                labels.forEach(label => {
+                  assert(
+                    labelIs(label, 'label', 'value0') ||
+                      labelIs(label, 'label', 'value1') ||
+                      labelIs(label, rootSpanIdLabel, rootSpanId),
+                    'loop can be observed with value0 or value1 or root span id'
+                  );
+                });
+              }
+
               break;
             case fn0Idx:
               assert(labels.length < 2, 'fn0 can have at most one label');
               labels.forEach(label => {
-                if (labelIs(label, value0Idx)) {
+                if (labelIs(label, 'label', 'value0')) {
                   fn0ObservedWithLabel0 = true;
                 } else {
                   throw new AssertionError({
@@ -170,13 +268,29 @@ describe('Time Profiler', () => {
               });
               break;
             case fn1Idx:
-              assert(labels.length === 1, 'fn1 must be observed with a label');
-              labels.forEach(label => {
+              if (enableEndPoint) {
                 assert(
-                  labelIs(label, value1Idx),
-                  'Only value1 can be observed with fn1'
+                  labels.length === 3,
+                  'fn1 must be observed with a label, a root span id and an endpoint'
                 );
-              });
+                const labelMap = getLabels(labels);
+                assert.deepEqual(labelMap, {
+                  ...label1,
+                  [endPointLabel]: endPoint,
+                });
+              } else {
+                assert(
+                  labels.length === 2,
+                  'fn1 must be observed with a label'
+                );
+                labels.forEach(label => {
+                  assert(
+                    labelIs(label, 'label', 'value1') ||
+                      labelIs(label, rootSpanIdLabel, rootSpanId),
+                    'Only value1 can be observed with fn1'
+                  );
+                });
+              }
               fn1ObservedWithLabel1 = true;
               break;
             case fn2Idx:

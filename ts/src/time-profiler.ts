@@ -51,7 +51,7 @@ export interface TimeProfilerOptions {
    * This defaults to false.
    */
   lineNumbers?: boolean;
-  customLabels?: boolean;
+  withContexts?: boolean;
 }
 
 export async function profile({
@@ -59,14 +59,14 @@ export async function profile({
   durationMillis = DEFAULT_DURATION_MILLIS,
   sourceMapper,
   lineNumbers = false,
-  customLabels = false,
+  withContexts = false,
 }: TimeProfilerOptions) {
   start({
     intervalMicros,
     durationMillis,
     sourceMapper,
     lineNumbers,
-    customLabels,
+    withContexts,
   });
   await delay(durationMillis);
   return stop();
@@ -78,7 +78,7 @@ export function start({
   durationMillis = DEFAULT_DURATION_MILLIS,
   sourceMapper,
   lineNumbers = false,
-  customLabels = false,
+  withContexts = false,
 }: TimeProfilerOptions) {
   if (gProfiler) {
     throw new Error('Wall profiler is already started');
@@ -88,9 +88,8 @@ export function start({
     intervalMicros,
     durationMillis * 1000,
     lineNumbers,
-    customLabels
+    withContexts
   );
-  gProfiler.start();
   gSourceMapper = sourceMapper;
   gIntervalMicros = intervalMicros;
 }
@@ -114,11 +113,11 @@ export function stop(restart = false) {
   return serialized_profile;
 }
 
-export function setLabels(labels?: LabelSet) {
+export function setContext(context?: object) {
   if (!gProfiler) {
     throw new Error('Wall profiler is not started');
   }
-  gProfiler.labels = labels;
+  gProfiler.context = context;
 }
 
 export function isStarted() {
