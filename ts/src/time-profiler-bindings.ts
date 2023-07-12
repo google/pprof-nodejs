@@ -19,3 +19,4 @@ const findBinding = require('node-gyp-build');
 const profiler = findBinding(join(__dirname, '..', '..'));
 
 export const TimeProfiler = profiler.TimeProfiler;
+export const constants = profiler.constants;

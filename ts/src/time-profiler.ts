@@ -18,8 +18,13 @@ import delay from 'delay';
 
 import {serializeTimeProfile} from './profile-serializer';
 import {SourceMapper} from './sourcemapper/sourcemapper';
-import {TimeProfiler} from './time-profiler-bindings';
+import {
+  TimeProfiler,
+  constants as profilerConstants,
+} from './time-profiler-bindings';
 import {LabelSet} from './v8-types';
+
+const {kSampleCount} = profilerConstants;
 
 const DEFAULT_INTERVAL_MICROS: Microseconds = 1000;
 const DEFAULT_DURATION_MILLIS: Milliseconds = 60000;
@@ -92,9 +97,13 @@ export function start({
   );
   gSourceMapper = sourceMapper;
   gIntervalMicros = intervalMicros;
+  gProfiler.start();
 }
 
-export function stop(restart = false) {
+export function stop(
+  restart = false,
+  generateLabels?: (context: object) => LabelSet
+) {
   if (!gProfiler) {
     throw new Error('Wall profiler is not started');
   }
@@ -104,13 +113,21 @@ export function stop(restart = false) {
     profile,
     gIntervalMicros,
     gSourceMapper,
-    true
+    true,
+    generateLabels
   );
   if (!restart) {
     gProfiler = undefined;
     gSourceMapper = undefined;
   }
   return serialized_profile;
+}
+
+export function getState() {
+  if (!gProfiler) {
+    throw new Error('Wall profiler is not started');
+  }
+  return gProfiler.state;
 }
 
 export function setContext(context?: object) {
@@ -123,3 +140,6 @@ export function setContext(context?: object) {
 export function isStarted() {
   return !!gProfiler;
 }
+
+export const constants = {kSampleCount};
+export {LabelSet};

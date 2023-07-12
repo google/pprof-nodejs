@@ -18,7 +18,12 @@ import {writeFileSync} from 'fs';
 import * as heapProfiler from './heap-profiler';
 import {encodeSync} from './profile-encoder';
 import * as timeProfiler from './time-profiler';
-export {AllocationProfileNode, TimeProfileNode, ProfileNode} from './v8-types';
+export {
+  AllocationProfileNode,
+  TimeProfileNode,
+  ProfileNode,
+  LabelSet,
+} from './v8-types';
 
 export {encode, encodeSync} from './profile-encoder';
 export {SourceMapper} from './sourcemapper/sourcemapper';
@@ -30,6 +35,8 @@ export const time = {
   stop: timeProfiler.stop,
   setContext: timeProfiler.setContext,
   isStarted: timeProfiler.isStarted,
+  getState: timeProfiler.getState,
+  constants: timeProfiler.constants,
 };
 
 export const heap = {

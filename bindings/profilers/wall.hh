@@ -37,6 +37,8 @@ struct Result {
 
 class WallProfiler : public Nan::ObjectWrap {
  private:
+  enum Fields { kSampleCount, kFieldCount };
+
   using ContextPtr = std::shared_ptr<v8::Global<v8::Value>>;
 
   int samplingPeriodMicros_ = 0;
@@ -56,6 +58,9 @@ class WallProfiler : public Nan::ObjectWrap {
   bool includeLines_ = false;
   bool withContexts_ = false;
   bool started_ = false;
+
+  uint32_t* fields_;
+  v8::Global<v8::Uint32Array> jsArray_;
 
   struct SampleContext {
     ContextPtr context;
@@ -109,6 +114,7 @@ class WallProfiler : public Nan::ObjectWrap {
   static NAN_MODULE_INIT(Init);
   static NAN_GETTER(GetContext);
   static NAN_SETTER(SetContext);
+  static NAN_GETTER(SharedArrayGetter);
 };
 
 }  // namespace dd

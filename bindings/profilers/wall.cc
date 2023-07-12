@@ -330,6 +330,20 @@ WallProfiler::WallProfiler(int samplingPeriodMicros,
   contexts_.reserve(durationMicros * 2 / samplingPeriodMicros);
   curContext_.store(&context1_, std::memory_order_relaxed);
   collectSamples_.store(false, std::memory_order_relaxed);
+
+  auto isolate = v8::Isolate::GetCurrent();
+  v8::Local<v8::ArrayBuffer> buffer =
+      v8::ArrayBuffer::New(isolate, sizeof(uint32_t) * kFieldCount);
+
+  v8::Local<v8::Uint32Array> jsArray =
+      v8::Uint32Array::New(buffer, 0, kFieldCount);
+#if (V8_MAJOR_VERSION >= 8)
+  fields_ = static_cast<uint32_t*>(buffer->GetBackingStore()->Data());
+#else
+  fields_ = static_cast<uint32_t*>(buffer->GetContents().Data());
+#endif
+  jsArray_ = v8::Global<v8::Uint32Array>(isolate, jsArray);
+  std::fill(fields_, fields_ + kFieldCount, 0);
 }
 
 WallProfiler::~WallProfiler() {
@@ -464,6 +478,7 @@ std::string WallProfiler::StartInternal() {
   // reinstall sighandler on each new upload period
   if (withContexts_) {
     SignalHandler::IncreaseUseCount();
+    fields_[kSampleCount] = 0;
   }
 
   return buf;
@@ -599,11 +614,30 @@ NAN_MODULE_INIT(WallProfiler::Init) {
 
   Nan::SetPrototypeMethod(tpl, "start", Start);
   Nan::SetPrototypeMethod(tpl, "stop", Stop);
+  Nan::SetAccessor(tpl->InstanceTemplate(),
+                   Nan::New("state").ToLocalChecked(),
+                   SharedArrayGetter);
 
   PerIsolateData::For(Isolate::GetCurrent())
       ->WallProfilerConstructor()
       .Reset(Nan::GetFunction(tpl).ToLocalChecked());
   Nan::Set(target, className, Nan::GetFunction(tpl).ToLocalChecked());
+
+  auto isolate = v8::Isolate::GetCurrent();
+  v8::PropertyAttribute ReadOnlyDontDelete =
+      static_cast<v8::PropertyAttribute>(ReadOnly | DontDelete);
+
+  v8::Local<Object> constants = v8::Object::New(isolate);
+  Nan::DefineOwnProperty(constants,
+                         Nan::New("kSampleCount").ToLocalChecked(),
+                         Nan::New<Integer>(kSampleCount),
+                         ReadOnlyDontDelete)
+      .FromJust();
+  Nan::DefineOwnProperty(target,
+                         Nan::New("constants").ToLocalChecked(),
+                         constants,
+                         ReadOnlyDontDelete)
+      .FromJust();
 }
 
 // A new CPU profiler object will be created each time profiling is started
@@ -660,6 +694,11 @@ NAN_SETTER(WallProfiler::SetContext) {
   profiler->SetContext(info.GetIsolate(), value);
 }
 
+NAN_GETTER(WallProfiler::SharedArrayGetter) {
+  auto profiler = Nan::ObjectWrap::Unwrap<WallProfiler>(info.Holder());
+  info.GetReturnValue().Set(profiler->jsArray_.Get(v8::Isolate::GetCurrent()));
+}
+
 void WallProfiler::PushContext(int64_t time_from, int64_t time_to) {
   // Be careful this is called in a signal handler context therefore all
   // operations must be async signal safe (in particular no allocations).
@@ -668,6 +707,10 @@ void WallProfiler::PushContext(int64_t time_from, int64_t time_to) {
   std::atomic_signal_fence(std::memory_order_acquire);
   if (contexts_.size() < contexts_.capacity()) {
     contexts_.push_back({*context, time_from, time_to});
+    std::atomic_fetch_add_explicit(
+        reinterpret_cast<std::atomic<uint32_t>*>(&fields_[kSampleCount]),
+        1U,
+        std::memory_order_relaxed);
   }
 }
 
