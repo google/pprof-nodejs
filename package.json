@@ -51,7 +51,7 @@
     "deep-copy": "^1.4.2",
     "gts": "^3.0.0",
     "js-green-licenses": "^4.0.0",
-    "linkinator": "^4.0.0",
+    "linkinator": "^5.0.0",
     "mocha": "^10.0.0",
     "nyc": "^15.0.0",
     "protobufjs-cli": "1.1.1",
