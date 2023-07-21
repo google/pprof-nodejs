@@ -1,4 +1,4 @@
-/*eslint-disable block-scoped-var, no-redeclare, no-control-regex, no-prototype-builtins*/
+/*eslint-disable block-scoped-var, id-length, no-control-regex, no-magic-numbers, no-prototype-builtins, no-redeclare, no-shadow, no-var, sort-vars*/
 "use strict";
 
 var $protobuf = require("protobufjs/minimal");
@@ -33,26 +33,27 @@ $root.perftools = (function() {
              * Properties of a Profile.
              * @memberof perftools.profiles
              * @interface IProfile
-             * @property {Array.<perftools.profiles.IValueType>} [sampleType] Profile sampleType
-             * @property {Array.<perftools.profiles.ISample>} [sample] Profile sample
-             * @property {Array.<perftools.profiles.IMapping>} [mapping] Profile mapping
-             * @property {Array.<perftools.profiles.ILocation>} [location] Profile location
-             * @property {Array.<perftools.profiles.IFunction>} ["function"] Profile function
-             * @property {Array.<string>} [stringTable] Profile stringTable
-             * @property {number|Long} [dropFrames] Profile dropFrames
-             * @property {number|Long} [keepFrames] Profile keepFrames
-             * @property {number|Long} [timeNanos] Profile timeNanos
-             * @property {number|Long} [durationNanos] Profile durationNanos
-             * @property {perftools.profiles.IValueType} [periodType] Profile periodType
-             * @property {number|Long} [period] Profile period
-             * @property {Array.<number|Long>} [comment] Profile comment
-             * @property {number|Long} [defaultSampleType] Profile defaultSampleType
+             * @property {Array.<perftools.profiles.IValueType>|null} [sampleType] Profile sampleType
+             * @property {Array.<perftools.profiles.ISample>|null} [sample] Profile sample
+             * @property {Array.<perftools.profiles.IMapping>|null} [mapping] Profile mapping
+             * @property {Array.<perftools.profiles.ILocation>|null} [location] Profile location
+             * @property {Array.<perftools.profiles.IFunction>|null} ["function"] Profile function
+             * @property {Array.<string>|null} [stringTable] Profile stringTable
+             * @property {number|Long|null} [dropFrames] Profile dropFrames
+             * @property {number|Long|null} [keepFrames] Profile keepFrames
+             * @property {number|Long|null} [timeNanos] Profile timeNanos
+             * @property {number|Long|null} [durationNanos] Profile durationNanos
+             * @property {perftools.profiles.IValueType|null} [periodType] Profile periodType
+             * @property {number|Long|null} [period] Profile period
+             * @property {Array.<number|Long>|null} [comment] Profile comment
+             * @property {number|Long|null} [defaultSampleType] Profile defaultSampleType
              */
 
             /**
              * Constructs a new Profile.
              * @memberof perftools.profiles
              * @classdesc Represents a Profile.
+             * @implements IProfile
              * @constructor
              * @param {perftools.profiles.IProfile=} [properties] Properties to set
              */
@@ -72,7 +73,7 @@ $root.perftools = (function() {
 
             /**
              * Profile sampleType.
-             * @member {Array.<perftools.profiles.IValueType>}sampleType
+             * @member {Array.<perftools.profiles.IValueType>} sampleType
              * @memberof perftools.profiles.Profile
              * @instance
              */
@@ -80,7 +81,7 @@ $root.perftools = (function() {
 
             /**
              * Profile sample.
-             * @member {Array.<perftools.profiles.ISample>}sample
+             * @member {Array.<perftools.profiles.ISample>} sample
              * @memberof perftools.profiles.Profile
              * @instance
              */
@@ -88,7 +89,7 @@ $root.perftools = (function() {
 
             /**
              * Profile mapping.
-             * @member {Array.<perftools.profiles.IMapping>}mapping
+             * @member {Array.<perftools.profiles.IMapping>} mapping
              * @memberof perftools.profiles.Profile
              * @instance
              */
@@ -96,7 +97,7 @@ $root.perftools = (function() {
 
             /**
              * Profile location.
-             * @member {Array.<perftools.profiles.ILocation>}location
+             * @member {Array.<perftools.profiles.ILocation>} location
              * @memberof perftools.profiles.Profile
              * @instance
              */
@@ -104,7 +105,7 @@ $root.perftools = (function() {
 
             /**
              * Profile function.
-             * @member {Array.<perftools.profiles.IFunction>}function_
+             * @member {Array.<perftools.profiles.IFunction>} function
              * @memberof perftools.profiles.Profile
              * @instance
              */
@@ -112,7 +113,7 @@ $root.perftools = (function() {
 
             /**
              * Profile stringTable.
-             * @member {Array.<string>}stringTable
+             * @member {Array.<string>} stringTable
              * @memberof perftools.profiles.Profile
              * @instance
              */
@@ -120,7 +121,7 @@ $root.perftools = (function() {
 
             /**
              * Profile dropFrames.
-             * @member {number|Long}dropFrames
+             * @member {number|Long} dropFrames
              * @memberof perftools.profiles.Profile
              * @instance
              */
@@ -128,7 +129,7 @@ $root.perftools = (function() {
 
             /**
              * Profile keepFrames.
-             * @member {number|Long}keepFrames
+             * @member {number|Long} keepFrames
              * @memberof perftools.profiles.Profile
              * @instance
              */
@@ -136,7 +137,7 @@ $root.perftools = (function() {
 
             /**
              * Profile timeNanos.
-             * @member {number|Long}timeNanos
+             * @member {number|Long} timeNanos
              * @memberof perftools.profiles.Profile
              * @instance
              */
@@ -144,7 +145,7 @@ $root.perftools = (function() {
 
             /**
              * Profile durationNanos.
-             * @member {number|Long}durationNanos
+             * @member {number|Long} durationNanos
              * @memberof perftools.profiles.Profile
              * @instance
              */
@@ -152,7 +153,7 @@ $root.perftools = (function() {
 
             /**
              * Profile periodType.
-             * @member {(perftools.profiles.IValueType|null|undefined)}periodType
+             * @member {perftools.profiles.IValueType|null|undefined} periodType
              * @memberof perftools.profiles.Profile
              * @instance
              */
@@ -160,7 +161,7 @@ $root.perftools = (function() {
 
             /**
              * Profile period.
-             * @member {number|Long}period
+             * @member {number|Long} period
              * @memberof perftools.profiles.Profile
              * @instance
              */
@@ -168,7 +169,7 @@ $root.perftools = (function() {
 
             /**
              * Profile comment.
-             * @member {Array.<number|Long>}comment
+             * @member {Array.<number|Long>} comment
              * @memberof perftools.profiles.Profile
              * @instance
              */
@@ -176,7 +177,7 @@ $root.perftools = (function() {
 
             /**
              * Profile defaultSampleType.
-             * @member {number|Long}defaultSampleType
+             * @member {number|Long} defaultSampleType
              * @memberof perftools.profiles.Profile
              * @instance
              */
@@ -224,17 +225,17 @@ $root.perftools = (function() {
                 if (message.stringTable != null && message.stringTable.length)
                     for (var i = 0; i < message.stringTable.length; ++i)
                         writer.uint32(/* id 6, wireType 2 =*/50).string(message.stringTable[i]);
-                if (message.dropFrames != null && message.hasOwnProperty("dropFrames"))
+                if (message.dropFrames != null && Object.hasOwnProperty.call(message, "dropFrames"))
                     writer.uint32(/* id 7, wireType 0 =*/56).int64(message.dropFrames);
-                if (message.keepFrames != null && message.hasOwnProperty("keepFrames"))
+                if (message.keepFrames != null && Object.hasOwnProperty.call(message, "keepFrames"))
                     writer.uint32(/* id 8, wireType 0 =*/64).int64(message.keepFrames);
-                if (message.timeNanos != null && message.hasOwnProperty("timeNanos"))
+                if (message.timeNanos != null && Object.hasOwnProperty.call(message, "timeNanos"))
                     writer.uint32(/* id 9, wireType 0 =*/72).int64(message.timeNanos);
-                if (message.durationNanos != null && message.hasOwnProperty("durationNanos"))
+                if (message.durationNanos != null && Object.hasOwnProperty.call(message, "durationNanos"))
                     writer.uint32(/* id 10, wireType 0 =*/80).int64(message.durationNanos);
-                if (message.periodType != null && message.hasOwnProperty("periodType"))
+                if (message.periodType != null && Object.hasOwnProperty.call(message, "periodType"))
                     $root.perftools.profiles.ValueType.encode(message.periodType, writer.uint32(/* id 11, wireType 2 =*/90).fork()).ldelim();
-                if (message.period != null && message.hasOwnProperty("period"))
+                if (message.period != null && Object.hasOwnProperty.call(message, "period"))
                     writer.uint32(/* id 12, wireType 0 =*/96).int64(message.period);
                 if (message.comment != null && message.comment.length) {
                     writer.uint32(/* id 13, wireType 2 =*/106).fork();
@@ -242,7 +243,7 @@ $root.perftools = (function() {
                         writer.int64(message.comment[i]);
                     writer.ldelim();
                 }
-                if (message.defaultSampleType != null && message.hasOwnProperty("defaultSampleType"))
+                if (message.defaultSampleType != null && Object.hasOwnProperty.call(message, "defaultSampleType"))
                     writer.uint32(/* id 14, wireType 0 =*/112).int64(message.defaultSampleType);
                 return writer;
             };
@@ -278,67 +279,81 @@ $root.perftools = (function() {
                 while (reader.pos < end) {
                     var tag = reader.uint32();
                     switch (tag >>> 3) {
-                    case 1:
-                        if (!(message.sampleType && message.sampleType.length))
-                            message.sampleType = [];
-                        message.sampleType.push($root.perftools.profiles.ValueType.decode(reader, reader.uint32()));
-                        break;
-                    case 2:
-                        if (!(message.sample && message.sample.length))
-                            message.sample = [];
-                        message.sample.push($root.perftools.profiles.Sample.decode(reader, reader.uint32()));
-                        break;
-                    case 3:
-                        if (!(message.mapping && message.mapping.length))
-                            message.mapping = [];
-                        message.mapping.push($root.perftools.profiles.Mapping.decode(reader, reader.uint32()));
-                        break;
-                    case 4:
-                        if (!(message.location && message.location.length))
-                            message.location = [];
-                        message.location.push($root.perftools.profiles.Location.decode(reader, reader.uint32()));
-                        break;
-                    case 5:
-                        if (!(message["function"] && message["function"].length))
-                            message["function"] = [];
-                        message["function"].push($root.perftools.profiles.Function.decode(reader, reader.uint32()));
-                        break;
-                    case 6:
-                        if (!(message.stringTable && message.stringTable.length))
-                            message.stringTable = [];
-                        message.stringTable.push(reader.string());
-                        break;
-                    case 7:
-                        message.dropFrames = reader.int64();
-                        break;
-                    case 8:
-                        message.keepFrames = reader.int64();
-                        break;
-                    case 9:
-                        message.timeNanos = reader.int64();
-                        break;
-                    case 10:
-                        message.durationNanos = reader.int64();
-                        break;
-                    case 11:
-                        message.periodType = $root.perftools.profiles.ValueType.decode(reader, reader.uint32());
-                        break;
-                    case 12:
-                        message.period = reader.int64();
-                        break;
-                    case 13:
-                        if (!(message.comment && message.comment.length))
-                            message.comment = [];
-                        if ((tag & 7) === 2) {
-                            var end2 = reader.uint32() + reader.pos;
-                            while (reader.pos < end2)
+                    case 1: {
+                            if (!(message.sampleType && message.sampleType.length))
+                                message.sampleType = [];
+                            message.sampleType.push($root.perftools.profiles.ValueType.decode(reader, reader.uint32()));
+                            break;
+                        }
+                    case 2: {
+                            if (!(message.sample && message.sample.length))
+                                message.sample = [];
+                            message.sample.push($root.perftools.profiles.Sample.decode(reader, reader.uint32()));
+                            break;
+                        }
+                    case 3: {
+                            if (!(message.mapping && message.mapping.length))
+                                message.mapping = [];
+                            message.mapping.push($root.perftools.profiles.Mapping.decode(reader, reader.uint32()));
+                            break;
+                        }
+                    case 4: {
+                            if (!(message.location && message.location.length))
+                                message.location = [];
+                            message.location.push($root.perftools.profiles.Location.decode(reader, reader.uint32()));
+                            break;
+                        }
+                    case 5: {
+                            if (!(message["function"] && message["function"].length))
+                                message["function"] = [];
+                            message["function"].push($root.perftools.profiles.Function.decode(reader, reader.uint32()));
+                            break;
+                        }
+                    case 6: {
+                            if (!(message.stringTable && message.stringTable.length))
+                                message.stringTable = [];
+                            message.stringTable.push(reader.string());
+                            break;
+                        }
+                    case 7: {
+                            message.dropFrames = reader.int64();
+                            break;
+                        }
+                    case 8: {
+                            message.keepFrames = reader.int64();
+                            break;
+                        }
+                    case 9: {
+                            message.timeNanos = reader.int64();
+                            break;
+                        }
+                    case 10: {
+                            message.durationNanos = reader.int64();
+                            break;
+                        }
+                    case 11: {
+                            message.periodType = $root.perftools.profiles.ValueType.decode(reader, reader.uint32());
+                            break;
+                        }
+                    case 12: {
+                            message.period = reader.int64();
+                            break;
+                        }
+                    case 13: {
+                            if (!(message.comment && message.comment.length))
+                                message.comment = [];
+                            if ((tag & 7) === 2) {
+                                var end2 = reader.uint32() + reader.pos;
+                                while (reader.pos < end2)
+                                    message.comment.push(reader.int64());
+                            } else
                                 message.comment.push(reader.int64());
-                        } else
-                            message.comment.push(reader.int64());
-                        break;
-                    case 14:
-                        message.defaultSampleType = reader.int64();
-                        break;
+                            break;
+                        }
+                    case 14: {
+                            message.defaultSampleType = reader.int64();
+                            break;
+                        }
                     default:
                         reader.skipType(tag & 7);
                         break;
@@ -387,7 +402,7 @@ $root.perftools = (function() {
                     if (!Array.isArray(message.sample))
                         return "sample: array expected";
                     for (var i = 0; i < message.sample.length; ++i) {
-                        error = $root.perftools.profiles.Sample.verify(message.sample[i]);
+                        var error = $root.perftools.profiles.Sample.verify(message.sample[i]);
                         if (error)
                             return "sample." + error;
                     }
@@ -396,7 +411,7 @@ $root.perftools = (function() {
                     if (!Array.isArray(message.mapping))
                         return "mapping: array expected";
                     for (var i = 0; i < message.mapping.length; ++i) {
-                        error = $root.perftools.profiles.Mapping.verify(message.mapping[i]);
+                        var error = $root.perftools.profiles.Mapping.verify(message.mapping[i]);
                         if (error)
                             return "mapping." + error;
                     }
@@ -405,7 +420,7 @@ $root.perftools = (function() {
                     if (!Array.isArray(message.location))
                         return "location: array expected";
                     for (var i = 0; i < message.location.length; ++i) {
-                        error = $root.perftools.profiles.Location.verify(message.location[i]);
+                        var error = $root.perftools.profiles.Location.verify(message.location[i]);
                         if (error)
                             return "location." + error;
                     }
@@ -414,7 +429,7 @@ $root.perftools = (function() {
                     if (!Array.isArray(message["function"]))
                         return "function: array expected";
                     for (var i = 0; i < message["function"].length; ++i) {
-                        error = $root.perftools.profiles.Function.verify(message["function"][i]);
+                        var error = $root.perftools.profiles.Function.verify(message["function"][i]);
                         if (error)
                             return "function." + error;
                     }
@@ -439,7 +454,7 @@ $root.perftools = (function() {
                     if (!$util.isInteger(message.durationNanos) && !(message.durationNanos && $util.isInteger(message.durationNanos.low) && $util.isInteger(message.durationNanos.high)))
                         return "durationNanos: integer|Long expected";
                 if (message.periodType != null && message.hasOwnProperty("periodType")) {
-                    error = $root.perftools.profiles.ValueType.verify(message.periodType);
+                    var error = $root.perftools.profiles.ValueType.verify(message.periodType);
                     if (error)
                         return "periodType." + error;
                 }
@@ -743,6 +758,21 @@ $root.perftools = (function() {
                 return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
             };
 
+            /**
+             * Gets the default type url for Profile
+             * @function getTypeUrl
+             * @memberof perftools.profiles.Profile
+             * @static
+             * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+             * @returns {string} The default type url
+             */
+            Profile.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+                if (typeUrlPrefix === undefined) {
+                    typeUrlPrefix = "type.googleapis.com";
+                }
+                return typeUrlPrefix + "/perftools.profiles.Profile";
+            };
+
             return Profile;
         })();
 
@@ -752,14 +782,15 @@ $root.perftools = (function() {
              * Properties of a ValueType.
              * @memberof perftools.profiles
              * @interface IValueType
-             * @property {number|Long} [type] ValueType type
-             * @property {number|Long} [unit] ValueType unit
+             * @property {number|Long|null} [type] ValueType type
+             * @property {number|Long|null} [unit] ValueType unit
              */
 
             /**
              * Constructs a new ValueType.
              * @memberof perftools.profiles
              * @classdesc Represents a ValueType.
+             * @implements IValueType
              * @constructor
              * @param {perftools.profiles.IValueType=} [properties] Properties to set
              */
@@ -772,7 +803,7 @@ $root.perftools = (function() {
 
             /**
              * ValueType type.
-             * @member {number|Long}type
+             * @member {number|Long} type
              * @memberof perftools.profiles.ValueType
              * @instance
              */
@@ -780,7 +811,7 @@ $root.perftools = (function() {
 
             /**
              * ValueType unit.
-             * @member {number|Long}unit
+             * @member {number|Long} unit
              * @memberof perftools.profiles.ValueType
              * @instance
              */
@@ -810,9 +841,9 @@ $root.perftools = (function() {
             ValueType.encode = function encode(message, writer) {
                 if (!writer)
                     writer = $Writer.create();
-                if (message.type != null && message.hasOwnProperty("type"))
+                if (message.type != null && Object.hasOwnProperty.call(message, "type"))
                     writer.uint32(/* id 1, wireType 0 =*/8).int64(message.type);
-                if (message.unit != null && message.hasOwnProperty("unit"))
+                if (message.unit != null && Object.hasOwnProperty.call(message, "unit"))
                     writer.uint32(/* id 2, wireType 0 =*/16).int64(message.unit);
                 return writer;
             };
@@ -848,12 +879,14 @@ $root.perftools = (function() {
                 while (reader.pos < end) {
                     var tag = reader.uint32();
                     switch (tag >>> 3) {
-                    case 1:
-                        message.type = reader.int64();
-                        break;
-                    case 2:
-                        message.unit = reader.int64();
-                        break;
+                    case 1: {
+                            message.type = reader.int64();
+                            break;
+                        }
+                    case 2: {
+                            message.unit = reader.int64();
+                            break;
+                        }
                     default:
                         reader.skipType(tag & 7);
                         break;
@@ -980,6 +1013,21 @@ $root.perftools = (function() {
                 return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
             };
 
+            /**
+             * Gets the default type url for ValueType
+             * @function getTypeUrl
+             * @memberof perftools.profiles.ValueType
+             * @static
+             * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+             * @returns {string} The default type url
+             */
+            ValueType.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+                if (typeUrlPrefix === undefined) {
+                    typeUrlPrefix = "type.googleapis.com";
+                }
+                return typeUrlPrefix + "/perftools.profiles.ValueType";
+            };
+
             return ValueType;
         })();
 
@@ -989,15 +1037,16 @@ $root.perftools = (function() {
              * Properties of a Sample.
              * @memberof perftools.profiles
              * @interface ISample
-             * @property {Array.<number|Long>} [locationId] Sample locationId
-             * @property {Array.<number|Long>} [value] Sample value
-             * @property {Array.<perftools.profiles.ILabel>} [label] Sample label
+             * @property {Array.<number|Long>|null} [locationId] Sample locationId
+             * @property {Array.<number|Long>|null} [value] Sample value
+             * @property {Array.<perftools.profiles.ILabel>|null} [label] Sample label
              */
 
             /**
              * Constructs a new Sample.
              * @memberof perftools.profiles
              * @classdesc Represents a Sample.
+             * @implements ISample
              * @constructor
              * @param {perftools.profiles.ISample=} [properties] Properties to set
              */
@@ -1013,7 +1062,7 @@ $root.perftools = (function() {
 
             /**
              * Sample locationId.
-             * @member {Array.<number|Long>}locationId
+             * @member {Array.<number|Long>} locationId
              * @memberof perftools.profiles.Sample
              * @instance
              */
@@ -1021,7 +1070,7 @@ $root.perftools = (function() {
 
             /**
              * Sample value.
-             * @member {Array.<number|Long>}value
+             * @member {Array.<number|Long>} value
              * @memberof perftools.profiles.Sample
              * @instance
              */
@@ -1029,7 +1078,7 @@ $root.perftools = (function() {
 
             /**
              * Sample label.
-             * @member {Array.<perftools.profiles.ILabel>}label
+             * @member {Array.<perftools.profiles.ILabel>} label
              * @memberof perftools.profiles.Sample
              * @instance
              */
@@ -1108,31 +1157,34 @@ $root.perftools = (function() {
                 while (reader.pos < end) {
                     var tag = reader.uint32();
                     switch (tag >>> 3) {
-                    case 1:
-                        if (!(message.locationId && message.locationId.length))
-                            message.locationId = [];
-                        if ((tag & 7) === 2) {
-                            var end2 = reader.uint32() + reader.pos;
-                            while (reader.pos < end2)
+                    case 1: {
+                            if (!(message.locationId && message.locationId.length))
+                                message.locationId = [];
+                            if ((tag & 7) === 2) {
+                                var end2 = reader.uint32() + reader.pos;
+                                while (reader.pos < end2)
+                                    message.locationId.push(reader.uint64());
+                            } else
                                 message.locationId.push(reader.uint64());
-                        } else
-                            message.locationId.push(reader.uint64());
-                        break;
-                    case 2:
-                        if (!(message.value && message.value.length))
-                            message.value = [];
-                        if ((tag & 7) === 2) {
-                            var end2 = reader.uint32() + reader.pos;
-                            while (reader.pos < end2)
+                            break;
+                        }
+                    case 2: {
+                            if (!(message.value && message.value.length))
+                                message.value = [];
+                            if ((tag & 7) === 2) {
+                                var end2 = reader.uint32() + reader.pos;
+                                while (reader.pos < end2)
+                                    message.value.push(reader.int64());
+                            } else
                                 message.value.push(reader.int64());
-                        } else
-                            message.value.push(reader.int64());
-                        break;
-                    case 3:
-                        if (!(message.label && message.label.length))
-                            message.label = [];
-                        message.label.push($root.perftools.profiles.Label.decode(reader, reader.uint32()));
-                        break;
+                            break;
+                        }
+                    case 3: {
+                            if (!(message.label && message.label.length))
+                                message.label = [];
+                            message.label.push($root.perftools.profiles.Label.decode(reader, reader.uint32()));
+                            break;
+                        }
                     default:
                         reader.skipType(tag & 7);
                         break;
@@ -1300,6 +1352,21 @@ $root.perftools = (function() {
                 return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
             };
 
+            /**
+             * Gets the default type url for Sample
+             * @function getTypeUrl
+             * @memberof perftools.profiles.Sample
+             * @static
+             * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+             * @returns {string} The default type url
+             */
+            Sample.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+                if (typeUrlPrefix === undefined) {
+                    typeUrlPrefix = "type.googleapis.com";
+                }
+                return typeUrlPrefix + "/perftools.profiles.Sample";
+            };
+
             return Sample;
         })();
 
@@ -1309,16 +1376,17 @@ $root.perftools = (function() {
              * Properties of a Label.
              * @memberof perftools.profiles
              * @interface ILabel
-             * @property {number|Long} [key] Label key
-             * @property {number|Long} [str] Label str
-             * @property {number|Long} [num] Label num
-             * @property {number|Long} [numUnit] Label numUnit
+             * @property {number|Long|null} [key] Label key
+             * @property {number|Long|null} [str] Label str
+             * @property {number|Long|null} [num] Label num
+             * @property {number|Long|null} [numUnit] Label numUnit
              */
 
             /**
              * Constructs a new Label.
              * @memberof perftools.profiles
              * @classdesc Represents a Label.
+             * @implements ILabel
              * @constructor
              * @param {perftools.profiles.ILabel=} [properties] Properties to set
              */
@@ -1331,7 +1399,7 @@ $root.perftools = (function() {
 
             /**
              * Label key.
-             * @member {number|Long}key
+             * @member {number|Long} key
              * @memberof perftools.profiles.Label
              * @instance
              */
@@ -1339,7 +1407,7 @@ $root.perftools = (function() {
 
             /**
              * Label str.
-             * @member {number|Long}str
+             * @member {number|Long} str
              * @memberof perftools.profiles.Label
              * @instance
              */
@@ -1347,7 +1415,7 @@ $root.perftools = (function() {
 
             /**
              * Label num.
-             * @member {number|Long}num
+             * @member {number|Long} num
              * @memberof perftools.profiles.Label
              * @instance
              */
@@ -1355,7 +1423,7 @@ $root.perftools = (function() {
 
             /**
              * Label numUnit.
-             * @member {number|Long}numUnit
+             * @member {number|Long} numUnit
              * @memberof perftools.profiles.Label
              * @instance
              */
@@ -1385,13 +1453,13 @@ $root.perftools = (function() {
             Label.encode = function encode(message, writer) {
                 if (!writer)
                     writer = $Writer.create();
-                if (message.key != null && message.hasOwnProperty("key"))
+                if (message.key != null && Object.hasOwnProperty.call(message, "key"))
                     writer.uint32(/* id 1, wireType 0 =*/8).int64(message.key);
-                if (message.str != null && message.hasOwnProperty("str"))
+                if (message.str != null && Object.hasOwnProperty.call(message, "str"))
                     writer.uint32(/* id 2, wireType 0 =*/16).int64(message.str);
-                if (message.num != null && message.hasOwnProperty("num"))
+                if (message.num != null && Object.hasOwnProperty.call(message, "num"))
                     writer.uint32(/* id 3, wireType 0 =*/24).int64(message.num);
-                if (message.numUnit != null && message.hasOwnProperty("numUnit"))
+                if (message.numUnit != null && Object.hasOwnProperty.call(message, "numUnit"))
                     writer.uint32(/* id 4, wireType 0 =*/32).int64(message.numUnit);
                 return writer;
             };
@@ -1427,18 +1495,22 @@ $root.perftools = (function() {
                 while (reader.pos < end) {
                     var tag = reader.uint32();
                     switch (tag >>> 3) {
-                    case 1:
-                        message.key = reader.int64();
-                        break;
-                    case 2:
-                        message.str = reader.int64();
-                        break;
-                    case 3:
-                        message.num = reader.int64();
-                        break;
-                    case 4:
-                        message.numUnit = reader.int64();
-                        break;
+                    case 1: {
+                            message.key = reader.int64();
+                            break;
+                        }
+                    case 2: {
+                            message.str = reader.int64();
+                            break;
+                        }
+                    case 3: {
+                            message.num = reader.int64();
+                            break;
+                        }
+                    case 4: {
+                            message.numUnit = reader.int64();
+                            break;
+                        }
                     default:
                         reader.skipType(tag & 7);
                         break;
@@ -1609,6 +1681,21 @@ $root.perftools = (function() {
                 return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
             };
 
+            /**
+             * Gets the default type url for Label
+             * @function getTypeUrl
+             * @memberof perftools.profiles.Label
+             * @static
+             * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+             * @returns {string} The default type url
+             */
+            Label.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+                if (typeUrlPrefix === undefined) {
+                    typeUrlPrefix = "type.googleapis.com";
+                }
+                return typeUrlPrefix + "/perftools.profiles.Label";
+            };
+
             return Label;
         })();
 
@@ -1618,22 +1705,23 @@ $root.perftools = (function() {
              * Properties of a Mapping.
              * @memberof perftools.profiles
              * @interface IMapping
-             * @property {number|Long} [id] Mapping id
-             * @property {number|Long} [memoryStart] Mapping memoryStart
-             * @property {number|Long} [memoryLimit] Mapping memoryLimit
-             * @property {number|Long} [fileOffset] Mapping fileOffset
-             * @property {number|Long} [filename] Mapping filename
-             * @property {number|Long} [buildId] Mapping buildId
-             * @property {boolean} [hasFunctions] Mapping hasFunctions
-             * @property {boolean} [hasFilenames] Mapping hasFilenames
-             * @property {boolean} [hasLineNumbers] Mapping hasLineNumbers
-             * @property {boolean} [hasInlineFrames] Mapping hasInlineFrames
+             * @property {number|Long|null} [id] Mapping id
+             * @property {number|Long|null} [memoryStart] Mapping memoryStart
+             * @property {number|Long|null} [memoryLimit] Mapping memoryLimit
+             * @property {number|Long|null} [fileOffset] Mapping fileOffset
+             * @property {number|Long|null} [filename] Mapping filename
+             * @property {number|Long|null} [buildId] Mapping buildId
+             * @property {boolean|null} [hasFunctions] Mapping hasFunctions
+             * @property {boolean|null} [hasFilenames] Mapping hasFilenames
+             * @property {boolean|null} [hasLineNumbers] Mapping hasLineNumbers
+             * @property {boolean|null} [hasInlineFrames] Mapping hasInlineFrames
              */
 
             /**
              * Constructs a new Mapping.
              * @memberof perftools.profiles
              * @classdesc Represents a Mapping.
+             * @implements IMapping
              * @constructor
              * @param {perftools.profiles.IMapping=} [properties] Properties to set
              */
@@ -1646,7 +1734,7 @@ $root.perftools = (function() {
 
             /**
              * Mapping id.
-             * @member {number|Long}id
+             * @member {number|Long} id
              * @memberof perftools.profiles.Mapping
              * @instance
              */
@@ -1654,7 +1742,7 @@ $root.perftools = (function() {
 
             /**
              * Mapping memoryStart.
-             * @member {number|Long}memoryStart
+             * @member {number|Long} memoryStart
              * @memberof perftools.profiles.Mapping
              * @instance
              */
@@ -1662,7 +1750,7 @@ $root.perftools = (function() {
 
             /**
              * Mapping memoryLimit.
-             * @member {number|Long}memoryLimit
+             * @member {number|Long} memoryLimit
              * @memberof perftools.profiles.Mapping
              * @instance
              */
@@ -1670,7 +1758,7 @@ $root.perftools = (function() {
 
             /**
              * Mapping fileOffset.
-             * @member {number|Long}fileOffset
+             * @member {number|Long} fileOffset
              * @memberof perftools.profiles.Mapping
              * @instance
              */
@@ -1678,7 +1766,7 @@ $root.perftools = (function() {
 
             /**
              * Mapping filename.
-             * @member {number|Long}filename
+             * @member {number|Long} filename
              * @memberof perftools.profiles.Mapping
              * @instance
              */
@@ -1686,7 +1774,7 @@ $root.perftools = (function() {
 
             /**
              * Mapping buildId.
-             * @member {number|Long}buildId
+             * @member {number|Long} buildId
              * @memberof perftools.profiles.Mapping
              * @instance
              */
@@ -1694,7 +1782,7 @@ $root.perftools = (function() {
 
             /**
              * Mapping hasFunctions.
-             * @member {boolean}hasFunctions
+             * @member {boolean} hasFunctions
              * @memberof perftools.profiles.Mapping
              * @instance
              */
@@ -1702,7 +1790,7 @@ $root.perftools = (function() {
 
             /**
              * Mapping hasFilenames.
-             * @member {boolean}hasFilenames
+             * @member {boolean} hasFilenames
              * @memberof perftools.profiles.Mapping
              * @instance
              */
@@ -1710,7 +1798,7 @@ $root.perftools = (function() {
 
             /**
              * Mapping hasLineNumbers.
-             * @member {boolean}hasLineNumbers
+             * @member {boolean} hasLineNumbers
              * @memberof perftools.profiles.Mapping
              * @instance
              */
@@ -1718,7 +1806,7 @@ $root.perftools = (function() {
 
             /**
              * Mapping hasInlineFrames.
-             * @member {boolean}hasInlineFrames
+             * @member {boolean} hasInlineFrames
              * @memberof perftools.profiles.Mapping
              * @instance
              */
@@ -1748,25 +1836,25 @@ $root.perftools = (function() {
             Mapping.encode = function encode(message, writer) {
                 if (!writer)
                     writer = $Writer.create();
-                if (message.id != null && message.hasOwnProperty("id"))
+                if (message.id != null && Object.hasOwnProperty.call(message, "id"))
                     writer.uint32(/* id 1, wireType 0 =*/8).uint64(message.id);
-                if (message.memoryStart != null && message.hasOwnProperty("memoryStart"))
+                if (message.memoryStart != null && Object.hasOwnProperty.call(message, "memoryStart"))
                     writer.uint32(/* id 2, wireType 0 =*/16).uint64(message.memoryStart);
-                if (message.memoryLimit != null && message.hasOwnProperty("memoryLimit"))
+                if (message.memoryLimit != null && Object.hasOwnProperty.call(message, "memoryLimit"))
                     writer.uint32(/* id 3, wireType 0 =*/24).uint64(message.memoryLimit);
-                if (message.fileOffset != null && message.hasOwnProperty("fileOffset"))
+                if (message.fileOffset != null && Object.hasOwnProperty.call(message, "fileOffset"))
                     writer.uint32(/* id 4, wireType 0 =*/32).uint64(message.fileOffset);
-                if (message.filename != null && message.hasOwnProperty("filename"))
+                if (message.filename != null && Object.hasOwnProperty.call(message, "filename"))
                     writer.uint32(/* id 5, wireType 0 =*/40).int64(message.filename);
-                if (message.buildId != null && message.hasOwnProperty("buildId"))
+                if (message.buildId != null && Object.hasOwnProperty.call(message, "buildId"))
                     writer.uint32(/* id 6, wireType 0 =*/48).int64(message.buildId);
-                if (message.hasFunctions != null && message.hasOwnProperty("hasFunctions"))
+                if (message.hasFunctions != null && Object.hasOwnProperty.call(message, "hasFunctions"))
                     writer.uint32(/* id 7, wireType 0 =*/56).bool(message.hasFunctions);
-                if (message.hasFilenames != null && message.hasOwnProperty("hasFilenames"))
+                if (message.hasFilenames != null && Object.hasOwnProperty.call(message, "hasFilenames"))
                     writer.uint32(/* id 8, wireType 0 =*/64).bool(message.hasFilenames);
-                if (message.hasLineNumbers != null && message.hasOwnProperty("hasLineNumbers"))
+                if (message.hasLineNumbers != null && Object.hasOwnProperty.call(message, "hasLineNumbers"))
                     writer.uint32(/* id 9, wireType 0 =*/72).bool(message.hasLineNumbers);
-                if (message.hasInlineFrames != null && message.hasOwnProperty("hasInlineFrames"))
+                if (message.hasInlineFrames != null && Object.hasOwnProperty.call(message, "hasInlineFrames"))
                     writer.uint32(/* id 10, wireType 0 =*/80).bool(message.hasInlineFrames);
                 return writer;
             };
@@ -1802,36 +1890,46 @@ $root.perftools = (function() {
                 while (reader.pos < end) {
                     var tag = reader.uint32();
                     switch (tag >>> 3) {
-                    case 1:
-                        message.id = reader.uint64();
-                        break;
-                    case 2:
-                        message.memoryStart = reader.uint64();
-                        break;
-                    case 3:
-                        message.memoryLimit = reader.uint64();
-                        break;
-                    case 4:
-                        message.fileOffset = reader.uint64();
-                        break;
-                    case 5:
-                        message.filename = reader.int64();
-                        break;
-                    case 6:
-                        message.buildId = reader.int64();
-                        break;
-                    case 7:
-                        message.hasFunctions = reader.bool();
-                        break;
-                    case 8:
-                        message.hasFilenames = reader.bool();
-                        break;
-                    case 9:
-                        message.hasLineNumbers = reader.bool();
-                        break;
-                    case 10:
-                        message.hasInlineFrames = reader.bool();
-                        break;
+                    case 1: {
+                            message.id = reader.uint64();
+                            break;
+                        }
+                    case 2: {
+                            message.memoryStart = reader.uint64();
+                            break;
+                        }
+                    case 3: {
+                            message.memoryLimit = reader.uint64();
+                            break;
+                        }
+                    case 4: {
+                            message.fileOffset = reader.uint64();
+                            break;
+                        }
+                    case 5: {
+                            message.filename = reader.int64();
+                            break;
+                        }
+                    case 6: {
+                            message.buildId = reader.int64();
+                            break;
+                        }
+                    case 7: {
+                            message.hasFunctions = reader.bool();
+                            break;
+                        }
+                    case 8: {
+                            message.hasFilenames = reader.bool();
+                            break;
+                        }
+                    case 9: {
+                            message.hasLineNumbers = reader.bool();
+                            break;
+                        }
+                    case 10: {
+                            message.hasInlineFrames = reader.bool();
+                            break;
+                        }
                     default:
                         reader.skipType(tag & 7);
                         break;
@@ -2078,6 +2176,21 @@ $root.perftools = (function() {
                 return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
             };
 
+            /**
+             * Gets the default type url for Mapping
+             * @function getTypeUrl
+             * @memberof perftools.profiles.Mapping
+             * @static
+             * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+             * @returns {string} The default type url
+             */
+            Mapping.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+                if (typeUrlPrefix === undefined) {
+                    typeUrlPrefix = "type.googleapis.com";
+                }
+                return typeUrlPrefix + "/perftools.profiles.Mapping";
+            };
+
             return Mapping;
         })();
 
@@ -2087,16 +2200,17 @@ $root.perftools = (function() {
              * Properties of a Location.
              * @memberof perftools.profiles
              * @interface ILocation
-             * @property {number|Long} [id] Location id
-             * @property {number|Long} [mappingId] Location mappingId
-             * @property {number|Long} [address] Location address
-             * @property {Array.<perftools.profiles.ILine>} [line] Location line
+             * @property {number|Long|null} [id] Location id
+             * @property {number|Long|null} [mappingId] Location mappingId
+             * @property {number|Long|null} [address] Location address
+             * @property {Array.<perftools.profiles.ILine>|null} [line] Location line
              */
 
             /**
              * Constructs a new Location.
              * @memberof perftools.profiles
              * @classdesc Represents a Location.
+             * @implements ILocation
              * @constructor
              * @param {perftools.profiles.ILocation=} [properties] Properties to set
              */
@@ -2110,7 +2224,7 @@ $root.perftools = (function() {
 
             /**
              * Location id.
-             * @member {number|Long}id
+             * @member {number|Long} id
              * @memberof perftools.profiles.Location
              * @instance
              */
@@ -2118,7 +2232,7 @@ $root.perftools = (function() {
 
             /**
              * Location mappingId.
-             * @member {number|Long}mappingId
+             * @member {number|Long} mappingId
              * @memberof perftools.profiles.Location
              * @instance
              */
@@ -2126,7 +2240,7 @@ $root.perftools = (function() {
 
             /**
              * Location address.
-             * @member {number|Long}address
+             * @member {number|Long} address
              * @memberof perftools.profiles.Location
              * @instance
              */
@@ -2134,7 +2248,7 @@ $root.perftools = (function() {
 
             /**
              * Location line.
-             * @member {Array.<perftools.profiles.ILine>}line
+             * @member {Array.<perftools.profiles.ILine>} line
              * @memberof perftools.profiles.Location
              * @instance
              */
@@ -2164,11 +2278,11 @@ $root.perftools = (function() {
             Location.encode = function encode(message, writer) {
                 if (!writer)
                     writer = $Writer.create();
-                if (message.id != null && message.hasOwnProperty("id"))
+                if (message.id != null && Object.hasOwnProperty.call(message, "id"))
                     writer.uint32(/* id 1, wireType 0 =*/8).uint64(message.id);
-                if (message.mappingId != null && message.hasOwnProperty("mappingId"))
+                if (message.mappingId != null && Object.hasOwnProperty.call(message, "mappingId"))
                     writer.uint32(/* id 2, wireType 0 =*/16).uint64(message.mappingId);
-                if (message.address != null && message.hasOwnProperty("address"))
+                if (message.address != null && Object.hasOwnProperty.call(message, "address"))
                     writer.uint32(/* id 3, wireType 0 =*/24).uint64(message.address);
                 if (message.line != null && message.line.length)
                     for (var i = 0; i < message.line.length; ++i)
@@ -2207,20 +2321,24 @@ $root.perftools = (function() {
                 while (reader.pos < end) {
                     var tag = reader.uint32();
                     switch (tag >>> 3) {
-                    case 1:
-                        message.id = reader.uint64();
-                        break;
-                    case 2:
-                        message.mappingId = reader.uint64();
-                        break;
-                    case 3:
-                        message.address = reader.uint64();
-                        break;
-                    case 4:
-                        if (!(message.line && message.line.length))
-                            message.line = [];
-                        message.line.push($root.perftools.profiles.Line.decode(reader, reader.uint32()));
-                        break;
+                    case 1: {
+                            message.id = reader.uint64();
+                            break;
+                        }
+                    case 2: {
+                            message.mappingId = reader.uint64();
+                            break;
+                        }
+                    case 3: {
+                            message.address = reader.uint64();
+                            break;
+                        }
+                    case 4: {
+                            if (!(message.line && message.line.length))
+                                message.line = [];
+                            message.line.push($root.perftools.profiles.Line.decode(reader, reader.uint32()));
+                            break;
+                        }
                     default:
                         reader.skipType(tag & 7);
                         break;
@@ -2395,6 +2513,21 @@ $root.perftools = (function() {
                 return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
             };
 
+            /**
+             * Gets the default type url for Location
+             * @function getTypeUrl
+             * @memberof perftools.profiles.Location
+             * @static
+             * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+             * @returns {string} The default type url
+             */
+            Location.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+                if (typeUrlPrefix === undefined) {
+                    typeUrlPrefix = "type.googleapis.com";
+                }
+                return typeUrlPrefix + "/perftools.profiles.Location";
+            };
+
             return Location;
         })();
 
@@ -2404,14 +2537,15 @@ $root.perftools = (function() {
              * Properties of a Line.
              * @memberof perftools.profiles
              * @interface ILine
-             * @property {number|Long} [functionId] Line functionId
-             * @property {number|Long} [line] Line line
+             * @property {number|Long|null} [functionId] Line functionId
+             * @property {number|Long|null} [line] Line line
              */
 
             /**
              * Constructs a new Line.
              * @memberof perftools.profiles
              * @classdesc Represents a Line.
+             * @implements ILine
              * @constructor
              * @param {perftools.profiles.ILine=} [properties] Properties to set
              */
@@ -2424,7 +2558,7 @@ $root.perftools = (function() {
 
             /**
              * Line functionId.
-             * @member {number|Long}functionId
+             * @member {number|Long} functionId
              * @memberof perftools.profiles.Line
              * @instance
              */
@@ -2432,7 +2566,7 @@ $root.perftools = (function() {
 
             /**
              * Line line.
-             * @member {number|Long}line
+             * @member {number|Long} line
              * @memberof perftools.profiles.Line
              * @instance
              */
@@ -2462,9 +2596,9 @@ $root.perftools = (function() {
             Line.encode = function encode(message, writer) {
                 if (!writer)
                     writer = $Writer.create();
-                if (message.functionId != null && message.hasOwnProperty("functionId"))
+                if (message.functionId != null && Object.hasOwnProperty.call(message, "functionId"))
                     writer.uint32(/* id 1, wireType 0 =*/8).uint64(message.functionId);
-                if (message.line != null && message.hasOwnProperty("line"))
+                if (message.line != null && Object.hasOwnProperty.call(message, "line"))
                     writer.uint32(/* id 2, wireType 0 =*/16).int64(message.line);
                 return writer;
             };
@@ -2500,12 +2634,14 @@ $root.perftools = (function() {
                 while (reader.pos < end) {
                     var tag = reader.uint32();
                     switch (tag >>> 3) {
-                    case 1:
-                        message.functionId = reader.uint64();
-                        break;
-                    case 2:
-                        message.line = reader.int64();
-                        break;
+                    case 1: {
+                            message.functionId = reader.uint64();
+                            break;
+                        }
+                    case 2: {
+                            message.line = reader.int64();
+                            break;
+                        }
                     default:
                         reader.skipType(tag & 7);
                         break;
@@ -2632,6 +2768,21 @@ $root.perftools = (function() {
                 return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
             };
 
+            /**
+             * Gets the default type url for Line
+             * @function getTypeUrl
+             * @memberof perftools.profiles.Line
+             * @static
+             * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+             * @returns {string} The default type url
+             */
+            Line.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+                if (typeUrlPrefix === undefined) {
+                    typeUrlPrefix = "type.googleapis.com";
+                }
+                return typeUrlPrefix + "/perftools.profiles.Line";
+            };
+
             return Line;
         })();
 
@@ -2641,17 +2792,18 @@ $root.perftools = (function() {
              * Properties of a Function.
              * @memberof perftools.profiles
              * @interface IFunction
-             * @property {number|Long} [id] Function id
-             * @property {number|Long} [name] Function name
-             * @property {number|Long} [systemName] Function systemName
-             * @property {number|Long} [filename] Function filename
-             * @property {number|Long} [startLine] Function startLine
+             * @property {number|Long|null} [id] Function id
+             * @property {number|Long|null} [name] Function name
+             * @property {number|Long|null} [systemName] Function systemName
+             * @property {number|Long|null} [filename] Function filename
+             * @property {number|Long|null} [startLine] Function startLine
              */
 
             /**
              * Constructs a new Function.
              * @memberof perftools.profiles
              * @classdesc Represents a Function.
+             * @implements IFunction
              * @constructor
              * @param {perftools.profiles.IFunction=} [properties] Properties to set
              */
@@ -2664,7 +2816,7 @@ $root.perftools = (function() {
 
             /**
              * Function id.
-             * @member {number|Long}id
+             * @member {number|Long} id
              * @memberof perftools.profiles.Function
              * @instance
              */
@@ -2672,7 +2824,7 @@ $root.perftools = (function() {
 
             /**
              * Function name.
-             * @member {number|Long}name
+             * @member {number|Long} name
              * @memberof perftools.profiles.Function
              * @instance
              */
@@ -2680,7 +2832,7 @@ $root.perftools = (function() {
 
             /**
              * Function systemName.
-             * @member {number|Long}systemName
+             * @member {number|Long} systemName
              * @memberof perftools.profiles.Function
              * @instance
              */
@@ -2688,7 +2840,7 @@ $root.perftools = (function() {
 
             /**
              * Function filename.
-             * @member {number|Long}filename
+             * @member {number|Long} filename
              * @memberof perftools.profiles.Function
              * @instance
              */
@@ -2696,7 +2848,7 @@ $root.perftools = (function() {
 
             /**
              * Function startLine.
-             * @member {number|Long}startLine
+             * @member {number|Long} startLine
              * @memberof perftools.profiles.Function
              * @instance
              */
@@ -2726,15 +2878,15 @@ $root.perftools = (function() {
             Function.encode = function encode(message, writer) {
                 if (!writer)
                     writer = $Writer.create();
-                if (message.id != null && message.hasOwnProperty("id"))
+                if (message.id != null && Object.hasOwnProperty.call(message, "id"))
                     writer.uint32(/* id 1, wireType 0 =*/8).uint64(message.id);
-                if (message.name != null && message.hasOwnProperty("name"))
+                if (message.name != null && Object.hasOwnProperty.call(message, "name"))
                     writer.uint32(/* id 2, wireType 0 =*/16).int64(message.name);
-                if (message.systemName != null && message.hasOwnProperty("systemName"))
+                if (message.systemName != null && Object.hasOwnProperty.call(message, "systemName"))
                     writer.uint32(/* id 3, wireType 0 =*/24).int64(message.systemName);
-                if (message.filename != null && message.hasOwnProperty("filename"))
+                if (message.filename != null && Object.hasOwnProperty.call(message, "filename"))
                     writer.uint32(/* id 4, wireType 0 =*/32).int64(message.filename);
-                if (message.startLine != null && message.hasOwnProperty("startLine"))
+                if (message.startLine != null && Object.hasOwnProperty.call(message, "startLine"))
                     writer.uint32(/* id 5, wireType 0 =*/40).int64(message.startLine);
                 return writer;
             };
@@ -2770,21 +2922,26 @@ $root.perftools = (function() {
                 while (reader.pos < end) {
                     var tag = reader.uint32();
                     switch (tag >>> 3) {
-                    case 1:
-                        message.id = reader.uint64();
-                        break;
-                    case 2:
-                        message.name = reader.int64();
-                        break;
-                    case 3:
-                        message.systemName = reader.int64();
-                        break;
-                    case 4:
-                        message.filename = reader.int64();
-                        break;
-                    case 5:
-                        message.startLine = reader.int64();
-                        break;
+                    case 1: {
+                            message.id = reader.uint64();
+                            break;
+                        }
+                    case 2: {
+                            message.name = reader.int64();
+                            break;
+                        }
+                    case 3: {
+                            message.systemName = reader.int64();
+                            break;
+                        }
+                    case 4: {
+                            message.filename = reader.int64();
+                            break;
+                        }
+                    case 5: {
+                            message.startLine = reader.int64();
+                            break;
+                        }
                     default:
                         reader.skipType(tag & 7);
                         break;
@@ -2975,6 +3132,21 @@ $root.perftools = (function() {
              */
             Function.prototype.toJSON = function toJSON() {
                 return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+            };
+
+            /**
+             * Gets the default type url for Function
+             * @function getTypeUrl
+             * @memberof perftools.profiles.Function
+             * @static
+             * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+             * @returns {string} The default type url
+             */
+            Function.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+                if (typeUrlPrefix === undefined) {
+                    typeUrlPrefix = "type.googleapis.com";
+                }
+                return typeUrlPrefix + "/perftools.profiles.Function";
             };
 
             return Function;

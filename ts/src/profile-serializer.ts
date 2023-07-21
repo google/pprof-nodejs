@@ -326,22 +326,23 @@ export function serializeHeapProfile(
   ignoreSamplesPath?: string,
   sourceMapper?: SourceMapper
 ): perftools.profiles.IProfile {
-  const appendHeapEntryToSamples: AppendEntryToSamples<AllocationProfileNode> =
-    (
-      entry: Entry<AllocationProfileNode>,
-      samples: perftools.profiles.Sample[]
-    ) => {
-      if (entry.node.allocations.length > 0) {
-        for (const alloc of entry.node.allocations) {
-          const sample = new perftools.profiles.Sample({
-            locationId: entry.stack,
-            value: [alloc.count, alloc.sizeBytes * alloc.count],
-            // TODO: add tag for allocation size
-          });
-          samples.push(sample);
-        }
+  const appendHeapEntryToSamples: AppendEntryToSamples<
+    AllocationProfileNode
+  > = (
+    entry: Entry<AllocationProfileNode>,
+    samples: perftools.profiles.Sample[]
+  ) => {
+    if (entry.node.allocations.length > 0) {
+      for (const alloc of entry.node.allocations) {
+        const sample = new perftools.profiles.Sample({
+          locationId: entry.stack,
+          value: [alloc.count, alloc.sizeBytes * alloc.count],
+          // TODO: add tag for allocation size
+        });
+        samples.push(sample);
       }
-    };
+    }
+  };
 
   const stringTable = new StringTable();
   const sampleValueType = createObjectCountValueType(stringTable);

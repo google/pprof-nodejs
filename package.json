@@ -36,7 +36,7 @@
     "@mapbox/node-pre-gyp": "^1.0.0",
     "p-limit": "^3.0.0",
     "pify": "^5.0.0",
-    "protobufjs": "~6.11.0",
+    "protobufjs": "~7.2.4",
     "source-map": "^0.7.3",
     "split": "^1.0.1"
   },
@@ -56,7 +56,8 @@
     "linkinator": "^2.0.0",
     "mocha": "^8.0.0",
     "nyc": "^15.0.0",
-    "sinon": "^11.1.0",
+    "protobufjs-cli": "1.1.1",
+    "sinon": "^15.0.0",
     "source-map-support": "^0.5.12",
     "tmp": "0.2.1",
     "ts-mockito": "^2.2.5",

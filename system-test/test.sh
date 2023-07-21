@@ -23,6 +23,8 @@ cd $(dirname $0)/..
 
 NODEDIR=$(dirname $(dirname $(which node)))
 
+retry npm_install -g npm@^6
+
 # TODO: Remove when a new version of nan (current version 2.12.1) is released.
 # For v8-canary tests, we need to use the version of NAN on github, which
 # contains unreleased fixes that allow the native component to be compiled
@@ -50,7 +52,7 @@ TESTDIR=$(mktemp -d)
 cp -r "$BENCHDIR" "$TESTDIR/busybench"
 cd "$TESTDIR/busybench"
 
-retry npm_install pify @types/pify typescript gts @types/node >/dev/null
+retry npm_install pify@^5.0.0 @types/pify@^5.0.0 typescript@~4.3.0 gts @types/node >/dev/null
 retry npm_install --nodedir="$NODEDIR" \
     $([ -z "$BINARY_HOST" ] && echo "--build-from-source=pprof" \
         || echo "--pprof_binary_host_mirror=$BINARY_HOST")\
