@@ -4,7 +4,7 @@ WORKDIR /root/
 RUN go get github.com/google/pprof
 
 
-FROM node:16-alpine
+FROM node:16-alpine3.17
 
 ARG ADDITIONAL_PACKAGES
 
