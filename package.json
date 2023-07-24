@@ -1,6 +1,6 @@
 {
   "name": "pprof",
-  "version": "3.2.0",
+  "version": "3.2.1",
   "description": "pprof support for Node.js",
   "repository": "google/pprof-nodejs",
   "main": "out/src/index.js",
