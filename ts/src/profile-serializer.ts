@@ -272,10 +272,7 @@ export function serializeTimeProfile(
     if (totalHitCount > 0) {
       intervalMicros = Math.min(
         Math.max(
-          Math.floor(
-            (prof.endTime - prof.startTime) /
-              computeTotalHitCount(prof.topDownRoot)
-          ),
+          Math.floor((prof.endTime - prof.startTime) / totalHitCount),
           intervalMicros
         ),
         2 * intervalMicros

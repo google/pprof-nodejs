@@ -4,14 +4,11 @@ import {promisify} from 'util';
 
 const exec = promisify(execFile);
 
-const assert = require('assert');
-
 describe('Worker Threads', () => {
   // eslint-ignore-next-line prefer-array-callback
   it('should work when propagated to workers through -r flag', function () {
-    this.timeout(5000);
-    return exec('node', ['./out/test/worker.js']).then(({stdout}) => {
-      assert.strictEqual(stdout, 'it works!\nit works!\nit works!\n');
-    });
+    this.timeout(10000);
+    const nbWorkers = 4;
+    return exec('node', ['./out/test/worker.js', String(nbWorkers)]);
   });
 });

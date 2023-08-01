@@ -7,12 +7,76 @@ const assert = require('assert');
 
 const {hasOwnProperty} = Object.prototype;
 
-if (isMainThread) {
-  new Worker(__filename).on('exit', () => {
-    // Run a second worker after the first one exited to test for proper
-    // cleanup after first worker. This used to segfault.
-    new Worker(__filename);
+const durationMillis = 300;
+const intervalMicros = 1000;
+const withContexts =
+  process.platform === 'darwin' || process.platform === 'linux';
+
+function createWorker(): Promise<void> {
+  return new Promise((resolve, reject) => {
+    new Worker(__filename)
+      .on('exit', exitCode => {
+        if (exitCode !== 0) reject();
+        setTimeout(() => {
+          // Run a second worker after the first one exited to test for proper
+          // cleanup after first worker. This used to segfault.
+          new Worker(__filename)
+            .on('exit', exitCode => {
+              if (exitCode !== 0) reject();
+              resolve();
+            })
+            .on('error', reject);
+        }, Math.floor(Math.random() * durationMillis));
+      })
+      .on('error', reject);
   });
+}
+
+async function executeWorkers(nbWorkers: number) {
+  return Promise.all(Array.from({length: nbWorkers}, createWorker));
+}
+
+async function main() {
+  time.start({
+    durationMillis: durationMillis * 3,
+    intervalMicros,
+    withContexts,
+  });
+
+  const nbWorkers = Number(process.argv[2] || 4);
+  // start workers
+  const workers = executeWorkers(nbWorkers);
+  // do some work
+  foo(durationMillis);
+  // wait for all workers to finish
+  await workers;
+  // restart and check profile
+  const profile = time.stop(true);
+  checkProfile(profile);
+  foo(durationMillis);
+
+  const profile2 = time.stop();
+  checkProfile(profile2);
+}
+
+function worker() {
+  const p = time.profile({
+    durationMillis,
+    intervalMicros,
+    withContexts,
+  });
+
+  foo(durationMillis);
+
+  p.then(profile => {
+    checkProfile(profile);
+  });
+}
+
+if (isMainThread) {
+  main();
+} else {
+  worker();
 }
 
 function valueName(profile: Profile, vt: ValueType) {
@@ -49,53 +113,52 @@ function getAndVerifyString(
   return str;
 }
 
-time
-  .profile({
-    durationMillis: 500,
-  })
-  .then(profile => {
-    assert.deepStrictEqual(sampleName(profile, profile.sampleType!), [
-      'sample/count',
-      'wall/nanoseconds',
-    ]);
-    assert.strictEqual(typeof profile.timeNanos, 'number');
-    assert.strictEqual(typeof profile.durationNanos, 'number');
-    assert.strictEqual(typeof profile.period, 'number');
-    assert.strictEqual(
-      valueName(profile, profile.periodType!),
-      'wall/nanoseconds'
-    );
+function checkProfile(profile: Profile) {
+  assert.deepStrictEqual(sampleName(profile, profile.sampleType!), [
+    'sample/count',
+    'wall/nanoseconds',
+  ]);
+  assert.strictEqual(typeof profile.timeNanos, 'number');
+  assert.strictEqual(typeof profile.durationNanos, 'number');
+  assert.strictEqual(typeof profile.period, 'number');
+  assert.strictEqual(
+    valueName(profile, profile.periodType!),
+    'wall/nanoseconds'
+  );
 
-    for (const sample of profile.sample!) {
-      assert.deepStrictEqual(sample.label, []);
+  assert.ok(profile.sample.length > 0, 'No samples');
 
-      for (const value of sample.value!) {
-        assert.strictEqual(typeof value, 'number');
-      }
+  for (const sample of profile.sample!) {
+    assert.deepStrictEqual(sample.label, []);
 
-      for (const locationId of sample.locationId!) {
-        const location = getAndVerifyPresence(
-          profile.location!,
-          locationId as number
-        );
-
-        for (const {functionId, line} of location.line!) {
-          const fn = getAndVerifyPresence(
-            profile.function!,
-            functionId as number
-          );
-
-          getAndVerifyString(profile.stringTable!, fn, 'name');
-          getAndVerifyString(profile.stringTable!, fn, 'systemName');
-          getAndVerifyString(profile.stringTable!, fn, 'filename');
-          assert.strictEqual(typeof line, 'number');
-        }
-      }
+    for (const value of sample.value!) {
+      assert.strictEqual(typeof value, 'number');
     }
 
-    console.log('it works!');
-  })
-  .catch(err => {
-    console.error(err.stack);
-    process.exitCode = 1;
-  });
+    for (const locationId of sample.locationId!) {
+      const location = getAndVerifyPresence(
+        profile.location!,
+        locationId as number
+      );
+
+      for (const {functionId, line} of location.line!) {
+        const fn = getAndVerifyPresence(
+          profile.function!,
+          functionId as number
+        );
+
+        getAndVerifyString(profile.stringTable!, fn, 'name');
+        getAndVerifyString(profile.stringTable!, fn, 'systemName');
+        getAndVerifyString(profile.stringTable!, fn, 'filename');
+        assert.strictEqual(typeof line, 'number');
+      }
+    }
+  }
+}
+
+function foo(ms: number) {
+  const now = Date.now();
+  while (Date.now() - now < ms) {
+    undefined;
+  }
+}

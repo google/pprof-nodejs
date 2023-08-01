@@ -107,6 +107,7 @@ class ProtectedProfilerMap {
 
     if (!init_) {
       profilers_.store(new ProfilerMap(), std::memory_order_release);
+      init_ = true;
     }
 
     auto currProfilers = profilers_.load(std::memory_order_acquire);
@@ -138,7 +139,6 @@ class ProtectedProfilerMap {
 using ProfilerMap = std::unordered_map<Isolate*, WallProfiler*>;
 
 static ProtectedProfilerMap g_profilers;
-static std::mutex g_profilers_update_mtx;
 
 namespace {
 
