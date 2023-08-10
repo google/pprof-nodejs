@@ -37,7 +37,7 @@ this module. Instructions for installing the `pprof` CLI can be found
 Install [`pprof`][npm-url] with `npm` or add to your `package.json`.
   ```sh
   # Install through npm while saving to the local 'package.json'
-  npm install --save pprof
+  npm install --save @datadog/pprof
   ```
 
 ## Using the Profiler
@@ -66,7 +66,7 @@ Install [`pprof`][npm-url] with `npm` or add to your `package.json`.
 
 1. Start program from the command line:
     ```sh
-    node --require pprof app.js
+    node --require @datadog/pprof app.js
     ```
 
 2. A wall time profile for the job will be saved in 
