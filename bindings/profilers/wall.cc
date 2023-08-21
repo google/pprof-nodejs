@@ -29,7 +29,7 @@
 #include "wall.hh"
 
 #ifndef _WIN32
-#define DD_WALL_USE_SIGPROF
+#define DD_WALL_USE_SIGPROF true
 
 // Declare v8::base::TimeTicks::Now. It is exported from the node executable so
 // our addon will be able to dynamically link to the symbol when loaded.
@@ -45,6 +45,7 @@ static int64_t Now() {
   return v8::base::TimeTicks::Now();
 };
 #else
+#define DD_WALL_USE_SIGPROF false
 static int64_t Now() {
   return 0;
 };
@@ -53,6 +54,47 @@ static int64_t Now() {
 using namespace v8;
 
 namespace dd {
+
+int getTotalHitCount(const v8::CpuProfileNode* node, bool* noHitLeaf) {
+  int count = node->GetHitCount();
+  auto child_count = node->GetChildrenCount();
+
+  for (int i = 0; i < child_count; ++i) {
+    count += getTotalHitCount(node->GetChild(i), noHitLeaf);
+  }
+  if (child_count == 0 && count == 0) {
+    *noHitLeaf = true;
+  }
+  return count;
+}
+
+/** Returns 0 if no bug detected, 1 if possible bug (it could be a false
+ * positive), 2 if bug detected for certain. */
+int detectV8Bug(const v8::CpuProfile* profile) {
+  /* When the profiler operates correctly, there'll be at least one node with
+   * a non-zero hitcount and the number of samples will be strictly greater than
+   * the number of hits because they'll contain at least the starting sample and
+   * potentially some deoptimization samples. If these conditions don't hold, it
+   * implies that v8::SamplingEventsProcessor::ProcessOneSample loop is stuck
+   * for ticks_buffer_ or vm_ticks_buffer_. */
+
+  bool noHitLeaf = false;
+  auto totalHitCount = getTotalHitCount(profile->GetTopDownRoot(), &noHitLeaf);
+  if (totalHitCount == 0) {
+    return 2;
+  }
+
+  if (profile->GetSamplesCount() == totalHitCount && !noHitLeaf) {
+    /*  Checking number of samples against number of hits potentially leads to
+     * false positive because some ticks samples can be discarded if their
+     * timestamp is older than profile start time because of queueing.
+     * Additionally check for leaf nodes with zero hitcount, if there is one,
+     * this implies that one non-tick sample was processed.
+     */
+    return 1;
+  }
+  return 0;
+}
 
 class ProtectedProfilerMap {
  public:
@@ -142,7 +184,7 @@ static ProtectedProfilerMap g_profilers;
 
 namespace {
 
-#ifdef DD_WALL_USE_SIGPROF
+#if DD_WALL_USE_SIGPROF
 class SignalHandler {
  public:
   static void IncreaseUseCount() {
@@ -222,8 +264,11 @@ void SignalHandler::HandleProfilerSignal(int sig,
     return;
   }
 
-  // Check if sampling is allowed
-  if (!prof->collectSampleAllowed()) {
+  auto mode = prof->collectionMode();
+  if (mode == WallProfiler::CollectionMode::kNoCollect) {
+    return;
+  } else if (mode == WallProfiler::CollectionMode::kPassThrough) {
+    old_handler(sig, info, context);
     return;
   }
 
@@ -323,13 +368,24 @@ ContextsByNode WallProfiler::GetContextsByNode(CpuProfile* profile,
 WallProfiler::WallProfiler(int samplingPeriodMicros,
                            int durationMicros,
                            bool includeLines,
-                           bool withContexts)
+                           bool withContexts,
+                           bool workaroundV8Bug)
     : samplingPeriodMicros_(samplingPeriodMicros),
       includeLines_(includeLines),
       withContexts_(withContexts) {
-  contexts_.reserve(durationMicros * 2 / samplingPeriodMicros);
+  // Try to workaround V8 bug where profiler event processor loop becomes stuck.
+  // When starting a new profile, wait for one signal before and one signal
+  // after to reduce the likelyhood that race condition occurs and one code
+  // event just after triggers the issue.
+  detectV8Bug_ = NODE_MODULE_VERSION >= NODE_16_0_MODULE_VERSION;
+  workaroundV8Bug_ = workaroundV8Bug && DD_WALL_USE_SIGPROF && detectV8Bug_;
+
+  if (withContexts_) {
+    contexts_.reserve(durationMicros * 2 / samplingPeriodMicros);
+  }
+
   curContext_.store(&context1_, std::memory_order_relaxed);
-  collectSamples_.store(false, std::memory_order_relaxed);
+  collectionMode_.store(CollectionMode::kNoCollect, std::memory_order_relaxed);
 
   auto isolate = v8::Isolate::GetCurrent();
   v8::Local<v8::ArrayBuffer> buffer =
@@ -360,7 +416,7 @@ void WallProfiler::Dispose(Isolate* isolate) {
 }
 
 NAN_METHOD(WallProfiler::New) {
-  if (info.Length() != 4) {
+  if (info.Length() != 5) {
     return Nan::ThrowTypeError("WallProfiler must have four arguments.");
   }
 
@@ -375,6 +431,9 @@ NAN_METHOD(WallProfiler::New) {
   }
   if (!info[3]->IsBoolean()) {
     return Nan::ThrowTypeError("withContext must be a boolean.");
+  }
+  if (!info[4]->IsBoolean()) {
+    return Nan::ThrowTypeError("workaroundV8bug must be a boolean.");
   }
 
   if (info.IsConstructCall()) {
@@ -393,12 +452,10 @@ NAN_METHOD(WallProfiler::New) {
 
     bool includeLines = info[2].As<v8::Boolean>()->Value();
     bool withContext = info[3].As<v8::Boolean>()->Value();
-
-#ifndef DD_WALL_USE_SIGPROF
-    if (withContext) {
+    bool workaroundV8bug = info[4].As<v8::Boolean>()->Value();
+    if (withContext && !DD_WALL_USE_SIGPROF) {
       return Nan::ThrowTypeError("Contexts are not supported.");
     }
-#endif
 
     if (includeLines && withContext) {
       // Currently custom contexts are not compatible with caller line
@@ -419,13 +476,14 @@ NAN_METHOD(WallProfiler::New) {
           "Include line option is not compatible with contexts.");
     }
 
-    WallProfiler* obj =
-        new WallProfiler(interval, duration, includeLines, withContext);
+    WallProfiler* obj = new WallProfiler(
+        interval, duration, includeLines, withContext, workaroundV8bug);
     obj->Wrap(info.This());
     info.GetReturnValue().Set(info.This());
   } else {
-    const int argc = 4;
-    v8::Local<v8::Value> argv[argc] = {info[0], info[1], info[2], info[3]};
+    const int argc = 5;
+    v8::Local<v8::Value> argv[argc] = {
+        info[0], info[1], info[2], info[3], info[4]};
     v8::Local<v8::Function> cons = Nan::New(
         PerIsolateData::For(info.GetIsolate())->WallProfilerConstructor());
     info.GetReturnValue().Set(
@@ -460,25 +518,54 @@ Result WallProfiler::StartImpl() {
 
   profileId_ = StartInternal();
 
-  collectSamples_.store(true, std::memory_order_relaxed);
+  auto collectionMode = withContexts_
+                            ? CollectionMode::kCollectContexts
+                            : (workaroundV8Bug_ ? CollectionMode::kPassThrough
+                                                : CollectionMode::kNoCollect);
+  collectionMode_.store(collectionMode, std::memory_order_relaxed);
   started_ = true;
   return {};
 }
 
 std::string WallProfiler::StartInternal() {
+  // Reuse the same names for the profiles because strings used for profile
+  // names are not released until v8::CpuProfiler object is destroyed.
+  // https://github.com/nodejs/node/blob/b53c51995380b1f8d642297d848cab6010d2909c/deps/v8/src/profiler/profile-generator.h#L516
   char buf[128];
-  snprintf(buf, sizeof(buf), "pprof-%" PRId64, profileIdx_++);
+  snprintf(buf, sizeof(buf), "pprof-%" PRId64, (profileIdx_++) % 2);
   v8::Local<v8::String> title = Nan::New<String>(buf).ToLocalChecked();
-  cpuProfiler_->StartProfiling(title,
-                               includeLines_
-                                   ? CpuProfilingMode::kCallerLineNumbers
-                                   : CpuProfilingMode::kLeafNodeLineNumbers,
-                               withContexts_);
+  cpuProfiler_->StartProfiling(
+      title,
+      includeLines_ ? CpuProfilingMode::kCallerLineNumbers
+                    : CpuProfilingMode::kLeafNodeLineNumbers,
+      // Always record samples in order to be able to check if non tick samples
+      // (ie. starting or deopt samples) have been processed, and therefore if
+      // SamplingEventsProcessor::ProcessOneSample is stuck on vm_ticks_buffer_.
+      withContexts_ || detectV8Bug_);
 
   // reinstall sighandler on each new upload period
-  if (withContexts_) {
+  if (withContexts_ || workaroundV8Bug_) {
     SignalHandler::IncreaseUseCount();
     fields_[kSampleCount] = 0;
+  }
+
+  // Force collection of two other non-tick samples (ie. that will not add to
+  // hitcount).
+  // This is to be able to detect when v8 profiler event processor loop is
+  // stuck on ticks_from_vm_buffer_.
+  // A non-tick sample is already taken upon profiling start, and should be
+  // enough to determine if a non-tick sample has been processed at the end by
+  // comparing number of samples with total hitcount.
+  // The first tick sample might be discarded though if its timestamp is older
+  // than profile start time due to queueing and in that case it is still added
+  // to hitcount but not to the sample array, leading to incorrectly detect
+  // that ticks_from_vm_buffer_ is stuck.
+  // This is not needed when workaroundV8Bug_ is enabled because in that case,
+  // we wait for one signal before starting a new profile which should leave
+  // time to process in-flight tick samples.
+  if (detectV8Bug_ && !workaroundV8Bug_) {
+    cpuProfiler_->CollectSample(v8::Isolate::GetCurrent());
+    cpuProfiler_->CollectSample(v8::Isolate::GetCurrent());
   }
 
   return buf;
@@ -510,14 +597,47 @@ NAN_METHOD(WallProfiler::Stop) {
   info.GetReturnValue().Set(profile);
 }
 
+bool WallProfiler::waitForSignal(uint64_t targetCallCount) {
+  auto currentCallCount = noCollectCallCount_.load(std::memory_order_relaxed);
+  std::atomic_signal_fence(std::memory_order_acquire);
+  if (targetCallCount != 0) {
+    // check if target call count already reached
+    if (currentCallCount >= targetCallCount) {
+      return true;
+    }
+  } else {
+    // no target call count in input, wait for the next signal
+    targetCallCount = currentCallCount + 1;
+  }
+#if DD_WALL_USE_SIGPROF
+  const int maxRetries = 2;
+  // wait for a maximum of 2 sample period
+  // if a signal occurs it will interrupt sleep (we use nanosleep and not
+  // uv_sleep because we want this behaviour)
+  timespec ts = {0, samplingPeriodMicros_ * maxRetries * 1000};
+  nanosleep(&ts, nullptr);
+#endif
+  auto res =
+      noCollectCallCount_.load(std::memory_order_relaxed) >= targetCallCount;
+  std::atomic_signal_fence(std::memory_order_release);
+  return res;
+}
+
 Result WallProfiler::StopImpl(bool restart, v8::Local<v8::Value>& profile) {
   if (!started_) {
     return Result{"Stop called on not started profiler."};
   }
 
+  uint64_t callCount = 0;
   auto oldProfileId = profileId_;
-  if (withContexts_) {
-    collectSamples_.store(false, std::memory_order_relaxed);
+  if (restart && workaroundV8Bug_) {
+    collectionMode_.store(CollectionMode::kNoCollect,
+                          std::memory_order_relaxed);
+    std::atomic_signal_fence(std::memory_order_release);
+    waitForSignal();
+  } else if (withContexts_) {
+    collectionMode_.store(CollectionMode::kNoCollect,
+                          std::memory_order_relaxed);
     std::atomic_signal_fence(std::memory_order_release);
 
     // make sure timestamp changes to avoid having samples from previous profile
@@ -528,11 +648,15 @@ Result WallProfiler::StopImpl(bool restart, v8::Local<v8::Value>& profile) {
 
   if (restart) {
     profileId_ = StartInternal();
+    // record callcount to wait for next signal at the end of function
+    callCount = noCollectCallCount_.load(std::memory_order_relaxed);
+    std::atomic_signal_fence(std::memory_order_acquire);
   }
 
-  if (withContexts_) {
+  if (withContexts_ || workaroundV8Bug_) {
     SignalHandler::DecreaseUseCount();
   }
+
   auto v8_profile = cpuProfiler_->StopProfiling(
       Nan::New<String>(oldProfileId).ToLocalChecked());
 
@@ -542,13 +666,20 @@ Result WallProfiler::StopImpl(bool restart, v8::Local<v8::Value>& profile) {
     std::swap(contexts, contexts_);
   }
 
-  if (restart && withContexts_) {
+  if (detectV8Bug_) {
+    v8ProfilerStuckEventLoopDetected_ = detectV8Bug(v8_profile);
+  }
+
+  if (restart && withContexts_ && !workaroundV8Bug_) {
     // make sure timestamp changes to avoid mixing sample taken upon start and a
     // sample from signal handler
+    // If v8 bug workaround is enabled, reactivation of sample collection is
+    // delayed until function end.
     auto now = Now();
     while (Now() == now) {
     }
-    collectSamples_.store(true, std::memory_order_relaxed);
+    collectionMode_.store(CollectionMode::kCollectContexts,
+                          std::memory_order_relaxed);
     std::atomic_signal_fence(std::memory_order_release);
   }
 
@@ -563,9 +694,15 @@ Result WallProfiler::StopImpl(bool restart, v8::Local<v8::Value>& profile) {
 
   if (!restart) {
     Dispose(v8::Isolate::GetCurrent());
+  } else if (workaroundV8Bug_) {
+    waitForSignal(callCount + 1);
+    collectionMode_.store(withContexts_ ? CollectionMode::kCollectContexts
+                                        : CollectionMode::kPassThrough,
+                          std::memory_order_relaxed);
+    std::atomic_signal_fence(std::memory_order_release);
   }
-  started_ = restart;
 
+  started_ = restart;
   return {};
 }
 
@@ -574,7 +711,7 @@ Result WallProfiler::StopImplOld(bool restart, v8::Local<v8::Value>& profile) {
     return Result{"Stop called on not started profiler."};
   }
 
-  if (withContexts_) {
+  if (withContexts_ || workaroundV8Bug_) {
     SignalHandler::DecreaseUseCount();
   }
   auto v8_profile = cpuProfiler_->StopProfiling(
@@ -583,7 +720,6 @@ Result WallProfiler::StopImplOld(bool restart, v8::Local<v8::Value>& profile) {
   if (withContexts_) {
     auto contextsByNode = GetContextsByNode(v8_profile, contexts_);
     profile = TranslateTimeProfile(v8_profile, includeLines_, &contextsByNode);
-
   } else {
     profile = TranslateTimeProfile(v8_profile, includeLines_);
   }
@@ -614,6 +750,10 @@ NAN_MODULE_INIT(WallProfiler::Init) {
 
   Nan::SetPrototypeMethod(tpl, "start", Start);
   Nan::SetPrototypeMethod(tpl, "stop", Stop);
+  Nan::SetPrototypeMethod(tpl,
+                          "v8ProfilerStuckEventLoopDetected",
+                          V8ProfilerStuckEventLoopDetected);
+
   Nan::SetAccessor(tpl->InstanceTemplate(),
                    Nan::New("state").ToLocalChecked(),
                    SharedArrayGetter);
@@ -697,6 +837,11 @@ NAN_SETTER(WallProfiler::SetContext) {
 NAN_GETTER(WallProfiler::SharedArrayGetter) {
   auto profiler = Nan::ObjectWrap::Unwrap<WallProfiler>(info.Holder());
   info.GetReturnValue().Set(profiler->jsArray_.Get(v8::Isolate::GetCurrent()));
+}
+
+NAN_METHOD(WallProfiler::V8ProfilerStuckEventLoopDetected) {
+  auto profiler = Nan::ObjectWrap::Unwrap<WallProfiler>(info.Holder());
+  info.GetReturnValue().Set(profiler->v8ProfilerStuckEventLoopDetected());
 }
 
 void WallProfiler::PushContext(int64_t time_from, int64_t time_to) {

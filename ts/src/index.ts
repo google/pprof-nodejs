@@ -35,6 +35,8 @@ export const time = {
   stop: timeProfiler.stop,
   setContext: timeProfiler.setContext,
   isStarted: timeProfiler.isStarted,
+  v8ProfilerStuckEventLoopDetected:
+    timeProfiler.v8ProfilerStuckEventLoopDetected,
   getState: timeProfiler.getState,
   constants: timeProfiler.constants,
 };

@@ -36,6 +36,9 @@ struct Result {
 };
 
 class WallProfiler : public Nan::ObjectWrap {
+ public:
+  enum class CollectionMode { kNoCollect, kPassThrough, kCollectContexts };
+
  private:
   enum Fields { kSampleCount, kFieldCount };
 
@@ -52,12 +55,17 @@ class WallProfiler : public Nan::ObjectWrap {
   ContextPtr context1_;
   ContextPtr context2_;
   std::atomic<ContextPtr*> curContext_;
-  std::atomic<bool> collectSamples_;
+
+  std::atomic<CollectionMode> collectionMode_;
+  std::atomic<uint64_t> noCollectCallCount_;
   std::string profileId_;
-  int64_t profileIdx_ = 0;
+  uint64_t profileIdx_ = 0;
   bool includeLines_ = false;
   bool withContexts_ = false;
   bool started_ = false;
+  bool workaroundV8Bug_;
+  bool detectV8Bug_;
+  int v8ProfilerStuckEventLoopDetected_ = 0;
 
   uint32_t* fields_;
   v8::Global<v8::Uint32Array> jsArray_;
@@ -81,6 +89,8 @@ class WallProfiler : public Nan::ObjectWrap {
   ContextsByNode GetContextsByNode(v8::CpuProfile* profile,
                                    ContextBuffer& contexts);
 
+  bool waitForSignal(uint64_t targetCallCount = 0);
+
  public:
   /**
    * @param samplingPeriodMicros sampling interval, in microseconds
@@ -92,7 +102,8 @@ class WallProfiler : public Nan::ObjectWrap {
   explicit WallProfiler(int samplingPeriodMicros,
                         int durationMicros,
                         bool includeLines,
-                        bool withContexts);
+                        bool withContexts,
+                        bool workaroundV8bug);
 
   v8::Local<v8::Value> GetContext(v8::Isolate*);
   void SetContext(v8::Isolate*, v8::Local<v8::Value>);
@@ -102,15 +113,23 @@ class WallProfiler : public Nan::ObjectWrap {
   Result StopImpl(bool restart, v8::Local<v8::Value>& profile);
   Result StopImplOld(bool restart, v8::Local<v8::Value>& profile);
 
-  bool collectSampleAllowed() const {
-    bool res = collectSamples_.load(std::memory_order_relaxed);
+  CollectionMode collectionMode() {
+    auto res = collectionMode_.load(std::memory_order_relaxed);
+    if (res == CollectionMode::kNoCollect) {
+      noCollectCallCount_.fetch_add(1, std::memory_order_relaxed);
+    }
     std::atomic_signal_fence(std::memory_order_acquire);
     return res;
+  }
+
+  int v8ProfilerStuckEventLoopDetected() const {
+    return v8ProfilerStuckEventLoopDetected_;
   }
 
   static NAN_METHOD(New);
   static NAN_METHOD(Start);
   static NAN_METHOD(Stop);
+  static NAN_METHOD(V8ProfilerStuckEventLoopDetected);
   static NAN_MODULE_INIT(Init);
   static NAN_GETTER(GetContext);
   static NAN_SETTER(SetContext);

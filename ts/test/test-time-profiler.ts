@@ -322,6 +322,7 @@ describe('Time Profiler', () => {
     const timeProfilerStub = {
       start: sinon.stub(),
       stop: sinon.stub().returns(v8TimeProfile),
+      v8ProfilerStuckEventLoopDetected: sinon.stub().returns(0),
     };
 
     before(() => {
@@ -357,6 +358,11 @@ describe('Time Profiler', () => {
       timeProfilerStub.stop.resetHistory();
 
       assert.deepEqual(timeProfile, time.stop(true));
+      assert.equal(
+        time.v8ProfilerStuckEventLoopDetected(),
+        0,
+        'v8 bug detected'
+      );
 
       sinon.assert.notCalled(timeProfilerStub.start);
       sinon.assert.calledOnce(timeProfilerStub.stop);
@@ -366,6 +372,48 @@ describe('Time Profiler', () => {
 
       assert.deepEqual(timeProfile, time.stop());
 
+      sinon.assert.notCalled(timeProfilerStub.start);
+      sinon.assert.calledOnce(timeProfilerStub.stop);
+    });
+  });
+
+  describe('v8BugWorkaround (w/ stubs)', () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const sinonStubs: Array<sinon.SinonStub<any, any>> = [];
+    const timeProfilerStub = {
+      start: sinon.stub(),
+      stop: sinon.stub().returns(v8TimeProfile),
+      v8ProfilerStuckEventLoopDetected: sinon.stub().returns(2),
+    };
+
+    before(() => {
+      sinonStubs.push(
+        sinon.stub(v8TimeProfiler, 'TimeProfiler').returns(timeProfilerStub)
+      );
+      sinonStubs.push(sinon.stub(Date, 'now').returns(0));
+    });
+
+    after(() => {
+      sinonStubs.forEach(stub => {
+        stub.restore();
+      });
+    });
+
+    it('should reset profiler when empty profile is returned and restart is requested', () => {
+      time.start(PROFILE_OPTIONS);
+      time.stop(true);
+      sinon.assert.calledTwice(timeProfilerStub.start);
+      sinon.assert.calledTwice(timeProfilerStub.stop);
+
+      assert.equal(
+        time.v8ProfilerStuckEventLoopDetected(),
+        2,
+        'v8 bug not detected'
+      );
+      timeProfilerStub.start.resetHistory();
+      timeProfilerStub.stop.resetHistory();
+
+      time.stop(false);
       sinon.assert.notCalled(timeProfilerStub.start);
       sinon.assert.calledOnce(timeProfilerStub.stop);
     });
