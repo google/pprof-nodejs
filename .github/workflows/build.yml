@@ -13,6 +13,7 @@ jobs:
       target-name: 'dd_pprof' # target name in binding.gyp
       package-manager: 'npm' # npm or yarn
       cache: true # enable caching of dependencies based on lockfile
+      min-node-version: 14
 
   dev_publish:
     needs: build

@@ -7,28 +7,22 @@
 [pprof][pprof-url] support for Node.js.
 
 ## Prerequisites
-1. Your application will need to be using Node.js 10.4.1 or greater, or any
-version of Node 12 or 14. 
-
-The profiler should not be enabled when using earlier versions of Node 10, 
-since versions of Node.js 10 prior to 10.4.1 are impacted by 
-[this](https://bugs.chromium.org/p/chromium/issues/detail?id=847863) issue, 
-which can cause garbage collection to take several minutes when heap profiling
-is enabled.
+1. Your application will need to be using Node.js 14 or greater.
 
 2. The `pprof` module has a native component that is used to collect profiles 
 with v8's CPU and Heap profilers. You may need to install additional
 dependencies to build this module.
-    * For Linux: `pprof` has prebuilt binaries available for Linux and Alpine
-    Linux for Node 10, 12 and 14. No additional dependencies are required.
-    * For other environments: when using `@google-cloud/profiler` on environments
-    that `pprof` does not have prebuilt binaries for, the module
+    * For Linux: `pprof` has prebuilt binaries available for Linux arm64/x64,
+    Alpine Linux x64, macOS arm64/x64, windows x64 for Node 14/16/18/20.
+    No additional dependencies are required.
+    * For other environments: on environments that `pprof` does not have
+    prebuilt binaries for, the module
     [`node-gyp`](https://www.npmjs.com/package/node-gyp) will be used to
     build binaries. See `node-gyp`'s
     [documentation](https://github.com/nodejs/node-gyp#installation)
     for information on dependencies required to build binaries with `node-gyp`.
 
-3. The [`pprof`][pprof-url] CLI can be used to view profiles collected with 
+3. The [`pprof`][pprof-url] CLI can be used to view profiles collected with
 this module. Instructions for installing the `pprof` CLI can be found
 [here][pprof-install-url].
 

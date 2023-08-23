@@ -480,13 +480,8 @@ NAN_METHOD(HeapProfiler::StartSamplingHeapProfiler) {
       return Nan::ThrowTypeError("First argument type must be Integer.");
     }
 
-#if NODE_MODULE_VERSION > NODE_8_0_MODULE_VERSION
     uint64_t sample_interval = info[0].As<v8::Integer>()->Value();
     int stack_depth = info[1].As<v8::Integer>()->Value();
-#else
-    uint64_t sample_interval = info[0].As<Integer>()->Uint32Value();
-    int stack_depth = info[1].As<Integer>()->IntegerValue();
-#endif
 
     info.GetIsolate()->GetHeapProfiler()->StartSamplingHeapProfiler(
         sample_interval, stack_depth);
