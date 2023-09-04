@@ -109,6 +109,7 @@ struct HeapProfilerState {
   Nan::Callback callback;
   uint32_t callbackMode = 0;
   bool callbackInstalled = false;
+  bool insideCallback = false;
 };
 
 std::shared_ptr<Node> TranslateAllocationProfileToCpp(
@@ -370,6 +371,21 @@ size_t NearHeapLimit(void* data,
                      size_t initial_heap_limit) {
   auto isolate = v8::Isolate::GetCurrent();
   auto state = PerIsolateData::For(isolate)->GetHeapProfilerState();
+
+  if (state->insideCallback) {
+    // Reentrant call detected, try to increase heap limit a bit so that
+    // previous callback can proceed
+    const uint32_t default_heap_extension_size = 10 * 1024 * 1024;
+    auto extension_size = state->heap_extension_size
+                              ? state->heap_extension_size
+                              : default_heap_extension_size;
+    return current_heap_limit + extension_size;
+  }
+  state->insideCallback = true;
+  defer {
+    state->insideCallback = false;
+  };
+
   ++state->current_heap_extension_count;
   fprintf(stderr,
           "NearHeapLimit(count=%d): current_heap_limit=%zu, "
