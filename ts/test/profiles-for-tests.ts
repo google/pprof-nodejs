@@ -1126,3 +1126,35 @@ export const timeSourceProfile = new Profile({
   periodType: new ValueType({type: 3, unit: 4}),
   period: 1000000,
 });
+
+export const labelEncodingProfile = {
+  startTime: 0,
+  endTime: 10 * 1000 * 1000,
+  topDownRoot: {
+    name: '(root)',
+    scriptName: '(root)',
+    scriptId: 10000,
+    lineNumber: 0,
+    columnNumber: 0,
+    hitCount: 0,
+    children: [
+      {
+        name: 'foo1',
+        scriptName: 'foo',
+        scriptId: 1,
+        lineNumber: 1,
+        columnNumber: 4,
+        hitCount: 1,
+        children: [],
+        contexts: [
+          {
+            someStr: 'foo',
+            someNum: 42,
+            someBigint: 18446744073709551557n,
+            ignored: {},
+          },
+        ],
+      },
+    ],
+  },
+};

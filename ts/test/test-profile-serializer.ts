@@ -21,12 +21,13 @@ import {
   serializeTimeProfile,
 } from '../src/profile-serializer';
 import {SourceMapper} from '../src/sourcemapper/sourcemapper';
-
+import {Label} from 'pprof-format';
 import {
   anonymousFunctionHeapProfile,
   anonymousFunctionTimeProfile,
   heapProfile,
   heapSourceProfile,
+  labelEncodingProfile,
   mapDirPath,
   timeProfile,
   timeSourceProfile,
@@ -61,6 +62,18 @@ describe('profile-serializer', () => {
         1000
       );
       assert.deepEqual(timeProfileOut, anonymousFunctionTimeProfile);
+    });
+  });
+
+  describe('label builder', () => {
+    it('should accept strings, numbers, and bigints', () => {
+      const profileOut = serializeTimeProfile(labelEncodingProfile, 1000);
+      const st = profileOut.stringTable;
+      assert.deepEqual(profileOut.sample[0].label, [
+        new Label({key: st.dedup('someStr'), str: st.dedup('foo')}),
+        new Label({key: st.dedup('someNum'), num: 42}),
+        new Label({key: st.dedup('someBigint'), num: 18446744073709551557n}),
+      ]);
     });
   });
 

@@ -17,6 +17,7 @@
 import {
   Function,
   Label,
+  LabelInput,
   Line,
   Location,
   Profile,
@@ -334,18 +335,21 @@ function buildLabels(labelSet: object, stringTable: StringTable): Label[] {
   const labels: Label[] = [];
 
   for (const [key, value] of Object.entries(labelSet)) {
-    if (typeof value === 'number' || typeof value === 'string') {
-      const label = new Label({
-        key: stringTable.dedup(key),
-        num: typeof value === 'number' ? value : undefined,
-        str:
-          typeof value === 'string'
-            ? stringTable.dedup(value as string)
-            : undefined,
-      });
-
-      labels.push(label);
+    const labelInput: LabelInput = {
+      key: stringTable.dedup(key),
+    };
+    switch (typeof value) {
+      case 'string':
+        labelInput.str = stringTable.dedup(value);
+        break;
+      case 'number':
+      case 'bigint':
+        labelInput.num = value;
+        break;
+      default:
+        continue;
     }
+    labels.push(new Label(labelInput));
   }
 
   return labels;
