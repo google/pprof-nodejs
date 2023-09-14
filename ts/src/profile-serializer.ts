@@ -37,6 +37,7 @@ import {
   ProfileNode,
   TimeProfile,
   TimeProfileNode,
+  TimeProfileNodeContext,
 } from './v8-types';
 
 /**
@@ -260,7 +261,7 @@ export function serializeTimeProfile(
   intervalMicros: number,
   sourceMapper?: SourceMapper,
   recomputeSamplingInterval = false,
-  generateLabels?: (context: object) => LabelSet
+  generateLabels?: (context: TimeProfileNodeContext) => LabelSet
 ): Profile {
   // If requested, recompute sampling interval from profile duration and total number of hits,
   // since profile duration should be #hits x interval.
@@ -287,7 +288,7 @@ export function serializeTimeProfile(
   ) => {
     let unlabelledHits = entry.node.hitCount;
     for (const context of entry.node.contexts || []) {
-      const labels = generateLabels ? generateLabels(context) : context;
+      const labels = generateLabels ? generateLabels(context) : context.context;
       if (Object.keys(labels).length > 0) {
         const sample = new Sample({
           locationId: entry.stack,

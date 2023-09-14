@@ -1148,10 +1148,12 @@ export const labelEncodingProfile = {
         children: [],
         contexts: [
           {
-            someStr: 'foo',
-            someNum: 42,
-            someBigint: 18446744073709551557n,
-            ignored: {},
+            context: {
+              someStr: 'foo',
+              someNum: 42,
+              someBigint: 18446744073709551557n,
+              ignored: {},
+            },
           },
         ],
       },

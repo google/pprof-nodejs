@@ -22,6 +22,7 @@ import {timeProfile, v8TimeProfile} from './profiles-for-tests';
 import {hrtime} from 'process';
 import {Label, Profile} from 'pprof-format';
 import {AssertionError} from 'assert';
+import {TimeProfileNodeContext} from '../src/v8-types';
 
 const assert = require('assert');
 
@@ -48,6 +49,7 @@ describe('Time Profiler', () => {
       if (process.platform !== 'darwin' && process.platform !== 'linux') {
         this.skip();
       }
+      const startTime = BigInt(Date.now()) * 1000n;
       time.start({
         intervalMicros: 20 * 1_000,
         durationMillis: PROFILE_OPTIONS.durationMillis,
@@ -70,8 +72,14 @@ describe('Time Profiler', () => {
       let checked = false;
       initialContext['aaa'] = 'bbb';
 
-      time.stop(false, (context: object) => {
-        assert.deepEqual(context, initialContext, 'Unexpected context');
+      let endTime = 0n;
+      time.stop(false, (context: TimeProfileNodeContext) => {
+        if (!endTime) {
+          endTime = BigInt(Date.now()) * 1000n;
+        }
+        assert.deepEqual(context.context, initialContext, 'Unexpected context');
+        assert.ok(context.timestamp >= startTime);
+        assert.ok(context.timestamp <= endTime);
         checked = true;
         return {};
       });
@@ -113,9 +121,9 @@ describe('Time Profiler', () => {
         );
       }
 
-      function generateLabels(context: object) {
+      function generateLabels(context: TimeProfileNodeContext) {
         const labels: time.LabelSet = {};
-        for (const [key, value] of Object.entries(context)) {
+        for (const [key, value] of Object.entries(context.context)) {
           if (typeof value === 'string') {
             labels[key] = value;
             if (

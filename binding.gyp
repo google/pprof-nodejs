@@ -48,5 +48,17 @@
                 ]
             }
         ]
-    ]
+    ],
+    "target_defaults": {
+        "conditions": [
+            [
+                'OS == "win"',
+                {
+                    "defines": [
+                        "NOMINMAX"
+                    ]
+                }
+            ]
+        ]
+    }
 }

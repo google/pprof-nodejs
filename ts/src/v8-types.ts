@@ -34,9 +34,14 @@ export interface ProfileNode {
   children: ProfileNode[];
 }
 
+export interface TimeProfileNodeContext {
+  context: object;
+  timestamp: bigint; // end of sample taking; in microseconds since epoch
+}
+
 export interface TimeProfileNode extends ProfileNode {
   hitCount: number;
-  contexts?: object[];
+  contexts?: TimeProfileNodeContext[];
 }
 
 export interface AllocationProfileNode extends ProfileNode {

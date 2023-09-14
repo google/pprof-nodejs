@@ -22,7 +22,7 @@ import {
   TimeProfiler,
   constants as profilerConstants,
 } from './time-profiler-bindings';
-import {LabelSet} from './v8-types';
+import {LabelSet, TimeProfileNodeContext} from './v8-types';
 
 const {kSampleCount} = profilerConstants;
 
@@ -109,7 +109,7 @@ export function start({
 
 export function stop(
   restart = false,
-  generateLabels?: (context: object) => LabelSet
+  generateLabels?: (context: TimeProfileNodeContext) => LabelSet
 ) {
   if (!gProfiler) {
     throw new Error('Wall profiler is not started');

@@ -16,6 +16,7 @@
 
 #include <cinttypes>
 #include <cstdint>
+#include <limits>
 #include <memory>
 #include <mutex>
 #include <vector>
@@ -54,6 +55,8 @@ static int64_t Now() {
 using namespace v8;
 
 namespace dd {
+// Maximum number of rounds in the GetV8ToEpochOffset
+static constexpr int MAX_EPOCH_OFFSET_ATTEMPTS = 20;
 
 int getTotalHitCount(const v8::CpuProfileNode* node, bool* noHitLeaf) {
   int count = node->GetHitCount();
@@ -286,6 +289,42 @@ class SignalHandler {
 #endif
 }  // namespace
 
+static_assert((-1L >> 1) == -1L, "Right shift is not arithmetic");
+
+static int64_t midpoint(int64_t x, int64_t y) {
+  // TODO: remove when we're on C++20 as it has a built-in midpoint
+  return ((x ^ y) >> 1) + (x & y);
+}
+
+static int64_t GetV8ToEpochOffset() {
+  using namespace std::chrono;
+  // Make a best effort to capture the difference between UNIX epoch and the V8
+  // profiling timer as precisely as possible. Will make at most 20 attempts to
+  // capture the epoch time within the same V8 microsecond and use the one with
+  // the smallest error. We repeat this every time we gather a profile (so,
+  // every minute) instead of once statically, as the difference doesn't
+  // necessarily remain constant depending on the characteristics of the clocks
+  // being used.
+  int64_t V8toEpochOffset;
+  int64_t smallestDiff = std::numeric_limits<int64_t>::max();
+  for (int i = 0; i < MAX_EPOCH_OFFSET_ATTEMPTS; ++i) {
+    auto v8Now = Now();
+    auto epochNow =
+        duration_cast<microseconds>(system_clock::now().time_since_epoch())
+            .count();
+    auto v8Now2 = Now();
+    auto diff = v8Now2 - v8Now;
+    if (diff < smallestDiff) {
+      V8toEpochOffset = epochNow - midpoint(v8Now, v8Now2);
+      if (diff == 0) {
+        break;
+      }
+      smallestDiff = diff;
+    }
+  }
+  return V8toEpochOffset;
+}
+
 ContextsByNode WallProfiler::GetContextsByNode(CpuProfile* profile,
                                                ContextBuffer& contexts) {
   ContextsByNode contextsByNode;
@@ -301,6 +340,10 @@ ContextsByNode WallProfiler::GetContextsByNode(CpuProfile* profile,
   // deltaIdx is the offset of the sample to process compared to current
   // iteration index
   int deltaIdx = 0;
+
+  auto contextKey = Nan::New<v8::String>("context").ToLocalChecked();
+  auto timestampKey = Nan::New<v8::String>("timestamp").ToLocalChecked();
+  auto V8toEpochOffset = GetV8ToEpochOffset();
 
   // skip first sample because it's the one taken on profiler start, outside of
   // signal handler
@@ -350,9 +393,16 @@ ContextsByNode WallProfiler::GetContextsByNode(CpuProfile* profile,
           ++it->second.hitcount;
         }
         if (sampleContext.context) {
-          Nan::Set(array,
-                   array->Length(),
+          // Conforms to TimeProfileNodeContext defined in v8-types.ts
+          v8::Local<v8::Object> timedContext = Nan::New<v8::Object>();
+          Nan::Set(timedContext,
+                   contextKey,
                    sampleContext.context.get()->Get(isolate));
+          Nan::Set(
+              timedContext,
+              timestampKey,
+              BigInt::New(isolate, sampleContext.time_to + V8toEpochOffset));
+          Nan::Set(array, array->Length(), timedContext);
         }
 
         // Sample context was consumed, fetch the next one
