@@ -147,35 +147,21 @@ function serialize<T extends ProfileNode>(
     }
     id = locations.length + 1;
     locationIdMap.set(keyStr, id);
-    const line = getLine(
-      node.scriptId,
-      profLoc.file,
-      profLoc.name,
-      profLoc.line
-    );
+    const line = getLine(profLoc, node.scriptId);
     const location = new Location({id, line: [line]});
     locations.push(location);
     return location;
   }
 
-  function getLine(
-    scriptId?: number,
-    scriptName?: string,
-    name?: string,
-    line?: number
-  ): Line {
+  function getLine(loc: SourceLocation, scriptId?: number): Line {
     return new Line({
-      functionId: getFunction(scriptId, scriptName, name).id,
-      line,
+      functionId: getFunction(loc, scriptId).id,
+      line: loc.line,
     });
   }
 
-  function getFunction(
-    scriptId?: number,
-    scriptName?: string,
-    name?: string
-  ): Function {
-    const keyStr = `${scriptId}:${name}`;
+  function getFunction(loc: SourceLocation, scriptId?: number): Function {
+    const keyStr = `${scriptId}:${loc.name}`;
     let id = functionIdMap.get(keyStr);
     if (id !== undefined) {
       // id is index+1, since 0 is not valid id.
@@ -183,12 +169,24 @@ function serialize<T extends ProfileNode>(
     }
     id = functions.length + 1;
     functionIdMap.set(keyStr, id);
-    const nameId = stringTable.dedup(name || '(anonymous)');
+    let name = loc.name;
+    if (!name) {
+      if (loc.line) {
+        if (loc.column) {
+          name = `(anonymous@L${loc.line}:C${loc.column})`;
+        } else {
+          name = `(anonymous@L${loc.line})`;
+        }
+      } else {
+        name = '(anonymous)';
+      }
+    }
+    const nameId = stringTable.dedup(name);
     const f = new Function({
       id,
       name: nameId,
       systemName: nameId,
-      filename: stringTable.dedup(scriptName || ''),
+      filename: stringTable.dedup(loc.file || ''),
     });
     functions.push(f);
     return f;
