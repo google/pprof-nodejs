@@ -161,7 +161,10 @@ function serialize<T extends ProfileNode>(
   }
 
   function getFunction(loc: SourceLocation, scriptId?: number): Function {
-    const keyStr = `${scriptId}:${loc.name}`;
+    let name = loc.name;
+    const keyStr = name
+      ? `${scriptId}:${name}`
+      : `${scriptId}:${loc.line}:${loc.column}`;
     let id = functionIdMap.get(keyStr);
     if (id !== undefined) {
       // id is index+1, since 0 is not valid id.
@@ -169,13 +172,12 @@ function serialize<T extends ProfileNode>(
     }
     id = functions.length + 1;
     functionIdMap.set(keyStr, id);
-    let name = loc.name;
     if (!name) {
       if (loc.line) {
         if (loc.column) {
-          name = `(anonymous@L${loc.line}:C${loc.column})`;
+          name = `(anonymous:L#${loc.line}:C#${loc.column})`;
         } else {
-          name = `(anonymous@L${loc.line})`;
+          name = `(anonymous:L#${loc.line})`;
         }
       } else {
         name = '(anonymous)';
