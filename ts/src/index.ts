@@ -28,6 +28,7 @@ export {
 export {encode, encodeSync} from './profile-encoder';
 export {SourceMapper} from './sourcemapper/sourcemapper';
 export {setLogger} from './logger';
+export {getNativeThreadId} from './time-profiler';
 
 export const time = {
   profile: timeProfiler.profile,

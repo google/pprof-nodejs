@@ -20,6 +20,7 @@ import {serializeTimeProfile} from './profile-serializer';
 import {SourceMapper} from './sourcemapper/sourcemapper';
 import {
   TimeProfiler,
+  getNativeThreadId,
   constants as profilerConstants,
 } from './time-profiler-bindings';
 import {LabelSet, TimeProfileNodeContext} from './v8-types';
@@ -169,3 +170,4 @@ export function v8ProfilerStuckEventLoopDetected() {
 
 export const constants = {kSampleCount};
 export {LabelSet};
+export {getNativeThreadId};

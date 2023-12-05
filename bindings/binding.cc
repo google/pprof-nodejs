@@ -21,7 +21,25 @@
 #include "profilers/heap.hh"
 #include "profilers/wall.hh"
 
+#ifdef __linux__
+#include <sys/syscall.h>
+#include <unistd.h>
+#endif
+
+static NAN_METHOD(GetNativeThreadId) {
+#ifdef __APPLE__
+  uint64_t native_id;
+  (void)pthread_threadid_np(NULL, &native_id);
+#elif defined(__linux__)
+  pid_t native_id = syscall(SYS_gettid);
+#elif defined(_MSC_VER)
+  DWORD native_id = GetCurrentThreadId();
+#endif
+  info.GetReturnValue().Set(v8::Integer::New(info.GetIsolate(), native_id));
+}
+
 NODE_MODULE_INIT(/* exports, module, context */) {
   dd::HeapProfiler::Init(exports);
   dd::WallProfiler::Init(exports);
+  Nan::SetMethod(exports, "getNativeThreadId", GetNativeThreadId);
 }

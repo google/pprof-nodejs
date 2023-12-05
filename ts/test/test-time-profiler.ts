@@ -426,4 +426,12 @@ describe('Time Profiler', () => {
       sinon.assert.calledOnce(timeProfilerStub.stop);
     });
   });
+
+  describe('getNativeThreadId', () => {
+    it('should return a number', () => {
+      const threadId = time.getNativeThreadId();
+      assert.ok(typeof threadId === 'number');
+      assert.ok(threadId > 0);
+    });
+  });
 });
