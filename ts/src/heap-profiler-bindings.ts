@@ -49,7 +49,8 @@ export function monitorOutOfMemory(
   dumpHeapProfileOnSdterr: boolean,
   exportCommand: Array<String> | undefined,
   callback: NearHeapLimitCallback | undefined,
-  callbackMode: number
+  callbackMode: number,
+  isMainThread: boolean
 ) {
   profiler.heapProfiler.monitorOutOfMemory(
     heapLimitExtensionSize,
@@ -57,6 +58,7 @@ export function monitorOutOfMemory(
     dumpHeapProfileOnSdterr,
     exportCommand,
     callback,
-    callbackMode
+    callbackMode,
+    isMainThread
   );
 }

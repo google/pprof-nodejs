@@ -108,6 +108,7 @@ struct HeapProfilerState {
   bool dumpProfileOnStderr = false;
   Nan::Callback callback;
   uint32_t callbackMode = 0;
+  bool isMainThread = true;
   bool callbackInstalled = false;
   bool insideCallback = false;
 };
@@ -430,6 +431,20 @@ size_t NearHeapLimit(void* data,
     state->profile.reset();
   }
 
+  if (!state->isMainThread) {
+    // In worker thread, OOM is not fatal to the whole process and will only
+    // terminate the worker.
+    // This is done by a callback registered by node, that's why we remove our
+    // callback and then call LowMemoryNotification() here to trigger another
+    // garbage collection, which will eventually call the callback registered by
+    // node.
+    state->UninstallNearHeapLimitCallback();
+    isolate->LowMemoryNotification();
+    // use the same value as node plus 1
+    constexpr size_t kExtraHeapAllowance = 16 * 1024 * 1024;
+    return current_heap_limit + kExtraHeapAllowance + 1;
+  }
+
   size_t new_heap_limit =
       current_heap_limit +
       ((state->current_heap_extension_count <= state->max_heap_extension_count)
@@ -529,8 +544,8 @@ NAN_METHOD(HeapProfiler::GetAllocationProfile) {
 }
 
 NAN_METHOD(HeapProfiler::MonitorOutOfMemory) {
-  if (info.Length() != 6) {
-    return Nan::ThrowTypeError("MonitorOOMCondition must have six arguments.");
+  if (info.Length() != 7) {
+    return Nan::ThrowTypeError("MonitorOOMCondition must have 7 arguments.");
   }
   if (!info[0]->IsUint32()) {
     return Nan::ThrowTypeError("Heap limit extension size must be a uint32.");
@@ -551,6 +566,9 @@ NAN_METHOD(HeapProfiler::MonitorOutOfMemory) {
   if (!info[5]->IsUint32()) {
     return Nan::ThrowTypeError("CallbackMode must be a uint32.");
   }
+  if (!info[6]->IsBoolean()) {
+    return Nan::ThrowTypeError("IsMainThread must be a boolean.");
+  }
 
   auto isolate = v8::Isolate::GetCurrent();
 
@@ -561,6 +579,7 @@ NAN_METHOD(HeapProfiler::MonitorOutOfMemory) {
   state->max_heap_extension_count = info[1].As<v8::Integer>()->Value();
   state->dumpProfileOnStderr = info[2].As<v8::Boolean>()->Value();
   state->callbackMode = info[5].As<v8::Integer>()->Value();
+  state->isMainThread = info[6].As<v8::Boolean>()->Value();
   state->InstallNearHeapLimitCallback();
   if (!info[4]->IsNullOrUndefined() && state->callbackMode != kNoCallback) {
     state->callback.Reset(Nan::To<v8::Function>(info[4]).ToLocalChecked());

@@ -25,6 +25,7 @@ import {
 import {serializeHeapProfile} from './profile-serializer';
 import {SourceMapper} from './sourcemapper/sourcemapper';
 import {AllocationProfileNode} from './v8-types';
+import {isMainThread} from 'node:worker_threads';
 
 let enabled = false;
 let heapIntervalBytes = 0;
@@ -174,6 +175,7 @@ export function monitorOutOfMemory(
     dumpHeapProfileOnSdterr,
     exportCommand || [],
     newCallback,
-    typeof callbackMode !== 'undefined' ? callbackMode : CallbackMode.Async
+    typeof callbackMode !== 'undefined' ? callbackMode : CallbackMode.Async,
+    isMainThread
   );
 }
