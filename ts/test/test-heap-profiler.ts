@@ -18,7 +18,7 @@ import * as sinon from 'sinon';
 
 import * as heapProfiler from '../src/heap-profiler';
 import * as v8HeapProfiler from '../src/heap-profiler-bindings';
-import {AllocationProfileNode} from '../src/v8-types';
+import {AllocationProfileNode, LabelSet} from '../src/v8-types';
 
 import {
   heapProfileExcludePath,
@@ -26,6 +26,7 @@ import {
   heapProfileWithExternal,
   v8HeapProfile,
   v8HeapWithPathProfile,
+  heapProfileIncludePathWithLabels,
 } from './profiles-for-tests';
 
 const copy = require('deep-copy');
@@ -104,6 +105,28 @@ describe('HeapProfiler', () => {
       heapProfiler.start(intervalBytes, stackDepth);
       const profile = heapProfiler.profile('@google-cloud/profiler');
       assert.deepEqual(heapProfileExcludePath, profile);
+    });
+
+    it('should return a profile equal to the expected profile when adding labels', async () => {
+      profileStub = sinon
+        .stub(v8HeapProfiler, 'getAllocationProfile')
+        .returns(copy(v8HeapWithPathProfile));
+      memoryUsageStub = sinon.stub(process, 'memoryUsage').returns({
+        external: 0,
+        rss: 2048,
+        heapTotal: 4096,
+        heapUsed: 2048,
+        arrayBuffers: 512,
+      });
+      const intervalBytes = 1024 * 512;
+      const stackDepth = 32;
+      heapProfiler.start(intervalBytes, stackDepth);
+      const labels: LabelSet = {baz: 'bar'};
+      const profile = heapProfiler.profile(undefined, undefined, () => {
+        return labels;
+      });
+      console.log(profile);
+      assert.deepEqual(heapProfileIncludePathWithLabels, profile);
     });
 
     it('should throw error when not started', () => {

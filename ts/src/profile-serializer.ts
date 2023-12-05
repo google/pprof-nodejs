@@ -371,16 +371,21 @@ export function serializeHeapProfile(
   startTimeNanos: number,
   intervalBytes: number,
   ignoreSamplesPath?: string,
-  sourceMapper?: SourceMapper
+  sourceMapper?: SourceMapper,
+  generateLabels?: (node: AllocationProfileNode) => LabelSet
 ): Profile {
   const appendHeapEntryToSamples: AppendEntryToSamples<
     AllocationProfileNode
   > = (entry: Entry<AllocationProfileNode>, samples: Sample[]) => {
     if (entry.node.allocations.length > 0) {
+      const labels = generateLabels
+        ? buildLabels(generateLabels(entry.node), stringTable)
+        : [];
       for (const alloc of entry.node.allocations) {
         const sample = new Sample({
           locationId: entry.stack,
           value: [alloc.count, alloc.sizeBytes * alloc.count],
+          label: labels,
           // TODO: add tag for allocation size
         });
         samples.push(sample);

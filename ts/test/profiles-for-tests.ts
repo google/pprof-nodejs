@@ -757,6 +757,70 @@ export const heapProfileIncludePath = new Profile({
   period: 524288,
 });
 
+export const heapProfileIncludePathWithLabels = new Profile({
+  sampleType: [
+    new ValueType({type: 1, unit: 2}),
+    new ValueType({type: 3, unit: 4}),
+  ],
+  sample: [
+    new Sample({
+      locationId: [2, 1],
+      value: [2, 4],
+      label: [
+        {
+          key: 5,
+          num: 0,
+          numUnit: 0,
+          str: 7,
+        },
+      ],
+    }),
+    new Sample({
+      locationId: [3, 1],
+      value: [1, 2],
+      label: [
+        {
+          key: 5,
+          num: 0,
+          numUnit: 0,
+          str: 7,
+        },
+      ],
+    }),
+    new Sample({
+      locationId: [5, 4],
+      value: [3, 6],
+      label: [
+        {
+          key: 5,
+          num: 0,
+          numUnit: 0,
+          str: 7,
+        },
+      ],
+    }),
+  ],
+  location: heapIncludePathLocations,
+  function: heapIncludePathFunctions,
+  stringTable: buildStringTable([
+    'objects',
+    'count',
+    'space',
+    'bytes',
+    'baz',
+    'foo.ts',
+    'bar',
+    '@google-cloud/profiler/profiler.ts',
+    'foo2',
+    'foo1',
+    'node_modules/@google-cloud/profiler/profiler.ts',
+    'bar.ts',
+  ]),
+  timeNanos: 0,
+  periodType: new ValueType({type: 3, unit: 4}),
+  period: 524288,
+});
+
 // heapProfile is encoded then decoded to convert numbers to longs, in
 // decodedHeapProfile
 const encodedHeapProfileIncludePath = heapProfileIncludePath.encode();
