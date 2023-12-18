@@ -110,7 +110,7 @@ export function start({
 
 export function stop(
   restart = false,
-  generateLabels?: (context: TimeProfileNodeContext) => LabelSet
+  generateLabels?: (context?: TimeProfileNodeContext) => LabelSet
 ) {
   if (!gProfiler) {
     throw new Error('Wall profiler is not started');

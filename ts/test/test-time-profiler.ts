@@ -73,15 +73,20 @@ describe('Time Profiler', () => {
       initialContext['aaa'] = 'bbb';
 
       let endTime = 0n;
-      time.stop(false, (context: TimeProfileNodeContext) => {
+      time.stop(false, (context?: TimeProfileNodeContext) => {
+        assert.ok(context !== null, 'Context should not be null');
         if (!endTime) {
           endTime = BigInt(Date.now()) * 1000n;
         }
-        assert.deepEqual(context.context, initialContext, 'Unexpected context');
-        assert.ok(context.timestamp >= startTime);
-        assert.ok(context.timestamp <= endTime);
+        assert.deepEqual(
+          context!.context,
+          initialContext,
+          'Unexpected context'
+        );
+        assert.ok(context!.timestamp >= startTime);
+        assert.ok(context!.timestamp <= endTime);
         checked = true;
-        return {};
+        return {...context!.context};
       });
       assert(checked, 'No context found');
     });
@@ -121,7 +126,10 @@ describe('Time Profiler', () => {
         );
       }
 
-      function generateLabels(context: TimeProfileNodeContext) {
+      function generateLabels(context?: TimeProfileNodeContext) {
+        if (!context) {
+          return {};
+        }
         const labels: time.LabelSet = {};
         for (const [key, value] of Object.entries(context.context)) {
           if (typeof value === 'string') {

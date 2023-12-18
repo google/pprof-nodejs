@@ -261,7 +261,7 @@ export function serializeTimeProfile(
   intervalMicros: number,
   sourceMapper?: SourceMapper,
   recomputeSamplingInterval = false,
-  generateLabels?: (context: TimeProfileNodeContext) => LabelSet
+  generateLabels?: (context?: TimeProfileNodeContext) => LabelSet
 ): Profile {
   // If requested, recompute sampling interval from profile duration and total number of hits,
   // since profile duration should be #hits x interval.
@@ -300,9 +300,11 @@ export function serializeTimeProfile(
       }
     }
     if (unlabelledHits > 0) {
+      const labels = generateLabels ? generateLabels() : {};
       const sample = new Sample({
         locationId: entry.stack,
         value: [unlabelledHits, unlabelledHits * intervalNanos],
+        label: buildLabels(labels, stringTable),
       });
       samples.push(sample);
     }
