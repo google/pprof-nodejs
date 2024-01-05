@@ -17,6 +17,7 @@
 #pragma once
 
 #include "contexts.hh"
+#include "thread-cpu-clock.hh"
 
 #include <nan.h>
 #include <v8-profiler.h>
@@ -44,7 +45,7 @@ class WallProfiler : public Nan::ObjectWrap {
 
   using ContextPtr = std::shared_ptr<v8::Global<v8::Value>>;
 
-  int samplingPeriodMicros_ = 0;
+  std::chrono::microseconds samplingPeriod_{0};
   v8::CpuProfiler* cpuProfiler_ = nullptr;
   // TODO: Investigate use of v8::Persistent instead of shared_ptr<Global> to
   // avoid heap allocation. Need to figure out the right move/copy semantics in
@@ -65,8 +66,14 @@ class WallProfiler : public Nan::ObjectWrap {
   bool started_ = false;
   bool workaroundV8Bug_;
   bool detectV8Bug_;
+  bool collectCpuTime_;
+  bool isMainThread_;
   int v8ProfilerStuckEventLoopDetected_ = 0;
-
+  ProcessCpuClock::time_point startProcessCpuTime_{};
+  int64_t startThreadCpuTime_ = 0;
+  /* threadCpuStopWatch_ is used to measure CPU consumed by JS thread owning the
+   * WallProfiler object during profiling period of main worker thread. */
+  ThreadCpuStopWatch threadCpuStopWatch_;
   uint32_t* fields_;
   v8::Global<v8::Uint32Array> jsArray_;
 
@@ -74,6 +81,7 @@ class WallProfiler : public Nan::ObjectWrap {
     ContextPtr context;
     int64_t time_from;
     int64_t time_to;
+    int64_t cpu_time;
   };
 
   using ContextBuffer = std::vector<SampleContext>;
@@ -87,7 +95,8 @@ class WallProfiler : public Nan::ObjectWrap {
   v8::CpuProfiler* CreateV8CpuProfiler();
 
   ContextsByNode GetContextsByNode(v8::CpuProfile* profile,
-                                   ContextBuffer& contexts);
+                                   ContextBuffer& contexts,
+                                   int64_t startCpuTime);
 
   bool waitForSignal(uint64_t targetCallCount = 0);
 
@@ -99,15 +108,17 @@ class WallProfiler : public Nan::ObjectWrap {
    * every period. The parameter is used to preallocate data structures that
    * should not be reallocated in async signal safe code.
    */
-  explicit WallProfiler(int samplingPeriodMicros,
-                        int durationMicros,
+  explicit WallProfiler(std::chrono::microseconds samplingPeriod,
+                        std::chrono::microseconds duration,
                         bool includeLines,
                         bool withContexts,
-                        bool workaroundV8bug);
+                        bool workaroundV8bug,
+                        bool collectCpuTime,
+                        bool isMainThread);
 
   v8::Local<v8::Value> GetContext(v8::Isolate*);
   void SetContext(v8::Isolate*, v8::Local<v8::Value>);
-  void PushContext(int64_t time_from, int64_t time_to);
+  void PushContext(int64_t time_from, int64_t time_to, int64_t cpu_time);
   Result StartImpl();
   std::string StartInternal();
   Result StopImpl(bool restart, v8::Local<v8::Value>& profile);
@@ -122,8 +133,14 @@ class WallProfiler : public Nan::ObjectWrap {
     return res;
   }
 
+  bool collectCpuTime() const { return collectCpuTime_; }
+
   int v8ProfilerStuckEventLoopDetected() const {
     return v8ProfilerStuckEventLoopDetected_;
+  }
+
+  ThreadCpuClock::duration GetAndResetThreadCpu() {
+    return threadCpuStopWatch_.GetAndReset();
   }
 
   static NAN_METHOD(New);

@@ -22,7 +22,7 @@ import {timeProfile, v8TimeProfile} from './profiles-for-tests';
 import {hrtime} from 'process';
 import {Label, Profile} from 'pprof-format';
 import {AssertionError} from 'assert';
-import {TimeProfileNodeContext} from '../src/v8-types';
+import {GenerateTimeLabelsArgs, LabelSet} from '../src/v8-types';
 
 const assert = require('assert');
 
@@ -73,16 +73,21 @@ describe('Time Profiler', () => {
       initialContext['aaa'] = 'bbb';
 
       let endTime = 0n;
-      time.stop(false, (context?: TimeProfileNodeContext) => {
+      time.stop(false, ({node, context}: GenerateTimeLabelsArgs) => {
+        if (node.name === time.constants.NON_JS_THREADS_FUNCTION_NAME) {
+          return {};
+        }
         assert.ok(context !== null, 'Context should not be null');
         if (!endTime) {
           endTime = BigInt(Date.now()) * 1000n;
         }
+
         assert.deepEqual(
           context!.context,
           initialContext,
           'Unexpected context'
         );
+
         assert.ok(context!.timestamp >= startTime);
         assert.ok(context!.timestamp <= endTime);
         checked = true;
@@ -126,11 +131,11 @@ describe('Time Profiler', () => {
         );
       }
 
-      function generateLabels(context?: TimeProfileNodeContext) {
+      function generateLabels({context}: GenerateTimeLabelsArgs) {
         if (!context) {
           return {};
         }
-        const labels: time.LabelSet = {};
+        const labels: LabelSet = {};
         for (const [key, value] of Object.entries(context.context)) {
           if (typeof value === 'string') {
             labels[key] = value;
@@ -253,10 +258,6 @@ describe('Time Profiler', () => {
                   );
                 });
               } else {
-                if (labels.length >= 3) {
-                  console.log(getLabels(labels));
-                }
-
                 assert(labels.length < 3, 'loop can have at most one label');
                 labels.forEach(label => {
                   assert(

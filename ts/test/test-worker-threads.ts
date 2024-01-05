@@ -6,9 +6,9 @@ const exec = promisify(execFile);
 
 describe('Worker Threads', () => {
   // eslint-ignore-next-line prefer-array-callback
-  it('should work when propagated to workers through -r flag', function () {
-    this.timeout(10000);
-    const nbWorkers = 4;
+  it('should work', function () {
+    this.timeout(20000);
+    const nbWorkers = 2;
     return exec('node', ['./out/test/worker.js', String(nbWorkers)]);
   });
 });

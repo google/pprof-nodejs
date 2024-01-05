@@ -24,7 +24,10 @@ import {
 } from './heap-profiler-bindings';
 import {serializeHeapProfile} from './profile-serializer';
 import {SourceMapper} from './sourcemapper/sourcemapper';
-import {AllocationProfileNode, LabelSet} from './v8-types';
+import {
+  AllocationProfileNode,
+  GenerateAllocationLabelsFunction,
+} from './v8-types';
 import {isMainThread} from 'node:worker_threads';
 
 let enabled = false;
@@ -54,7 +57,7 @@ export function v8Profile(): AllocationProfileNode {
 export function profile(
   ignoreSamplePath?: string,
   sourceMapper?: SourceMapper,
-  generateLabels?: (node: AllocationProfileNode) => LabelSet
+  generateLabels?: GenerateAllocationLabelsFunction
 ): Profile {
   return convertProfile(
     v8Profile(),
@@ -68,7 +71,7 @@ export function convertProfile(
   rootNode: AllocationProfileNode,
   ignoreSamplePath?: string,
   sourceMapper?: SourceMapper,
-  generateLabels?: (node: AllocationProfileNode) => LabelSet
+  generateLabels?: GenerateAllocationLabelsFunction
 ): Profile {
   const startTimeNanos = Date.now() * 1000 * 1000;
   // Add node for external memory usage.

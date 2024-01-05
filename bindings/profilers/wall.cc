@@ -45,18 +45,27 @@ struct TimeTicks {
 static int64_t Now() {
   return v8::base::TimeTicks::Now();
 };
+
 #else
 #define DD_WALL_USE_SIGPROF false
 static int64_t Now() {
   return 0;
 };
+
 #endif
 
 using namespace v8;
 
 namespace dd {
+
 // Maximum number of rounds in the GetV8ToEpochOffset
 static constexpr int MAX_EPOCH_OFFSET_ATTEMPTS = 20;
+
+bool isIdleOrProgram(const v8::CpuProfileNode* node) {
+  auto* function_name = node->GetFunctionNameStr();
+  return strcmp(function_name, "(idle)") == 0 ||
+         strcmp(function_name, "(program)") == 0;
+}
 
 int getTotalHitCount(const v8::CpuProfileNode* node, bool* noHitLeaf) {
   int count = node->GetHitCount();
@@ -75,11 +84,11 @@ int getTotalHitCount(const v8::CpuProfileNode* node, bool* noHitLeaf) {
  * positive), 2 if bug detected for certain. */
 int detectV8Bug(const v8::CpuProfile* profile) {
   /* When the profiler operates correctly, there'll be at least one node with
-   * a non-zero hitcount and the number of samples will be strictly greater than
-   * the number of hits because they'll contain at least the starting sample and
-   * potentially some deoptimization samples. If these conditions don't hold, it
-   * implies that v8::SamplingEventsProcessor::ProcessOneSample loop is stuck
-   * for ticks_buffer_ or vm_ticks_buffer_. */
+   * a non-zero hit count and the number of samples will be strictly greater
+   * than the number of hits because they'll contain at least the starting
+   * sample and potentially some deoptimization samples. If these conditions
+   * don't hold, it implies that v8::SamplingEventsProcessor::ProcessOneSample
+   * loop is stuck for ticks_buffer_ or vm_ticks_buffer_. */
 
   bool noHitLeaf = false;
   auto totalHitCount = getTotalHitCount(profile->GetTopDownRoot(), &noHitLeaf);
@@ -91,7 +100,7 @@ int detectV8Bug(const v8::CpuProfile* profile) {
     /*  Checking number of samples against number of hits potentially leads to
      * false positive because some ticks samples can be discarded if their
      * timestamp is older than profile start time because of queueing.
-     * Additionally check for leaf nodes with zero hitcount, if there is one,
+     * Additionally check for leaf nodes with zero hit count, if there is one,
      * this implies that one non-tick sample was processed.
      */
     return 1;
@@ -118,7 +127,9 @@ class ProtectedProfilerMap {
   }
 
   bool RemoveProfiler(const v8::Isolate* isolate, WallProfiler* profiler) {
-    return UpdateProfilers([isolate, profiler](auto map) {
+    return UpdateProfilers([isolate, profiler, this](auto map) {
+      terminatedWorkersCpu_ += profiler->GetAndResetThreadCpu();
+
       if (isolate != nullptr) {
         auto it = map->find(isolate);
         if (it != map->end() && it->second == profiler) {
@@ -142,6 +153,33 @@ class ProtectedProfilerMap {
     return UpdateProfilers([isolate, profiler](auto map) {
       return map->emplace(isolate, profiler).second;
     });
+  }
+
+  ThreadCpuClock::duration GatherTotalWorkerCpuAndReset() {
+    std::lock_guard<std::mutex> lock(update_mutex_);
+
+    // Retrieve CPU of workers that have terminated during the last period
+    ThreadCpuClock::duration totalWorkerCpu = terminatedWorkersCpu_;
+
+    // Reset terminated workers cpu to 0
+    terminatedWorkersCpu_ = ThreadCpuClock::duration::zero();
+
+    if (!init_) {
+      return totalWorkerCpu;
+    }
+
+    auto currProfilers = profilers_.load(std::memory_order_acquire);
+    // Wait until sighandler is done using the map
+    while (!currProfilers) {
+      currProfilers = profilers_.load(std::memory_order_relaxed);
+    }
+
+    // Gather CPU of workers that are still running
+    for (auto& profiler : *currProfilers) {
+      totalWorkerCpu += profiler.second->GetAndResetThreadCpu();
+    }
+
+    return totalWorkerCpu;
   }
 
  private:
@@ -179,6 +217,7 @@ class ProtectedProfilerMap {
   mutable std::atomic<ProfilerMap*> profilers_;
   std::mutex update_mutex_;
   bool init_ = false;
+  std::chrono::nanoseconds terminatedWorkersCpu_{};
 };
 
 using ProfilerMap = std::unordered_map<Isolate*, WallProfiler*>;
@@ -275,10 +314,14 @@ void SignalHandler::HandleProfilerSignal(int sig,
     return;
   }
 
+  int64_t cpu_time = 0;
+  if (prof->collectCpuTime()) {
+    cpu_time = CurrentThreadCpuClock::now().time_since_epoch().count();
+  }
   auto time_from = Now();
   old_handler(sig, info, context);
   auto time_to = Now();
-  prof->PushContext(time_from, time_to);
+  prof->PushContext(time_from, time_to, cpu_time);
 }
 #else
 class SignalHandler {
@@ -326,7 +369,8 @@ static int64_t GetV8ToEpochOffset() {
 }
 
 ContextsByNode WallProfiler::GetContextsByNode(CpuProfile* profile,
-                                               ContextBuffer& contexts) {
+                                               ContextBuffer& contexts,
+                                               int64_t startCpuTime) {
   ContextsByNode contextsByNode;
 
   auto sampleCount = profile->GetSamplesCount();
@@ -343,7 +387,9 @@ ContextsByNode WallProfiler::GetContextsByNode(CpuProfile* profile,
 
   auto contextKey = Nan::New<v8::String>("context").ToLocalChecked();
   auto timestampKey = Nan::New<v8::String>("timestamp").ToLocalChecked();
+  auto cpuTimeKey = Nan::New<v8::String>("cpuTime").ToLocalChecked();
   auto V8toEpochOffset = GetV8ToEpochOffset();
+  auto lastCpuTime = startCpuTime;
 
   // skip first sample because it's the one taken on profiler start, outside of
   // signal handler
@@ -398,10 +444,19 @@ ContextsByNode WallProfiler::GetContextsByNode(CpuProfile* profile,
           Nan::Set(timedContext,
                    contextKey,
                    sampleContext.context.get()->Get(isolate));
-          Nan::Set(
-              timedContext,
-              timestampKey,
-              BigInt::New(isolate, sampleContext.time_to + V8toEpochOffset));
+          Nan::Set(timedContext,
+                   timestampKey,
+                   BigInt::New(isolate, sampleTimestamp + V8toEpochOffset));
+
+          // if current sample is idle/program, reports its cpu time to the next
+          // sample
+          if (collectCpuTime_ && !isIdleOrProgram(sample)) {
+            Nan::Set(
+                timedContext,
+                cpuTimeKey,
+                Nan::New<v8::Number>(sampleContext.cpu_time - lastCpuTime));
+            lastCpuTime = sampleContext.cpu_time;
+          }
           Nan::Set(array, array->Length(), timedContext);
         }
 
@@ -415,23 +470,27 @@ ContextsByNode WallProfiler::GetContextsByNode(CpuProfile* profile,
   return contextsByNode;
 }
 
-WallProfiler::WallProfiler(int samplingPeriodMicros,
-                           int durationMicros,
+WallProfiler::WallProfiler(std::chrono::microseconds samplingPeriod,
+                           std::chrono::microseconds duration,
                            bool includeLines,
                            bool withContexts,
-                           bool workaroundV8Bug)
-    : samplingPeriodMicros_(samplingPeriodMicros),
+                           bool workaroundV8Bug,
+                           bool collectCpuTime,
+                           bool isMainThread)
+    : samplingPeriod_(samplingPeriod),
       includeLines_(includeLines),
-      withContexts_(withContexts) {
+      withContexts_(withContexts),
+      isMainThread_(isMainThread) {
   // Try to workaround V8 bug where profiler event processor loop becomes stuck.
   // When starting a new profile, wait for one signal before and one signal
-  // after to reduce the likelyhood that race condition occurs and one code
+  // after to reduce the likelihood that race condition occurs and one code
   // event just after triggers the issue.
   detectV8Bug_ = NODE_MODULE_VERSION >= NODE_16_0_MODULE_VERSION;
   workaroundV8Bug_ = workaroundV8Bug && DD_WALL_USE_SIGPROF && detectV8Bug_;
+  collectCpuTime_ = collectCpuTime && withContexts;
 
   if (withContexts_) {
-    contexts_.reserve(durationMicros * 2 / samplingPeriodMicros);
+    contexts_.reserve(duration * 2 / samplingPeriod);
   }
 
   curContext_.store(&context1_, std::memory_order_relaxed);
@@ -466,78 +525,129 @@ void WallProfiler::Dispose(Isolate* isolate) {
 }
 
 NAN_METHOD(WallProfiler::New) {
-  if (info.Length() != 5) {
-    return Nan::ThrowTypeError("WallProfiler must have four arguments.");
-  }
-
-  if (!info[0]->IsNumber()) {
-    return Nan::ThrowTypeError("Sample period must be a number.");
-  }
-  if (!info[1]->IsNumber()) {
-    return Nan::ThrowTypeError("Duration must be a number.");
-  }
-  if (!info[2]->IsBoolean()) {
-    return Nan::ThrowTypeError("includeLines must be a boolean.");
-  }
-  if (!info[3]->IsBoolean()) {
-    return Nan::ThrowTypeError("withContext must be a boolean.");
-  }
-  if (!info[4]->IsBoolean()) {
-    return Nan::ThrowTypeError("workaroundV8bug must be a boolean.");
+  if (info.Length() != 1 || !info[0]->IsObject()) {
+    return Nan::ThrowTypeError("WallProfiler must have one object argument.");
   }
 
   if (info.IsConstructCall()) {
-    int interval = info[0].As<v8::Integer>()->Value();
-    int duration = info[1].As<v8::Integer>()->Value();
+    auto arg = info[0].As<v8::Object>();
+    auto intervalMicrosValue =
+        Nan::Get(arg, Nan::New<v8::String>("intervalMicros").ToLocalChecked());
+    if (intervalMicrosValue.IsEmpty() ||
+        !intervalMicrosValue.ToLocalChecked()->IsNumber()) {
+      return Nan::ThrowTypeError("intervalMicros must be a number.");
+    }
 
-    if (interval <= 0) {
+    std::chrono::microseconds interval{
+        intervalMicrosValue.ToLocalChecked().As<v8::Integer>()->Value()};
+
+    if (interval <= std::chrono::microseconds::zero()) {
       return Nan::ThrowTypeError("Sample rate must be positive.");
     }
-    if (duration <= 0) {
+
+    auto durationMillisValue =
+        Nan::Get(arg, Nan::New<v8::String>("durationMillis").ToLocalChecked());
+    if (durationMillisValue.IsEmpty() ||
+        !durationMillisValue.ToLocalChecked()->IsNumber()) {
+      return Nan::ThrowTypeError("durationMillis must be a number.");
+    }
+
+    std::chrono::milliseconds duration{
+        durationMillisValue.ToLocalChecked().As<v8::Integer>()->Value()};
+
+    if (duration <= std::chrono::microseconds::zero()) {
       return Nan::ThrowTypeError("Duration must be positive.");
     }
     if (duration < interval) {
       return Nan::ThrowTypeError("Duration must not be less than sample rate.");
     }
 
-    bool includeLines = info[2].As<v8::Boolean>()->Value();
-    bool withContext = info[3].As<v8::Boolean>()->Value();
-    bool workaroundV8bug = info[4].As<v8::Boolean>()->Value();
-    if (withContext && !DD_WALL_USE_SIGPROF) {
+    auto lineNumbersValue =
+        Nan::Get(arg, Nan::New<v8::String>("lineNumbers").ToLocalChecked());
+    if (lineNumbersValue.IsEmpty() ||
+        !lineNumbersValue.ToLocalChecked()->IsBoolean()) {
+      return Nan::ThrowTypeError("lineNumbers must be a boolean.");
+    }
+    bool lineNumbers =
+        lineNumbersValue.ToLocalChecked().As<v8::Boolean>()->Value();
+
+    auto withContextsValue =
+        Nan::Get(arg, Nan::New<v8::String>("withContexts").ToLocalChecked());
+    if (withContextsValue.IsEmpty() ||
+        !withContextsValue.ToLocalChecked()->IsBoolean()) {
+      return Nan::ThrowTypeError("withContext must be a boolean.");
+    }
+    bool withContexts =
+        withContextsValue.ToLocalChecked().As<v8::Boolean>()->Value();
+
+    auto workaroundV8BugValue =
+        Nan::Get(arg, Nan::New<v8::String>("workaroundV8Bug").ToLocalChecked());
+    if (workaroundV8BugValue.IsEmpty() ||
+        !workaroundV8BugValue.ToLocalChecked()->IsBoolean()) {
+      return Nan::ThrowTypeError("workaroundV8Bug must be a boolean.");
+    }
+    bool workaroundV8Bug =
+        workaroundV8BugValue.ToLocalChecked().As<v8::Boolean>()->Value();
+
+    auto collectCpuTimeValue =
+        Nan::Get(arg, Nan::New<v8::String>("collectCpuTime").ToLocalChecked());
+    if (collectCpuTimeValue.IsEmpty() ||
+        !collectCpuTimeValue.ToLocalChecked()->IsBoolean()) {
+      return Nan::ThrowTypeError("collectCpuTime must be a boolean.");
+    }
+    bool collectCpuTime =
+        collectCpuTimeValue.ToLocalChecked().As<v8::Boolean>()->Value();
+
+    auto isMainThreadValue =
+        Nan::Get(arg, Nan::New<v8::String>("isMainThread").ToLocalChecked());
+    if (isMainThreadValue.IsEmpty() ||
+        !isMainThreadValue.ToLocalChecked()->IsBoolean()) {
+      return Nan::ThrowTypeError("isMainThread must be a boolean.");
+    }
+    bool isMainThread =
+        isMainThreadValue.ToLocalChecked().As<v8::Boolean>()->Value();
+
+    if (withContexts && !DD_WALL_USE_SIGPROF) {
       return Nan::ThrowTypeError("Contexts are not supported.");
     }
 
-    if (includeLines && withContext) {
+    if (collectCpuTime && !withContexts) {
+      return Nan::ThrowTypeError("Cpu time collection requires contexts.");
+    }
+
+    if (lineNumbers && withContexts) {
       // Currently custom contexts are not compatible with caller line
       // information, because it's not possible to associate context with line
       // ticks:
       // context is associated to sample which itself is associated with
-      // a CpuProfileNode, but this node has several line ticks, and we cannot
+      // a CpuProfileNode, but if node has several line ticks, then we cannot
       // determine context <-> line ticks association. Note that line number is
       // present in v8 internal sample struct and would allow mapping sample to
       // line tick, and thus context to line tick, but this information is not
       // available in v8 public API.
-      // More over in caller line number mode, line number of a CpuProfileNode
+      // Moreover in caller line number mode, line number of a CpuProfileNode
       // is not the line of the current function, but the line number where this
-      // function is called, therefore we don't access either to the line of the
-      // function (otherwise we could ignoree line ticks and replace them with
-      // single hitcount for the function).
+      // function is called, therefore we don't have access either to the line
+      // of the function (otherwise we could ignore line ticks and replace them
+      // with single hit count for the function).
       return Nan::ThrowTypeError(
           "Include line option is not compatible with contexts.");
     }
 
-    WallProfiler* obj = new WallProfiler(
-        interval, duration, includeLines, withContext, workaroundV8bug);
+    WallProfiler* obj = new WallProfiler(interval,
+                                         duration,
+                                         lineNumbers,
+                                         withContexts,
+                                         workaroundV8Bug,
+                                         collectCpuTime,
+                                         isMainThread);
     obj->Wrap(info.This());
     info.GetReturnValue().Set(info.This());
   } else {
-    const int argc = 5;
-    v8::Local<v8::Value> argv[argc] = {
-        info[0], info[1], info[2], info[3], info[4]};
+    v8::Local<v8::Value> arg = info[0];
     v8::Local<v8::Function> cons = Nan::New(
         PerIsolateData::For(info.GetIsolate())->WallProfilerConstructor());
-    info.GetReturnValue().Set(
-        Nan::NewInstance(cons, argc, argv).ToLocalChecked());
+    info.GetReturnValue().Set(Nan::NewInstance(cons, 1, &arg).ToLocalChecked());
   }
 }
 
@@ -599,16 +709,22 @@ std::string WallProfiler::StartInternal() {
     fields_[kSampleCount] = 0;
   }
 
+  if (collectCpuTime_) {
+    startThreadCpuTime_ =
+        CurrentThreadCpuClock::now().time_since_epoch().count();
+    startProcessCpuTime_ = ProcessCpuClock::now();
+  }
+
   // Force collection of two other non-tick samples (ie. that will not add to
-  // hitcount).
+  // hit count).
   // This is to be able to detect when v8 profiler event processor loop is
   // stuck on ticks_from_vm_buffer_.
   // A non-tick sample is already taken upon profiling start, and should be
   // enough to determine if a non-tick sample has been processed at the end by
-  // comparing number of samples with total hitcount.
+  // comparing number of samples with total hit count.
   // The first tick sample might be discarded though if its timestamp is older
   // than profile start time due to queueing and in that case it is still added
-  // to hitcount but not to the sample array, leading to incorrectly detect
+  // to hit count but not to the sample array, leading to incorrectly detect
   // that ticks_from_vm_buffer_ is stuck.
   // This is not needed when workaroundV8Bug_ is enabled because in that case,
   // we wait for one signal before starting a new profile which should leave
@@ -664,7 +780,8 @@ bool WallProfiler::waitForSignal(uint64_t targetCallCount) {
   // wait for a maximum of 2 sample period
   // if a signal occurs it will interrupt sleep (we use nanosleep and not
   // uv_sleep because we want this behaviour)
-  timespec ts = {0, samplingPeriodMicros_ * maxRetries * 1000};
+  timespec ts = {
+      0, std::chrono::nanoseconds(samplingPeriod_ * maxRetries).count()};
   nanosleep(&ts, nullptr);
 #endif
   auto res =
@@ -696,9 +813,12 @@ Result WallProfiler::StopImpl(bool restart, v8::Local<v8::Value>& profile) {
     }
   }
 
+  auto startThreadCpuTime = startThreadCpuTime_;
+  auto startProcessCpuTime = startProcessCpuTime_;
+
   if (restart) {
     profileId_ = StartInternal();
-    // record callcount to wait for next signal at the end of function
+    // record call count to wait for next signal at the end of function
     callCount = noCollectCallCount_.load(std::memory_order_relaxed);
     std::atomic_signal_fence(std::memory_order_acquire);
   }
@@ -734,8 +854,27 @@ Result WallProfiler::StopImpl(bool restart, v8::Local<v8::Value>& profile) {
   }
 
   if (withContexts_) {
-    auto contextsByNode = GetContextsByNode(v8_profile, contexts);
-    profile = TranslateTimeProfile(v8_profile, includeLines_, &contextsByNode);
+    int64_t nonJSThreadsCpuTime{};
+
+    if (isMainThread_) {
+      // account for non-JS threads CPU only in main thread
+      // CPU time of non-JS threads is the difference between process CPU time
+      // and sum of all worker JS thread during the profiling period of main
+      // worker thread.
+      auto totalWorkerCpu = g_profilers.GatherTotalWorkerCpuAndReset();
+      auto processCpu = ProcessCpuClock::now() - startProcessCpuTime;
+      nonJSThreadsCpuTime =
+          std::max(processCpu - totalWorkerCpu, ProcessCpuClock::duration{})
+              .count();
+    }
+    auto contextsByNode =
+        GetContextsByNode(v8_profile, contexts, startThreadCpuTime);
+
+    profile = TranslateTimeProfile(v8_profile,
+                                   includeLines_,
+                                   &contextsByNode,
+                                   collectCpuTime_,
+                                   nonJSThreadsCpuTime);
 
   } else {
     profile = TranslateTimeProfile(v8_profile, includeLines_);
@@ -768,8 +907,10 @@ Result WallProfiler::StopImplOld(bool restart, v8::Local<v8::Value>& profile) {
       Nan::New<String>(profileId_).ToLocalChecked());
 
   if (withContexts_) {
-    auto contextsByNode = GetContextsByNode(v8_profile, contexts_);
-    profile = TranslateTimeProfile(v8_profile, includeLines_, &contextsByNode);
+    auto contextsByNode =
+        GetContextsByNode(v8_profile, contexts_, startThreadCpuTime_);
+    profile = TranslateTimeProfile(
+        v8_profile, includeLines_, &contextsByNode, collectCpuTime_);
   } else {
     profile = TranslateTimeProfile(v8_profile, includeLines_);
   }
@@ -844,7 +985,8 @@ v8::CpuProfiler* WallProfiler::CreateV8CpuProfiler() {
       return nullptr;
     }
     cpuProfiler_ = v8::CpuProfiler::New(isolate);
-    cpuProfiler_->SetSamplingInterval(samplingPeriodMicros_);
+    cpuProfiler_->SetSamplingInterval(
+        std::chrono::microseconds(samplingPeriod_).count());
   }
   return cpuProfiler_;
 }
@@ -894,14 +1036,16 @@ NAN_METHOD(WallProfiler::V8ProfilerStuckEventLoopDetected) {
   info.GetReturnValue().Set(profiler->v8ProfilerStuckEventLoopDetected());
 }
 
-void WallProfiler::PushContext(int64_t time_from, int64_t time_to) {
+void WallProfiler::PushContext(int64_t time_from,
+                               int64_t time_to,
+                               int64_t cpu_time) {
   // Be careful this is called in a signal handler context therefore all
   // operations must be async signal safe (in particular no allocations).
   // Our ring buffer avoids allocations.
   auto context = curContext_.load(std::memory_order_relaxed);
   std::atomic_signal_fence(std::memory_order_acquire);
   if (contexts_.size() < contexts_.capacity()) {
-    contexts_.push_back({*context, time_from, time_to});
+    contexts_.push_back({*context, time_from, time_to, cpu_time});
     std::atomic_fetch_add_explicit(
         reinterpret_cast<std::atomic<uint32_t>*>(&fields_[kSampleCount]),
         1U,

@@ -16,14 +16,18 @@
 
 import delay from 'delay';
 
-import {serializeTimeProfile} from './profile-serializer';
+import {
+  serializeTimeProfile,
+  NON_JS_THREADS_FUNCTION_NAME,
+} from './profile-serializer';
 import {SourceMapper} from './sourcemapper/sourcemapper';
 import {
   TimeProfiler,
   getNativeThreadId,
   constants as profilerConstants,
 } from './time-profiler-bindings';
-import {LabelSet, TimeProfileNodeContext} from './v8-types';
+import {GenerateTimeLabelsFunction} from './v8-types';
+import {isMainThread} from 'node:worker_threads';
 
 const {kSampleCount} = profilerConstants;
 
@@ -60,57 +64,48 @@ export interface TimeProfilerOptions {
   lineNumbers?: boolean;
   withContexts?: boolean;
   workaroundV8Bug?: boolean;
+  collectCpuTime?: boolean;
 }
 
-export async function profile({
-  intervalMicros = DEFAULT_INTERVAL_MICROS,
-  durationMillis = DEFAULT_DURATION_MILLIS,
-  sourceMapper,
-  lineNumbers = false,
-  withContexts = false,
-  workaroundV8Bug = true,
-}: TimeProfilerOptions) {
-  start({
-    intervalMicros,
-    durationMillis,
-    sourceMapper,
-    lineNumbers,
-    withContexts,
-    workaroundV8Bug,
-  });
-  await delay(durationMillis);
+const DEFAULT_OPTIONS: TimeProfilerOptions = {
+  durationMillis: DEFAULT_DURATION_MILLIS,
+  intervalMicros: DEFAULT_INTERVAL_MICROS,
+  lineNumbers: false,
+  withContexts: false,
+  workaroundV8Bug: true,
+  collectCpuTime: false,
+};
+
+export async function profile(options: TimeProfilerOptions = {}) {
+  options = {...DEFAULT_OPTIONS, ...options};
+  start(options);
+  await delay(options.durationMillis!);
   return stop();
 }
 
 // Temporarily retained for backwards compatibility with older tracer
-export function start({
-  intervalMicros = DEFAULT_INTERVAL_MICROS,
-  durationMillis = DEFAULT_DURATION_MILLIS,
-  sourceMapper,
-  lineNumbers = false,
-  withContexts = false,
-  workaroundV8Bug = true,
-}: TimeProfilerOptions) {
+export function start(options: TimeProfilerOptions = {}) {
+  options = {...DEFAULT_OPTIONS, ...options};
   if (gProfiler) {
     throw new Error('Wall profiler is already started');
   }
 
-  gProfiler = new TimeProfiler(
-    intervalMicros,
-    durationMillis * 1000,
-    lineNumbers,
-    withContexts,
-    workaroundV8Bug
-  );
-  gSourceMapper = sourceMapper;
-  gIntervalMicros = intervalMicros;
+  gProfiler = new TimeProfiler({...options, isMainThread});
+  gSourceMapper = options.sourceMapper;
+  gIntervalMicros = options.intervalMicros!;
   gV8ProfilerStuckEventLoopDetected = 0;
+
   gProfiler.start();
+
+  // If contexts are enabled, set an initial empty context
+  if (options.withContexts) {
+    setContext({});
+  }
 }
 
 export function stop(
   restart = false,
-  generateLabels?: (context?: TimeProfileNodeContext) => LabelSet
+  generateLabels?: GenerateTimeLabelsFunction
 ) {
   if (!gProfiler) {
     throw new Error('Wall profiler is not started');
@@ -159,6 +154,13 @@ export function setContext(context?: object) {
   gProfiler.context = context;
 }
 
+export function getContext() {
+  if (!gProfiler) {
+    throw new Error('Wall profiler is not started');
+  }
+  return gProfiler.context;
+}
+
 export function isStarted() {
   return !!gProfiler;
 }
@@ -168,6 +170,5 @@ export function v8ProfilerStuckEventLoopDetected() {
   return gV8ProfilerStuckEventLoopDetected;
 }
 
-export const constants = {kSampleCount};
-export {LabelSet};
+export const constants = {kSampleCount, NON_JS_THREADS_FUNCTION_NAME};
 export {getNativeThreadId};

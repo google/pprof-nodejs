@@ -125,7 +125,6 @@ describe('HeapProfiler', () => {
       const profile = heapProfiler.profile(undefined, undefined, () => {
         return labels;
       });
-      console.log(profile);
       assert.deepEqual(heapProfileIncludePathWithLabels, profile);
     });
 

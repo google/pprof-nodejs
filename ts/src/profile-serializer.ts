@@ -33,12 +33,14 @@ import {
 } from './sourcemapper/sourcemapper';
 import {
   AllocationProfileNode,
-  LabelSet,
+  GenerateAllocationLabelsFunction,
+  GenerateTimeLabelsFunction,
   ProfileNode,
   TimeProfile,
   TimeProfileNode,
-  TimeProfileNodeContext,
 } from './v8-types';
+
+export const NON_JS_THREADS_FUNCTION_NAME = '(non-JS threads)';
 
 /**
  * A stack of function IDs.
@@ -218,6 +220,17 @@ function createTimeValueType(table: StringTable): ValueType {
 }
 
 /**
+ * @return value type for cpu samples (type:cpu, units:nanoseconds), and
+ * adds strings used in this value type to the table.
+ */
+function createCpuValueType(table: StringTable): ValueType {
+  return new ValueType({
+    type: table.dedup('cpu'),
+    unit: table.dedup('nanoseconds'),
+  });
+}
+
+/**
  * @return value type for object counts (type:objects, units:count), and
  * adds strings used in this value type to the table.
  */
@@ -261,7 +274,7 @@ export function serializeTimeProfile(
   intervalMicros: number,
   sourceMapper?: SourceMapper,
   recomputeSamplingInterval = false,
-  generateLabels?: (context?: TimeProfileNodeContext) => LabelSet
+  generateLabels?: GenerateTimeLabelsFunction
 ): Profile {
   // If requested, recompute sampling interval from profile duration and total number of hits,
   // since profile duration should be #hits x interval.
@@ -287,23 +300,36 @@ export function serializeTimeProfile(
     samples: Sample[]
   ) => {
     let unlabelledHits = entry.node.hitCount;
+    let unlabelledCpuTime = 0;
     for (const context of entry.node.contexts || []) {
-      const labels = generateLabels ? generateLabels(context) : context.context;
+      const labels = generateLabels
+        ? generateLabels({node: entry.node, context})
+        : context.context;
       if (Object.keys(labels).length > 0) {
+        const values = [1, intervalNanos];
+        if (prof.hasCpuTime) {
+          values.push(context.cpuTime);
+        }
         const sample = new Sample({
           locationId: entry.stack,
-          value: [1, intervalNanos],
+          value: values,
           label: buildLabels(labels, stringTable),
         });
         samples.push(sample);
         unlabelledHits--;
+      } else if (prof.hasCpuTime) {
+        unlabelledCpuTime += context.cpuTime;
       }
     }
-    if (unlabelledHits > 0) {
-      const labels = generateLabels ? generateLabels() : {};
+    if (unlabelledHits > 0 || unlabelledCpuTime > 0) {
+      const labels = generateLabels ? generateLabels({node: entry.node}) : {};
+      const values = [unlabelledHits, unlabelledHits * intervalNanos];
+      if (prof.hasCpuTime) {
+        values.push(unlabelledCpuTime);
+      }
       const sample = new Sample({
         locationId: entry.stack,
-        value: [unlabelledHits, unlabelledHits * intervalNanos],
+        value: values,
         label: buildLabels(labels, stringTable),
       });
       samples.push(sample);
@@ -314,14 +340,39 @@ export function serializeTimeProfile(
   const sampleValueType = createSampleCountValueType(stringTable);
   const timeValueType = createTimeValueType(stringTable);
 
+  const sampleTypes = [sampleValueType, timeValueType];
+  if (prof.hasCpuTime) {
+    const cpuValueType = createCpuValueType(stringTable);
+    sampleTypes.push(cpuValueType);
+  }
+
   const profile = {
-    sampleType: [sampleValueType, timeValueType],
+    sampleType: sampleTypes,
     timeNanos: Date.now() * 1000 * 1000,
     durationNanos: (prof.endTime - prof.startTime) * 1000,
     periodType: timeValueType,
     period: intervalNanos,
   };
 
+  if (prof.nonJSThreadsCpuTime) {
+    const node: TimeProfileNode = {
+      name: NON_JS_THREADS_FUNCTION_NAME,
+      scriptName: '',
+      scriptId: 0,
+      lineNumber: 0,
+      columnNumber: 0,
+      children: [],
+      hitCount: 0, // 0 because this should not be accounted for wall time
+      contexts: [
+        {
+          context: {},
+          timestamp: BigInt(0),
+          cpuTime: prof.nonJSThreadsCpuTime,
+        },
+      ],
+    };
+    prof.topDownRoot.children.push(node);
+  }
   serialize(
     profile,
     prof.topDownRoot,
@@ -374,14 +425,14 @@ export function serializeHeapProfile(
   intervalBytes: number,
   ignoreSamplesPath?: string,
   sourceMapper?: SourceMapper,
-  generateLabels?: (node: AllocationProfileNode) => LabelSet
+  generateLabels?: GenerateAllocationLabelsFunction
 ): Profile {
   const appendHeapEntryToSamples: AppendEntryToSamples<
     AllocationProfileNode
   > = (entry: Entry<AllocationProfileNode>, samples: Sample[]) => {
     if (entry.node.allocations.length > 0) {
       const labels = generateLabels
-        ? buildLabels(generateLabels(entry.node), stringTable)
+        ? buildLabels(generateLabels({node: entry.node}), stringTable)
         : [];
       for (const alloc of entry.node.allocations) {
         const sample = new Sample({

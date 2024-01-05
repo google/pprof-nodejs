@@ -218,7 +218,9 @@ class ProfileTranslator {
       : contextsByNode(nls) {}
 
   v8::Local<v8::Value> TranslateTimeProfile(const v8::CpuProfile* profile,
-                                            bool includeLineInfo) {
+                                            bool includeLineInfo,
+                                            bool hasCpuTime,
+                                            int64_t nonJSThreadsCpuTime) {
     v8::Local<v8::Object> js_profile = Nan::New<v8::Object>();
 
     if (includeLineInfo) {
@@ -236,7 +238,12 @@ class ProfileTranslator {
     Nan::Set(js_profile,
              NewString("endTime"),
              Nan::New<v8::Number>(profile->GetEndTime()));
+    Nan::Set(
+        js_profile, NewString("hasCpuTime"), Nan::New<v8::Boolean>(hasCpuTime));
 
+    Nan::Set(js_profile,
+             NewString("nonJSThreadsCpuTime"),
+             Nan::New<v8::Number>(nonJSThreadsCpuTime));
     return js_profile;
   }
 };
@@ -244,9 +251,12 @@ class ProfileTranslator {
 
 v8::Local<v8::Value> TranslateTimeProfile(const v8::CpuProfile* profile,
                                           bool includeLineInfo,
-                                          ContextsByNode* contextsByNode) {
+                                          ContextsByNode* contextsByNode,
+                                          bool hasCpuTime,
+                                          int64_t nonJSThreadsCpuTime) {
   return ProfileTranslator(contextsByNode)
-      .TranslateTimeProfile(profile, includeLineInfo);
+      .TranslateTimeProfile(
+          profile, includeLineInfo, hasCpuTime, nonJSThreadsCpuTime);
 }
 
 }  // namespace dd

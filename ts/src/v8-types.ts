@@ -22,6 +22,9 @@ export interface TimeProfile {
   topDownRoot: TimeProfileNode;
   /** Time in nanoseconds at which profile was started. */
   startTime: number;
+  hasCpuTime?: boolean;
+  /** CPU time of non-JS threads, only reported for the main worker thread */
+  nonJSThreadsCpuTime?: number;
 }
 
 export interface ProfileNode {
@@ -37,6 +40,7 @@ export interface ProfileNode {
 export interface TimeProfileNodeContext {
   context: object;
   timestamp: bigint; // end of sample taking; in microseconds since epoch
+  cpuTime: number; // cpu time in nanoseconds
 }
 
 export interface TimeProfileNode extends ProfileNode {
@@ -54,4 +58,17 @@ export interface Allocation {
 }
 export interface LabelSet {
   [key: string]: string | number;
+}
+
+export interface GenerateAllocationLabelsFunction {
+  ({node}: {node: AllocationProfileNode}): LabelSet;
+}
+
+export interface GenerateTimeLabelsArgs {
+  node: TimeProfileNode;
+  context?: TimeProfileNodeContext;
+}
+
+export interface GenerateTimeLabelsFunction {
+  (args: GenerateTimeLabelsArgs): LabelSet;
 }
