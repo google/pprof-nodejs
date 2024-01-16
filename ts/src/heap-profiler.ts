@@ -28,7 +28,7 @@ import {
   AllocationProfileNode,
   GenerateAllocationLabelsFunction,
 } from './v8-types';
-import {isMainThread} from 'node:worker_threads';
+import {isMainThread} from 'worker_threads';
 
 let enabled = false;
 let heapIntervalBytes = 0;

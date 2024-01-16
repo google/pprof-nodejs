@@ -27,7 +27,7 @@ import {
   constants as profilerConstants,
 } from './time-profiler-bindings';
 import {GenerateTimeLabelsFunction} from './v8-types';
-import {isMainThread} from 'node:worker_threads';
+import {isMainThread} from 'worker_threads';
 
 const {kSampleCount} = profilerConstants;
 
