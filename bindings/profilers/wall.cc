@@ -348,7 +348,7 @@ static int64_t GetV8ToEpochOffset() {
   // every minute) instead of once statically, as the difference doesn't
   // necessarily remain constant depending on the characteristics of the clocks
   // being used.
-  int64_t V8toEpochOffset;
+  int64_t V8toEpochOffset = 0;
   int64_t smallestDiff = std::numeric_limits<int64_t>::max();
   for (int i = 0; i < MAX_EPOCH_OFFSET_ATTEMPTS; ++i) {
     auto v8Now = Now();
@@ -777,7 +777,7 @@ bool WallProfiler::waitForSignal(uint64_t targetCallCount) {
   }
 #if DD_WALL_USE_SIGPROF
   const int maxRetries = 2;
-  // wait for a maximum of 2 sample period
+  // wait for a maximum of 2 sample periods
   // if a signal occurs it will interrupt sleep (we use nanosleep and not
   // uv_sleep because we want this behaviour)
   timespec ts = {
@@ -941,6 +941,7 @@ NAN_MODULE_INIT(WallProfiler::Init) {
 
   Nan::SetPrototypeMethod(tpl, "start", Start);
   Nan::SetPrototypeMethod(tpl, "stop", Stop);
+  Nan::SetPrototypeMethod(tpl, "dispose", Dispose);
   Nan::SetPrototypeMethod(tpl,
                           "v8ProfilerStuckEventLoopDetected",
                           V8ProfilerStuckEventLoopDetected);
@@ -1034,6 +1035,11 @@ NAN_GETTER(WallProfiler::SharedArrayGetter) {
 NAN_METHOD(WallProfiler::V8ProfilerStuckEventLoopDetected) {
   auto profiler = Nan::ObjectWrap::Unwrap<WallProfiler>(info.Holder());
   info.GetReturnValue().Set(profiler->v8ProfilerStuckEventLoopDetected());
+}
+
+NAN_METHOD(WallProfiler::Dispose) {
+  auto profiler = Nan::ObjectWrap::Unwrap<WallProfiler>(info.Holder());
+  delete profiler;
 }
 
 void WallProfiler::PushContext(int64_t time_from,

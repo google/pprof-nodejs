@@ -147,6 +147,7 @@ class WallProfiler : public Nan::ObjectWrap {
   static NAN_METHOD(Start);
   static NAN_METHOD(Stop);
   static NAN_METHOD(V8ProfilerStuckEventLoopDetected);
+  static NAN_METHOD(Dispose);
   static NAN_MODULE_INIT(Init);
   static NAN_GETTER(GetContext);
   static NAN_SETTER(SetContext);

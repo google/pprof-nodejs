@@ -1,8 +1,7 @@
 {
     "variables": {
-        "asan%": 0,
-        "lsan%": 0,
-        "ubsan%": 0,
+        "address_sanitizer%": 0, # enable address + undefined behaviour sanitizer
+        "thread_sanitizer%": 0, # enable thread sanitizer,
         "build_tests%": 0
     },
     "conditions": [
@@ -58,9 +57,89 @@
                 {
                     "defines": [
                         "NOMINMAX"
-                    ]
+                    ],
+                    'msvs_settings': {
+                        'VCCLCompilerTool': {
+                            'AdditionalOptions': [
+                                '/Zc:__cplusplus',
+                                '-std:c++17',
+                            ],
+                        },                        
+                    },
+                },
+            ],
+            ["OS == 'linux'",
+                {
+                "cflags+":
+                    ["-Wno-deprecated-declarations", "-Werror"],
+                "cflags_cc!": ["-std=gnu++14", "-std=gnu++1y"],
+                "cflags_cc": ["-std=gnu++17"],
                 }
-            ]
-        ]
+            ],
+            ["OS == 'mac'",
+                {
+                'xcode_settings': {
+                    'OTHER_CFLAGS+': [
+                        "-Wno-deprecated-declarations",
+                        "-Werror",
+                        '-std=gnu++17',
+                        ],
+                    },
+                }
+            ],
+            ["address_sanitizer == 'true' and OS == 'mac'", {
+                'xcode_settings': {
+                    'OTHER_CFLAGS+': [
+                        '-fno-omit-frame-pointer',
+                        '-fsanitize=address,undefined',
+                        '-O0',
+                        '-g',
+                    ],
+                    'OTHER_CFLAGS!': [
+                        '-fomit-frame-pointer',
+                        '-O3',
+                    ],
+                },
+                'target_conditions': [
+                    ['_type!="static_library"', {
+                        'xcode_settings': {'OTHER_LDFLAGS+': ['-fsanitize=address,undefined']},
+                    }],
+                ],
+            }],
+            ["address_sanitizer == 'true' and OS != 'mac'", {
+                "cflags+": [
+                "-fno-omit-frame-pointer",
+                "-fsanitize=address,undefined",
+                "-O0",
+                "-g",
+                ],
+                "cflags!": [ "-fomit-frame-pointer", "-O3" ],
+                "ldflags+": [ "-fsanitize=address,undefined" ],
+            }],
+            ["thread_sanitizer == 'true' and OS == 'mac'", {
+                'xcode_settings': {
+                    'OTHER_CFLAGS+': [
+                        '-fno-omit-frame-pointer',
+                        '-fsanitize=thread',
+                    ],
+                    'OTHER_CFLAGS!': [
+                        '-fomit-frame-pointer',
+                    ],
+                },
+                'target_conditions': [
+                    ['_type!="static_library"', {
+                        'xcode_settings': {'OTHER_LDFLAGS+': ['-fsanitize=thread']},
+                    }],
+                ],
+            }],
+            ["thread_sanitizer == 'true' and OS != 'mac'", {
+                "cflags+": [
+                "-fno-omit-frame-pointer",
+                "-fsanitize=thread",
+                ],
+                "cflags!": [ "-fomit-frame-pointer" ],
+                "ldflags+": [ "-fsanitize=thread" ],
+            }]
+        ],
     }
 }

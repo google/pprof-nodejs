@@ -7,13 +7,9 @@ const { join } = require('path')
 const name = process.argv[2] || 'test_dd_pprof'
 
 const cmd = [
-  'node-gyp rebuild',
-  '--release',
-  '--jobs=max',
-  '--build_v8_with_gn=false',
-  '--v8_enable_pointer_compression=""',
-  '--v8_enable_31bit_smis_on_64bit_arch=""',
-  '--enable_lto=false',
+  'node-gyp',
+  'configure',
+  'build',
   '--build_tests'
 ].join(' ')
 

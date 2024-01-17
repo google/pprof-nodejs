@@ -23,7 +23,15 @@
 #include "tap.h"
 #include "v8.h"
 
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wcast-function-type"
+#endif
 NODE_MODULE_INIT(/* exports, module, context */) {
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic pop
+#endif
+
   Tap t;
   const char* env_var = std::getenv("TEST");
   std::string name(env_var == nullptr ? "" : env_var);

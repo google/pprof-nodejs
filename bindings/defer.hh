@@ -64,4 +64,4 @@ details::DeferHolder<F> make_defer(F&& f) {
 #define DEFER_(LINE) zz_defer##LINE
 #define DEFER(LINE) DEFER_(LINE)
 #define defer                                                                  \
-  [[gnu::unused]] const auto& DEFER(__COUNTER__) = details::DeferDummy{}* [&]()
+  [[maybe_unused]] const auto& DEFER(__COUNTER__) = details::DeferDummy{}* [&]()

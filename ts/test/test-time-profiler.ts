@@ -339,6 +339,7 @@ describe('Time Profiler', () => {
     const timeProfilerStub = {
       start: sinon.stub(),
       stop: sinon.stub().returns(v8TimeProfile),
+      dispose: sinon.stub(),
       v8ProfilerStuckEventLoopDetected: sinon.stub().returns(0),
     };
 
@@ -400,6 +401,7 @@ describe('Time Profiler', () => {
     const timeProfilerStub = {
       start: sinon.stub(),
       stop: sinon.stub().returns(v8TimeProfile),
+      dispose: sinon.stub(),
       v8ProfilerStuckEventLoopDetected: sinon.stub().returns(2),
     };
 

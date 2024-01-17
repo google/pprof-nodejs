@@ -7,6 +7,33 @@ on:
       - main
 
 jobs:
+  asan:
+    strategy:
+      matrix:
+        version: [14, 16, 18, 20, 21]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.version }}
+      - run: npm install
+      - run: npm run test:js-asan
+
+  valgrind:
+    strategy:
+      matrix:
+        version: [14, 16, 18, 20, 21]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.version }}
+      - run: sudo apt-get update && sudo apt-get install valgrind
+      - run: npm install
+      - run: npm run test:js-valgrind
+
   build:
     uses: Datadog/action-prebuildify/.github/workflows/build.yml@main
     with:
@@ -14,6 +41,7 @@ jobs:
       package-manager: 'npm' # npm or yarn
       cache: true # enable caching of dependencies based on lockfile
       min-node-version: 14
+      skip: 'linux-arm linux-ia32' # skip building for these platforms
 
   dev_publish:
     needs: build

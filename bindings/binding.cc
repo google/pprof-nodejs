@@ -38,7 +38,15 @@ static NAN_METHOD(GetNativeThreadId) {
   info.GetReturnValue().Set(v8::Integer::New(info.GetIsolate(), native_id));
 }
 
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wcast-function-type"
+#endif
 NODE_MODULE_INIT(/* exports, module, context */) {
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic pop
+#endif
+
   dd::HeapProfiler::Init(exports);
   dd::WallProfiler::Init(exports);
   Nan::SetMethod(exports, "getNativeThreadId", GetNativeThreadId);

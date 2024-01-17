@@ -134,6 +134,7 @@ export function stop(
     generateLabels
   );
   if (!restart) {
+    gProfiler.dispose();
     gProfiler = undefined;
     gSourceMapper = undefined;
   }
