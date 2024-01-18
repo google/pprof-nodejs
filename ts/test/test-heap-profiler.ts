@@ -19,6 +19,9 @@ import * as sinon from 'sinon';
 import * as heapProfiler from '../src/heap-profiler';
 import * as v8HeapProfiler from '../src/heap-profiler-bindings';
 import {AllocationProfileNode, LabelSet} from '../src/v8-types';
+import {fork} from 'child_process';
+import path from 'path';
+import fs from 'fs';
 
 import {
   heapProfileExcludePath,
@@ -205,5 +208,36 @@ describe('HeapProfiler', () => {
         'expected stopSamplingHeapProfiler to be called'
       );
     });
+  });
+});
+
+describe('OOMMonitoring', () => {
+  it('should call external process upon OOM', async function () {
+    // On Windows, OOM monitoring does not work well, in particular
+    // it appears that calling GetAllocationProfile in NearHeapLimitCallback
+    // causes the process to abort. So we skip this test on Windows.
+    if (process.platform === 'win32') this.skip();
+
+    // this test is very slow on some configs (asan/valgrind)
+    this.timeout(10000);
+    const proc = fork(path.join(__dirname, 'oom.js'), {
+      execArgv: ['--max-old-space-size=50'],
+    });
+    const checkFilePath = 'oom_check.log';
+    if (fs.existsSync(checkFilePath)) {
+      fs.unlinkSync(checkFilePath);
+    }
+    // wait for proc to exit
+    await new Promise<void>((resolve, reject) => {
+      proc.on('exit', code => {
+        if (code === 0) {
+          reject();
+        } else {
+          resolve();
+        }
+      });
+    });
+    assert.equal(fs.readFileSync(checkFilePath), 'ok');
+    fs.unlinkSync(checkFilePath);
   });
 });
