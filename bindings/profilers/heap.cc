@@ -279,22 +279,44 @@ static int CreateTempFile(uv_loop_t& loop, std::string& filepath) {
     fprintf(stderr, "Failed to retrieve temp directory: %s\n", uv_strerror(r));
     return -1;
   }
-  std::string tmpl = std::string{buf, sz} + "/heap_profile_XXXXXX";
 
-// uv_fs_mkstemp is available in libuv >= 1.34.0
-#if UV_VERSION_HEX >= 0x012200
-  uv_fs_t req;
-  if ((r = uv_fs_mkstemp(&loop, &req, tmpl.c_str(), nullptr)) < 0) {
-    fprintf(stderr, "Failed to create temp file error: %s\n", uv_strerror(r));
+#if defined(__linux__) || defined(__APPLE__)
+  filepath = std::string{buf, sz} + "/heap_profile_XXXXXX";
+  int fd = mkstemp(&filepath[0]);
+  if (fd < 0) {
+    fprintf(stderr,
+            "Failed to create temp file %s : %s\n",
+            filepath.c_str(),
+            strerror(errno));
     return -1;
   }
-  filepath = req.path;
-  uv_fs_req_cleanup(&req);
-  return req.result;
-#elif defined(__linux__) || defined(__APPLE__)
-  filepath = tmpl;
-  return mkstemp(&filepath[0]);
+  return fd;
 #else
+  // Use custom implementation of mkstemp() for Windows
+  // uv_fs_mkstemp() is not used because it fails unexpectedly on Windows
+  // (fail fast exception is raised when trying to write to the returned file
+  // descriptor)
+  const int max_tries = 3;
+  for (int i = 0; i < max_tries; ++i) {
+    filepath = std::string{buf, sz} + "/heap_profile_" +
+               std::to_string(
+                   std::chrono::system_clock::now().time_since_epoch().count());
+    uv_fs_t fs_req{};
+    int fd = uv_fs_open(&loop,
+                        &fs_req,
+                        filepath.c_str(),
+                        UV_FS_O_CREAT | UV_FS_O_EXCL | UV_FS_O_WRONLY,
+                        0600,
+                        nullptr);
+    uv_fs_req_cleanup(&fs_req);
+    if (fd >= 0) {
+      return r;
+    }
+    if (fd != UV_EEXIST) {
+      fprintf(stderr, "Failed to create temp file: %s\n", uv_strerror(fd));
+      return -1;
+    }
+  }
   return -1;
 #endif
 }
@@ -363,8 +385,9 @@ static void ExportProfile(HeapProfilerState& state) {
   uv_run(&loop, UV_RUN_DEFAULT);
 
   // Delete temp file
-  uv_fs_t fs_req;
+  uv_fs_t fs_req{};
   uv_fs_unlink(&loop, &fs_req, filepath.c_str(), nullptr);
+  uv_fs_req_cleanup(&fs_req);
 }
 
 size_t NearHeapLimit(void* data,

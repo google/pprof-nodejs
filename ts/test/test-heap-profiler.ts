@@ -213,13 +213,8 @@ describe('HeapProfiler', () => {
 
 describe('OOMMonitoring', () => {
   it('should call external process upon OOM', async function () {
-    // On Windows, OOM monitoring does not work well, in particular
-    // it appears that calling GetAllocationProfile in NearHeapLimitCallback
-    // causes the process to abort. So we skip this test on Windows.
-    if (process.platform === 'win32') this.skip();
-
     // this test is very slow on some configs (asan/valgrind)
-    this.timeout(10000);
+    this.timeout(20000);
     const proc = fork(path.join(__dirname, 'oom.js'), {
       execArgv: ['--max-old-space-size=50'],
     });
