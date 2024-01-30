@@ -54,7 +54,7 @@
     "linkinator": "^5.0.0",
     "mocha": "^10.0.0",
     "nyc": "^15.0.0",
-    "protobufjs-cli": "1.1.1",
+    "protobufjs-cli": "1.1.2",
     "sinon": "^15.0.0",
     "source-map-support": "^0.5.12",
     "tmp": "0.2.1",
