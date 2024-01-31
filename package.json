@@ -2,7 +2,10 @@
   "name": "pprof",
   "version": "3.3.0",
   "description": "pprof support for Node.js",
-  "repository": "google/pprof-nodejs",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/google/pprof-nodejs.git"
+  },
   "main": "out/src/index.js",
   "types": "out/src/index.d.ts",
   "scripts": {
