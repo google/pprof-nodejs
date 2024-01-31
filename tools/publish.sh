@@ -19,11 +19,11 @@
 set -eo pipefail
 
 # Install desired version of Node.js
-retry curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.37.2/install.sh | bash >/dev/null
+retry curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash >/dev/null
 export NVM_DIR="$HOME/.nvm" >/dev/null
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" >/dev/null
 
-retry nvm install 10 &>/dev/null
+retry nvm install 20 &>/dev/null
 
 cd $(dirname $0)/..
 
@@ -31,5 +31,4 @@ NPM_TOKEN=$(cat $KOKORO_KEYSTORE_DIR/72935_pprof-npm-token)
 echo "//wombat-dressing-room.appspot.com/:_authToken=${NPM_TOKEN}" > ~/.npmrc
 
 retry npm install --quiet
-npm publish --access=public \
-    --registry=https://wombat-dressing-room.appspot.com
+npm publish
