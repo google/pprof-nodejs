@@ -14,7 +14,7 @@ cd $(dirname $0)
 # official releases. https://nodejs.org/en/about/releases/
 if [[ -z "$BINARY_HOST" ]]; then
   ADDITIONAL_PACKAGES="python3 g++ make"
-  NODE_VERSIONS=(14 16 18 19)
+  NODE_VERSIONS=(14 16 18 20)
 else
   # Tested versions for pre-built binaries are limited based on
   # what node-pre-gyp can specify as its target version.

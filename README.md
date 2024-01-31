@@ -8,7 +8,7 @@
 
 ## Prerequisites
 1. Your application will need to be using Node.js 14 or greater. This package is tested against
-[current versions of Node.js][node-versions]: 14, 16, 18, and 19.
+[current versions of Node.js][node-versions]: 14, 16, 18, and 20.
 
 2. The `pprof` module has a native component that is used to collect profiles 
 with v8's CPU and Heap profilers. You may need to install additional
