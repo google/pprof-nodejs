@@ -144,6 +144,8 @@ function computeStats(
         }
         statistics[filename] = fileStats;
       } catch (err) {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore upgrading to typescript v5
         errors.set(filename, err);
       }
     }
