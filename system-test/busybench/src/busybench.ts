@@ -27,9 +27,11 @@ const testArr: number[][] = [];
  * It continues to do this until durationSeconds after the startTime.
  */
 function busyLoop(durationSeconds: number) {
+  const noop = () => {};
   for (let i = 0; i < testArr.length; i++) {
     for (let j = 0; j < testArr[i].length; j++) {
       testArr[i][j] = Math.sqrt(j * testArr[i][j]);
+      noop();
     }
   }
   if (Date.now() - startTime < 1000 * durationSeconds) {
