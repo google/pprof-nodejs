@@ -306,7 +306,10 @@ export function serializeTimeProfile(
         ? generateLabels({node: entry.node, context})
         : context.context;
       if (Object.keys(labels).length > 0) {
-        const values = [1, intervalNanos];
+        // Only assign wall time if there are hits, some special nodes such as `(Non-JS threads)`
+        // have zero hit count (since they do not count as wall time) and should not be assigned any
+        // wall time.
+        const values = unlabelledHits > 0 ? [1, intervalNanos] : [0, 0];
         if (prof.hasCpuTime) {
           values.push(context.cpuTime);
         }
@@ -323,7 +326,10 @@ export function serializeTimeProfile(
     }
     if (unlabelledHits > 0 || unlabelledCpuTime > 0) {
       const labels = generateLabels ? generateLabels({node: entry.node}) : {};
-      const values = [unlabelledHits, unlabelledHits * intervalNanos];
+      const values =
+        unlabelledHits > 0
+          ? [unlabelledHits, unlabelledHits * intervalNanos]
+          : [0, 0];
       if (prof.hasCpuTime) {
         values.push(unlabelledCpuTime);
       }
@@ -354,7 +360,7 @@ export function serializeTimeProfile(
     period: intervalNanos,
   };
 
-  if (prof.nonJSThreadsCpuTime) {
+  if (prof.hasCpuTime && prof.nonJSThreadsCpuTime) {
     const node: TimeProfileNode = {
       name: NON_JS_THREADS_FUNCTION_NAME,
       scriptName: '',

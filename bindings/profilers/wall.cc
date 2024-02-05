@@ -856,7 +856,7 @@ Result WallProfiler::StopImpl(bool restart, v8::Local<v8::Value>& profile) {
   if (withContexts_) {
     int64_t nonJSThreadsCpuTime{};
 
-    if (isMainThread_) {
+    if (isMainThread_ && collectCpuTime_) {
       // account for non-JS threads CPU only in main thread
       // CPU time of non-JS threads is the difference between process CPU time
       // and sum of all worker JS thread during the profiling period of main

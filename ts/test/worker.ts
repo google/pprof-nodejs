@@ -1,11 +1,10 @@
 import {Worker, isMainThread, workerData, parentPort} from 'worker_threads';
 import {pbkdf2} from 'crypto';
 import {time} from '../src/index';
-import {Profile, StringTable, ValueType} from 'pprof-format';
+import {Profile, ValueType} from 'pprof-format';
+import {getAndVerifyPresence, getAndVerifyString} from './profiles-for-tests';
 
-const assert = require('assert');
-
-const {hasOwnProperty} = Object.prototype;
+import assert from 'assert';
 
 const DURATION_MILLIS = 1000;
 const intervalMicros = 10000;
@@ -122,30 +121,6 @@ function sampleName(profile: Profile, sampleType: ValueType[]) {
   return sampleType.map(valueName.bind(null, profile));
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function getAndVerifyPresence(list: any[], id: number, zeroIndex = false) {
-  assert.strictEqual(typeof id, 'number', 'has id');
-  const index = id - (zeroIndex ? 0 : 1);
-  assert.ok(list.length > index, 'exists in list');
-  return list[index];
-}
-
-function getAndVerifyString(
-  stringTable: StringTable,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  source: any,
-  field: string
-) {
-  assert.ok(hasOwnProperty.call(source, field), 'has id field');
-  const str = getAndVerifyPresence(
-    stringTable.strings,
-    source[field] as number,
-    true
-  );
-  assert.strictEqual(typeof str, 'string', 'is a string');
-  return str;
-}
-
 function getCpuTime(profile: Profile) {
   let jsCpuTime = 0;
   let nonJsCpuTime = 0;
@@ -161,6 +136,8 @@ function getCpuTime(profile: Profile) {
     const fn_name = profile.stringTable.strings[fn.name as number];
     if (fn_name === time.constants.NON_JS_THREADS_FUNCTION_NAME) {
       nonJsCpuTime += sample.value![2] as number;
+      assert.strictEqual(sample.value![0], 0);
+      assert.strictEqual(sample.value![1], 0);
     } else {
       jsCpuTime += sample.value![2] as number;
     }

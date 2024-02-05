@@ -24,6 +24,8 @@ import {Function, Location, Profile, Sample, ValueType} from 'pprof-format';
 import {TimeProfile} from '../src/v8-types';
 import {StringTable} from 'pprof-format';
 
+import assert from 'assert';
+
 function buildStringTable(values: string[]): StringTable {
   const table = new StringTable();
   for (const value of values) {
@@ -1224,3 +1226,33 @@ export const labelEncodingProfile = {
     ],
   },
 };
+
+const {hasOwnProperty} = Object.prototype;
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function getAndVerifyPresence(
+  list: any[],
+  id: number,
+  zeroIndex = false
+) {
+  assert.strictEqual(typeof id, 'number', 'has id');
+  const index = id - (zeroIndex ? 0 : 1);
+  assert.ok(list.length > index, 'exists in list');
+  return list[index];
+}
+
+export function getAndVerifyString(
+  stringTable: StringTable,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  source: any,
+  field: string
+) {
+  assert.ok(hasOwnProperty.call(source, field), 'has id field');
+  const str = getAndVerifyPresence(
+    stringTable.strings,
+    source[field] as number,
+    true
+  );
+  assert.strictEqual(typeof str, 'string', 'is a string');
+  return str;
+}

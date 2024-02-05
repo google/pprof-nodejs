@@ -17,14 +17,16 @@ import * as sinon from 'sinon';
 import * as tmp from 'tmp';
 
 import {
+  NON_JS_THREADS_FUNCTION_NAME,
   serializeHeapProfile,
   serializeTimeProfile,
 } from '../src/profile-serializer';
 import {SourceMapper} from '../src/sourcemapper/sourcemapper';
-import {Label} from 'pprof-format';
+import {Label, Profile} from 'pprof-format';
+import {TimeProfile} from '../src/v8-types';
 import {
   anonymousFunctionHeapProfile,
-  anonymousFunctionTimeProfile,
+  getAndVerifyPresence,
   heapProfile,
   heapSourceProfile,
   labelEncodingProfile,
@@ -32,7 +34,6 @@ import {
   timeProfile,
   timeSourceProfile,
   v8AnonymousFunctionHeapProfile,
-  v8AnonymousFunctionTimeProfile,
   v8HeapGeneratedProfile,
   v8HeapProfile,
   v8TimeGeneratedProfile,
@@ -40,6 +41,24 @@ import {
 } from './profiles-for-tests';
 
 const assert = require('assert');
+
+function getNonJSThreadsSample(profile: Profile): Number[] | null {
+  for (const sample of profile.sample!) {
+    const locationId = sample.locationId[0];
+    const location = getAndVerifyPresence(
+      profile.location!,
+      locationId as number
+    );
+    const functionId = location.line![0].functionId;
+    const fn = getAndVerifyPresence(profile.function!, functionId as number);
+    const fn_name = profile.stringTable.strings[fn.name as number];
+    if (fn_name === NON_JS_THREADS_FUNCTION_NAME) {
+      return sample.value as Number[];
+    }
+  }
+
+  return null;
+}
 
 describe('profile-serializer', () => {
   let dateStub: sinon.SinonStub<[], number>;
@@ -56,12 +75,103 @@ describe('profile-serializer', () => {
       const timeProfileOut = serializeTimeProfile(v8TimeProfile, 1000);
       assert.deepEqual(timeProfileOut, timeProfile);
     });
-    it('should produce expected profile when there is anyonmous function', () => {
-      const timeProfileOut = serializeTimeProfile(
-        v8AnonymousFunctionTimeProfile,
-        1000
+
+    it('should omit non-jS threads CPU time when profile has no CPU time', () => {
+      const timeProfile: TimeProfile = {
+        startTime: 0,
+        endTime: 10 * 1000 * 1000,
+        hasCpuTime: false,
+        nonJSThreadsCpuTime: 1000,
+        topDownRoot: {
+          name: '(root)',
+          scriptName: 'root',
+          scriptId: 0,
+          lineNumber: 0,
+          columnNumber: 0,
+          hitCount: 0,
+          children: [],
+        },
+      };
+      const timeProfileOut = serializeTimeProfile(timeProfile, 1000);
+      assert.equal(getNonJSThreadsSample(timeProfileOut), null);
+      const timeProfileOutWithLabels = serializeTimeProfile(
+        timeProfile,
+        1000,
+        undefined,
+        false,
+        () => {
+          return {foo: 'bar'};
+        }
       );
-      assert.deepEqual(timeProfileOut, anonymousFunctionTimeProfile);
+      assert.equal(getNonJSThreadsSample(timeProfileOutWithLabels), null);
+    });
+
+    it('should omit non-jS threads CPU time when it is zero', () => {
+      const timeProfile: TimeProfile = {
+        startTime: 0,
+        endTime: 10 * 1000 * 1000,
+        hasCpuTime: true,
+        nonJSThreadsCpuTime: 0,
+        topDownRoot: {
+          name: '(root)',
+          scriptName: 'root',
+          scriptId: 0,
+          lineNumber: 0,
+          columnNumber: 0,
+          hitCount: 0,
+          children: [],
+        },
+      };
+      const timeProfileOut = serializeTimeProfile(timeProfile, 1000);
+      assert.equal(getNonJSThreadsSample(timeProfileOut), null);
+      const timeProfileOutWithLabels = serializeTimeProfile(
+        timeProfile,
+        1000,
+        undefined,
+        false,
+        () => {
+          return {foo: 'bar'};
+        }
+      );
+      assert.equal(getNonJSThreadsSample(timeProfileOutWithLabels), null);
+    });
+
+    it('should produce Non-JS thread sample with zero wall time', () => {
+      const timeProfile: TimeProfile = {
+        startTime: 0,
+        endTime: 10 * 1000 * 1000,
+        hasCpuTime: true,
+        nonJSThreadsCpuTime: 1000,
+        topDownRoot: {
+          name: '(root)',
+          scriptName: 'root',
+          scriptId: 0,
+          lineNumber: 0,
+          columnNumber: 0,
+          hitCount: 0,
+          children: [],
+        },
+      };
+      const timeProfileOut = serializeTimeProfile(timeProfile, 1000);
+      const values = getNonJSThreadsSample(timeProfileOut);
+      assert.notEqual(values, null);
+      assert.equal(values![0], 0);
+      assert.equal(values![1], 0);
+      assert.equal(values![2], 1000);
+      const timeProfileOutWithLabels = serializeTimeProfile(
+        timeProfile,
+        1000,
+        undefined,
+        false,
+        () => {
+          return {foo: 'bar'};
+        }
+      );
+      const valuesWithLabels = getNonJSThreadsSample(timeProfileOutWithLabels);
+      assert.notEqual(valuesWithLabels, null);
+      assert.equal(valuesWithLabels![0], 0);
+      assert.equal(valuesWithLabels![1], 0);
+      assert.equal(valuesWithLabels![2], 1000);
     });
   });
 
