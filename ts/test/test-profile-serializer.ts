@@ -192,7 +192,7 @@ describe('profile-serializer', () => {
       const heapProfileOut = serializeHeapProfile(v8HeapProfile, 0, 512 * 1024);
       assert.deepEqual(heapProfileOut, heapProfile);
     });
-    it('should produce expected profile when there is anyonmous function', () => {
+    it('should produce expected profile when there is anonymous function', () => {
       const heapProfileOut = serializeHeapProfile(
         v8AnonymousFunctionHeapProfile,
         0,

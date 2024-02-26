@@ -40,7 +40,8 @@ import {
   TimeProfileNode,
 } from './v8-types';
 
-export const NON_JS_THREADS_FUNCTION_NAME = '(non-JS threads)';
+export const NON_JS_THREADS_FUNCTION_NAME = 'Non JS threads activity';
+export const GARBAGE_COLLECTION_FUNCTION_NAME = 'Garbage Collection';
 
 /**
  * A stack of function IDs.
@@ -110,7 +111,6 @@ function serialize<T extends ProfileNode>(
     if (ignoreSamplesPath && node.scriptName.indexOf(ignoreSamplesPath) > -1) {
       continue;
     }
-    if (node.name === '(idle)' || node.name === '(program)') continue;
     const stack = entry.stack;
     const location = getLocation(node, sourceMapper);
     stack.unshift(location.id as number);
@@ -262,6 +262,75 @@ function computeTotalHitCount(root: TimeProfileNode): number {
   );
 }
 
+/** Perform some modifications on time profile:
+ *  - Add non-JS thread activity node if available
+ *  - Remove `(idle)` and `(program)` nodes
+ *  - Convert `(garbage collector)` node to `Garbage Collection`
+ *  - Put `non-JS thread activity` node and `Garbage Collection` under a top level `Node.js` node
+ * This function does not change the input profile.
+ */
+function updateTimeProfile(prof: TimeProfile): TimeProfile {
+  const newTopLevelChildren: TimeProfileNode[] = [];
+
+  let runtimeNode: TimeProfileNode | undefined;
+
+  function getRuntimeNode(): TimeProfileNode {
+    if (!runtimeNode) {
+      runtimeNode = {
+        name: 'Node.js',
+        scriptName: '',
+        scriptId: 0,
+        lineNumber: 0,
+        columnNumber: 0,
+        children: [],
+        hitCount: 0,
+      };
+      newTopLevelChildren.push(runtimeNode);
+    }
+    return runtimeNode;
+  }
+
+  for (const child of prof.topDownRoot.children as TimeProfileNode[]) {
+    if (child.name === '(idle)' || child.name === '(program)') {
+      continue;
+    }
+    if (child.name === '(garbage collector)') {
+      // Create a new node to avoid modifying the input one
+      const newChild: TimeProfileNode = {
+        ...child,
+        name: GARBAGE_COLLECTION_FUNCTION_NAME,
+      };
+      getRuntimeNode().children.push(newChild);
+    } else {
+      newTopLevelChildren.push(child);
+    }
+  }
+
+  if (prof.hasCpuTime && prof.nonJSThreadsCpuTime) {
+    const node: TimeProfileNode = {
+      name: NON_JS_THREADS_FUNCTION_NAME,
+      scriptName: '',
+      scriptId: 0,
+      lineNumber: 0,
+      columnNumber: 0,
+      children: [],
+      hitCount: 0, // 0 because this should not be accounted for wall time
+      contexts: [
+        {
+          context: {},
+          timestamp: BigInt(0),
+          cpuTime: prof.nonJSThreadsCpuTime,
+        },
+      ],
+    };
+    getRuntimeNode().children.push(node);
+  }
+  return {
+    ...prof,
+    topDownRoot: {...prof.topDownRoot, children: newTopLevelChildren},
+  };
+}
+
 /**
  * Converts v8 time profile into into a profile proto.
  * (https://github.com/google/pprof/blob/master/proto/profile.proto)
@@ -360,28 +429,11 @@ export function serializeTimeProfile(
     period: intervalNanos,
   };
 
-  if (prof.hasCpuTime && prof.nonJSThreadsCpuTime) {
-    const node: TimeProfileNode = {
-      name: NON_JS_THREADS_FUNCTION_NAME,
-      scriptName: '',
-      scriptId: 0,
-      lineNumber: 0,
-      columnNumber: 0,
-      children: [],
-      hitCount: 0, // 0 because this should not be accounted for wall time
-      contexts: [
-        {
-          context: {},
-          timestamp: BigInt(0),
-          cpuTime: prof.nonJSThreadsCpuTime,
-        },
-      ],
-    };
-    prof.topDownRoot.children.push(node);
-  }
+  const updatedProf = updateTimeProfile(prof);
+
   serialize(
     profile,
-    prof.topDownRoot,
+    updatedProf.topDownRoot,
     appendTimeEntryToSamples,
     stringTable,
     undefined,

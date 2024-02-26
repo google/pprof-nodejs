@@ -18,6 +18,7 @@ import delay from 'delay';
 
 import {
   serializeTimeProfile,
+  GARBAGE_COLLECTION_FUNCTION_NAME,
   NON_JS_THREADS_FUNCTION_NAME,
 } from './profile-serializer';
 import {SourceMapper} from './sourcemapper/sourcemapper';
@@ -171,5 +172,9 @@ export function v8ProfilerStuckEventLoopDetected() {
   return gV8ProfilerStuckEventLoopDetected;
 }
 
-export const constants = {kSampleCount, NON_JS_THREADS_FUNCTION_NAME};
+export const constants = {
+  kSampleCount,
+  GARBAGE_COLLECTION_FUNCTION_NAME,
+  NON_JS_THREADS_FUNCTION_NAME,
+};
 export {getNativeThreadId};

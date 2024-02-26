@@ -84,7 +84,7 @@ const timeNode2 = {
   children: [timeLeaf3],
 };
 
-const timeRoot = {
+const timeRoot = Object.freeze({
   name: '(root)',
   scriptName: 'root',
   scriptId: 0,
@@ -92,7 +92,7 @@ const timeRoot = {
   columnNumber: 0,
   hitCount: 0,
   children: [timeNode1, timeNode2],
-};
+});
 
 export const v8TimeProfile: TimeProfile = Object.freeze({
   startTime: 0,
