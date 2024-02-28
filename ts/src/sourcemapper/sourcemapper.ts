@@ -359,7 +359,7 @@ async function getMapFiles(baseDir: string): Promise<string[]> {
   const mapFiles: string[] = [];
   for await (const entry of walk(
     baseDir,
-    filename => filename.endsWith('.js.map'),
+    filename => /\.[cm]?js\.map$/.test(filename),
     (root, dirname) =>
       root !== '/proc' && dirname !== '.git' && dirname !== 'node_modules'
   )) {

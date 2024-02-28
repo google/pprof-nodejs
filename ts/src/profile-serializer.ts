@@ -108,6 +108,12 @@ function serialize<T extends ProfileNode>(
   while (entries.length > 0) {
     const entry = entries.pop()!;
     const node = entry.node;
+
+    // mjs files have a `file://` prefix in the scriptName -> remove it
+    if (node.scriptName.startsWith('file://')) {
+      node.scriptName = node.scriptName.slice(7);
+    }
+
     if (ignoreSamplesPath && node.scriptName.indexOf(ignoreSamplesPath) > -1) {
       continue;
     }
