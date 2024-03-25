@@ -21,8 +21,8 @@ import {Profile} from 'pprof-format';
 
 const gzipPromise = promisify(gzip);
 
-export async function encode(profile: Profile): Promise<Buffer> {
-  return gzipPromise(profile.encode());
+export function encode(profile: Profile): Promise<Buffer> {
+  return profile.encodeAsync().then(gzipPromise);
 }
 
 export function encodeSync(profile: Profile): Buffer {

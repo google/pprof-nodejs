@@ -36,7 +36,7 @@
     "delay": "^5.0.0",
     "node-gyp-build": "<4.0",
     "p-limit": "^3.1.0",
-    "pprof-format": "^2.0.7",
+    "pprof-format": "^2.1.0",
     "source-map": "^0.7.4"
   },
   "devDependencies": {
