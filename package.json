@@ -55,7 +55,7 @@
     "gts": "^4.0.1",
     "js-green-licenses": "^4.0.0",
     "mocha": "^10.2.0",
-    "nan": "^2.18.0",
+    "nan": "^2.19.0",
     "nyc": "^15.1.0",
     "sinon": "^15.2.0",
     "source-map-support": "^0.5.21",

@@ -1229,8 +1229,8 @@ export const labelEncodingProfile = {
 
 const {hasOwnProperty} = Object.prototype;
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function getAndVerifyPresence(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   list: any[],
   id: number,
   zeroIndex = false
