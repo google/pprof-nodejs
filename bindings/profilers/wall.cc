@@ -485,7 +485,6 @@ WallProfiler::WallProfiler(std::chrono::microseconds samplingPeriod,
   // When starting a new profile, wait for one signal before and one signal
   // after to reduce the likelihood that race condition occurs and one code
   // event just after triggers the issue.
-  detectV8Bug_ = NODE_MODULE_VERSION >= NODE_16_0_MODULE_VERSION;
   workaroundV8Bug_ = workaroundV8Bug && DD_WALL_USE_SIGPROF && detectV8Bug_;
   collectCpuTime_ = collectCpuTime && withContexts;
 
@@ -751,11 +750,7 @@ NAN_METHOD(WallProfiler::Stop) {
       Nan::ObjectWrap::Unwrap<WallProfiler>(info.Holder());
 
   v8::Local<v8::Value> profile;
-#if NODE_MODULE_VERSION < NODE_16_0_MODULE_VERSION
-  auto err = wallProfiler->StopImplOld(restart, profile);
-#else
   auto err = wallProfiler->StopImpl(restart, profile);
-#endif
 
   if (!err.success) {
     return Nan::ThrowTypeError(err.msg.c_str());
@@ -895,39 +890,6 @@ Result WallProfiler::StopImpl(bool restart, v8::Local<v8::Value>& profile) {
   return {};
 }
 
-Result WallProfiler::StopImplOld(bool restart, v8::Local<v8::Value>& profile) {
-  if (!started_) {
-    return Result{"Stop called on not started profiler."};
-  }
-
-  if (withContexts_ || workaroundV8Bug_) {
-    SignalHandler::DecreaseUseCount();
-  }
-  auto v8_profile = cpuProfiler_->StopProfiling(
-      Nan::New<String>(profileId_).ToLocalChecked());
-
-  if (withContexts_) {
-    auto contextsByNode =
-        GetContextsByNode(v8_profile, contexts_, startThreadCpuTime_);
-    profile = TranslateTimeProfile(
-        v8_profile, includeLines_, &contextsByNode, collectCpuTime_);
-  } else {
-    profile = TranslateTimeProfile(v8_profile, includeLines_);
-  }
-  contexts_.clear();
-  v8_profile->Delete();
-  Dispose(v8::Isolate::GetCurrent());
-
-  if (restart) {
-    CreateV8CpuProfiler();
-    profileId_ = StartInternal();
-  } else {
-    started_ = false;
-  }
-
-  return {};
-}
-
 NAN_MODULE_INIT(WallProfiler::Init) {
   Local<FunctionTemplate> tpl = Nan::New<FunctionTemplate>(New);
   Local<String> className = Nan::New("TimeProfiler").ToLocalChecked();
@@ -972,9 +934,6 @@ NAN_MODULE_INIT(WallProfiler::Init) {
       .FromJust();
 }
 
-// A new CPU profiler object will be created each time profiling is started
-// to work around https://bugs.chromium.org/p/v8/issues/detail?id=11051.
-// TODO: Fixed in v16. Delete this hack when deprecating v14.
 v8::CpuProfiler* WallProfiler::CreateV8CpuProfiler() {
   if (cpuProfiler_ == nullptr) {
     v8::Isolate* isolate = v8::Isolate::GetCurrent();

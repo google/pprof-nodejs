@@ -10,7 +10,7 @@ jobs:
   asan:
     strategy:
       matrix:
-        version: [14, 16, 18, 20, 22]
+        version: [16, 18, 20, 22]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -23,7 +23,7 @@ jobs:
   valgrind:
     strategy:
       matrix:
-        version: [14, 16, 18, 20, 22]
+        version: [16, 18, 20, 22]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -40,7 +40,7 @@ jobs:
       target-name: 'dd_pprof' # target name in binding.gyp
       package-manager: 'npm' # npm or yarn
       cache: true # enable caching of dependencies based on lockfile
-      min-node-version: 14
+      min-node-version: 16
       skip: 'linux-arm linux-ia32' # skip building for these platforms
 
   dev_publish:

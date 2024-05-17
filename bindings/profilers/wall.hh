@@ -65,7 +65,7 @@ class WallProfiler : public Nan::ObjectWrap {
   bool withContexts_ = false;
   bool started_ = false;
   bool workaroundV8Bug_;
-  bool detectV8Bug_;
+  static inline constexpr bool detectV8Bug_ = true;
   bool collectCpuTime_;
   bool isMainThread_;
   int v8ProfilerStuckEventLoopDetected_ = 0;
@@ -122,7 +122,6 @@ class WallProfiler : public Nan::ObjectWrap {
   Result StartImpl();
   std::string StartInternal();
   Result StopImpl(bool restart, v8::Local<v8::Value>& profile);
-  Result StopImplOld(bool restart, v8::Local<v8::Value>& profile);
 
   CollectionMode collectionMode() {
     auto res = collectionMode_.load(std::memory_order_relaxed);

@@ -7,13 +7,13 @@
 [pprof][pprof-url] support for Node.js.
 
 ## Prerequisites
-1. Your application will need to be using Node.js 14 or greater.
+1. Your application will need to be using Node.js 16 or greater.
 
-2. The `pprof` module has a native component that is used to collect profiles 
+2. The `pprof` module has a native component that is used to collect profiles
 with v8's CPU and Heap profilers. You may need to install additional
 dependencies to build this module.
     * For Linux: `pprof` has prebuilt binaries available for Linux arm64/x64,
-    Alpine Linux x64, macOS arm64/x64, windows x64 for Node 14/16/18/20.
+    Alpine Linux x64, macOS arm64/x64, windows x64 for Node 16/18/20/22.
     No additional dependencies are required.
     * For other environments: on environments that `pprof` does not have
     prebuilt binaries for, the module
@@ -42,7 +42,7 @@ Install [`pprof`][npm-url] with `npm` or add to your `package.json`.
 1. Update code to collect and save a profile:
     ```javascript
     const profile = await pprof.time.profile({
-      durationMillis: 10000,    // time in milliseconds for which to 
+      durationMillis: 10000,    // time in milliseconds for which to
                                 // collect profile.
     });
     const buf = await pprof.encode(profile);
@@ -63,8 +63,8 @@ Install [`pprof`][npm-url] with `npm` or add to your `package.json`.
     node --require @datadog/pprof app.js
     ```
 
-2. A wall time profile for the job will be saved in 
-`pprof-profile-${process.pid}.pb.gz`. View the profile with command line 
+2. A wall time profile for the job will be saved in
+`pprof-profile-${process.pid}.pb.gz`. View the profile with command line
 [`pprof`][pprof-url]:
     ```sh
     pprof -http=: pprof-profile-${process.pid}.pb.gz
@@ -79,10 +79,10 @@ Install [`pprof`][npm-url] with `npm` or add to your `package.json`.
     // The maximum stack depth for samples collected.
     const stackDepth = 64;
 
-    heap.start(intervalBytes, stackDepth); 
+    heap.start(intervalBytes, stackDepth);
     ```
 2. Collect heap profiles:
-  
+
     * Collecting and saving a profile in profile.proto format:
         ```javascript
         const profile = await pprof.heap.profile();
@@ -96,11 +96,11 @@ Install [`pprof`][npm-url] with `npm` or add to your `package.json`.
         ```sh
         pprof -http=: heap.pb.gz
         ```
-    
+
     * Collecting a heap profile with  V8 allocation profile format:
         ```javascript
           const profile = await pprof.heap.v8Profile();
-        ``` 
+        ```
 
 [build-image]: https://github.com/Datadog/pprof-nodejs/actions/workflows/build.yml/badge.svg?branch=main
 [build-url]: https://github.com/Datadog/pprof-nodejs/actions/workflows/build.yml
