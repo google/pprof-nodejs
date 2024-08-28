@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-// eslint-disable-next-line node/no-unsupported-features/node-builtins
+// eslint-disable-next-line n/no-unsupported-features/node-builtins
 import {promises} from 'fs';
-// eslint-disable-next-line node/no-extraneous-import
+// eslint-disable-next-line n/no-extraneous-import
 import {encode, heap, SourceMapper, time} from 'pprof';
 
 const startTime: number = Date.now();
