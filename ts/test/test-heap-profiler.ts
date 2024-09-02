@@ -17,7 +17,7 @@
 import * as sinon from 'sinon';
 
 import * as heapProfiler from '../src/heap-profiler';
-import * as v8HeapProfiler from '../src/heap-profiler-bindings';
+import * as inspectorHeapProfiler from '../src/heap-profiler-inspector';
 import {AllocationProfileNode} from '../src/v8-types';
 
 import {
@@ -32,14 +32,14 @@ const copy = require('deep-copy');
 const assert = require('assert');
 
 describe('HeapProfiler', () => {
-  let startStub: sinon.SinonStub<[number, number], void>;
-  let stopStub: sinon.SinonStub<[], void>;
-  let profileStub: sinon.SinonStub<[], AllocationProfileNode>;
+  let startStub: sinon.SinonStub<[number, number], Promise<void>>;
+  let stopStub: sinon.SinonStub<[], Promise<void>>;
+  let profileStub: sinon.SinonStub<[], Promise<AllocationProfileNode>>;
   let dateStub: sinon.SinonStub<[], number>;
   let memoryUsageStub: sinon.SinonStub<[], NodeJS.MemoryUsage>;
   beforeEach(() => {
-    startStub = sinon.stub(v8HeapProfiler, 'startSamplingHeapProfiler');
-    stopStub = sinon.stub(v8HeapProfiler, 'stopSamplingHeapProfiler');
+    startStub = sinon.stub(inspectorHeapProfiler, 'startSamplingHeapProfiler');
+    stopStub = sinon.stub(inspectorHeapProfiler, 'stopSamplingHeapProfiler');
     dateStub = sinon.stub(Date, 'now').returns(0);
   });
 
@@ -54,7 +54,7 @@ describe('HeapProfiler', () => {
   describe('profile', () => {
     it('should return a profile equal to the expected profile when external memory is allocated', async () => {
       profileStub = sinon
-        .stub(v8HeapProfiler, 'getAllocationProfile')
+        .stub(inspectorHeapProfiler, 'getAllocationProfile')
         .returns(copy(v8HeapProfile));
       memoryUsageStub = sinon.stub(process, 'memoryUsage').returns({
         external: 1024,
@@ -66,13 +66,13 @@ describe('HeapProfiler', () => {
       const intervalBytes = 1024 * 512;
       const stackDepth = 32;
       heapProfiler.start(intervalBytes, stackDepth);
-      const profile = heapProfiler.profile();
+      const profile = await heapProfiler.profile();
       assert.deepEqual(heapProfileWithExternal, profile);
     });
 
     it('should return a profile equal to the expected profile when including all samples', async () => {
       profileStub = sinon
-        .stub(v8HeapProfiler, 'getAllocationProfile')
+        .stub(inspectorHeapProfiler, 'getAllocationProfile')
         .returns(copy(v8HeapWithPathProfile));
       memoryUsageStub = sinon.stub(process, 'memoryUsage').returns({
         external: 0,
@@ -84,13 +84,13 @@ describe('HeapProfiler', () => {
       const intervalBytes = 1024 * 512;
       const stackDepth = 32;
       heapProfiler.start(intervalBytes, stackDepth);
-      const profile = heapProfiler.profile();
+      const profile = await heapProfiler.profile();
       assert.deepEqual(heapProfileIncludePath, profile);
     });
 
     it('should return a profile equal to the expected profile when excluding profiler samples', async () => {
       profileStub = sinon
-        .stub(v8HeapProfiler, 'getAllocationProfile')
+        .stub(inspectorHeapProfiler, 'getAllocationProfile')
         .returns(copy(v8HeapWithPathProfile));
       memoryUsageStub = sinon.stub(process, 'memoryUsage').returns({
         external: 0,
@@ -102,14 +102,14 @@ describe('HeapProfiler', () => {
       const intervalBytes = 1024 * 512;
       const stackDepth = 32;
       heapProfiler.start(intervalBytes, stackDepth);
-      const profile = heapProfiler.profile('@google-cloud/profiler');
+      const profile = await heapProfiler.profile('@google-cloud/profiler');
       assert.deepEqual(heapProfileExcludePath, profile);
     });
 
     it('should throw error when not started', () => {
-      assert.throws(
-        () => {
-          heapProfiler.profile();
+      assert.rejects(
+        async () => {
+          await heapProfiler.profile();
         },
         (err: Error) => {
           return err.message === 'Heap profiler is not enabled.';
@@ -122,9 +122,9 @@ describe('HeapProfiler', () => {
       const stackDepth = 32;
       heapProfiler.start(intervalBytes, stackDepth);
       heapProfiler.stop();
-      assert.throws(
-        () => {
-          heapProfiler.profile();
+      assert.rejects(
+        async () => {
+          await heapProfiler.profile();
         },
         (err: Error) => {
           return err.message === 'Heap profiler is not enabled.';
@@ -160,7 +160,7 @@ describe('HeapProfiler', () => {
         assert.strictEqual(
           (e as Error).message,
           'Heap profiler is already started  with intervalBytes 524288 and' +
-            ' stackDepth 64'
+            ' stackDepth 128'
         );
       }
       assert.ok(
