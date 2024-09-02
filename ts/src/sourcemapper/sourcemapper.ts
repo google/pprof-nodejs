@@ -222,7 +222,7 @@ export class SourceMapper {
   }
 }
 
-async function createFromMapFiles(mapFiles: string[]): Promise<SourceMapper> {
+export async function createFromMapFiles(mapFiles: string[]): Promise<SourceMapper> {
   const limit = pLimit(CONCURRENCY);
   const mapper = new SourceMapper();
   const promises: Array<Promise<void>> = mapFiles.map(mapPath =>
