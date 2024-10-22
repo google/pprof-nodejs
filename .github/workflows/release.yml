@@ -24,13 +24,17 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: actions/download-artifact@v4
-        with:
-          name: prebuilds
       - uses: actions/setup-node@v3
         with:
           registry-url: 'https://registry.npmjs.org'
       - run: npm install
       - run: npm publish
+
+  tag:
+    needs: publish
+    permissions:
+      content: write
+    steps:
       - id: pkg
         run: |
           content=`cat ./package.json | tr '\n' ' '`
