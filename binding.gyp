@@ -62,9 +62,9 @@
                         'VCCLCompilerTool': {
                             'AdditionalOptions': [
                                 '/Zc:__cplusplus',
-                                '-std:c++17',
+                                '-std:c++20',
                             ],
-                        },                        
+                        },
                     },
                 },
             ],
@@ -72,8 +72,8 @@
                 {
                 "cflags+":
                     ["-Wno-deprecated-declarations", "-Werror"],
-                "cflags_cc!": ["-std=gnu++14", "-std=gnu++1y"],
-                "cflags_cc": ["-std=gnu++17"],
+                "cflags_cc!": ["-std=gnu++14", "-std=gnu++1y", "-std=gnu++20" ],
+                "cflags_cc": ["-std=gnu++2a"],
                 }
             ],
             ["OS == 'mac'",
@@ -82,7 +82,7 @@
                     'OTHER_CFLAGS+': [
                         "-Wno-deprecated-declarations",
                         "-Werror",
-                        '-std=gnu++17',
+                        '-std=gnu++20',
                         ],
                     },
                 }

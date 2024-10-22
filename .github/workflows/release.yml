@@ -13,7 +13,7 @@ jobs:
       package-manager: 'npm' # npm or yarn
       cache: true # enable caching of dependencies based on lockfile
       min-node-version: 16
-      skip: 'linux-arm linux-ia32' # skip building for these platforms
+      skip: 'linux-arm,linux-ia32' # skip building for these platforms
 
   publish:
     needs: build
