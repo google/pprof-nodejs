@@ -12,8 +12,8 @@
 2. The `pprof` module has a native component that is used to collect profiles
 with v8's CPU and Heap profilers. You may need to install additional
 dependencies to build this module.
-    * For Linux: `pprof` has prebuilt binaries available for Linux arm64/x64,
-    Alpine Linux x64, macOS arm64/x64, windows x64 for Node 16/18/20/22.
+    * `pprof` has prebuilt binaries available for Linux arm64/x64,
+    Alpine Linux x64, macOS arm64/x64, and Windows x64 for Node 16/18/20/22/23.
     No additional dependencies are required.
     * For other environments: on environments that `pprof` does not have
     prebuilt binaries for, the module
