@@ -22,7 +22,7 @@ jobs:
     env:
       NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
     permissions:
-      content: write
+      contents: write
     steps:
       - uses: actions/checkout@v2
       - uses: actions/download-artifact@v4
