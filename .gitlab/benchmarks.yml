@@ -5,7 +5,10 @@ variables:
   tags: ["runner:apm-k8s-tweaked-metal"]
   image: $BASE_CI_IMAGE
   stage: benchmarks
-  when: on_success
+  rules:
+    - if: $CI_COMMIT_TAG
+      when: never
+    - when: on_success
   variables:
     UPSTREAM_PROJECT_ID: $CI_PROJECT_ID
     UPSTREAM_PROJECT_NAME: $CI_PROJECT_NAME
