@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 Datadog, Inc
+ * Copyright 2024 Datadog, Inc
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,14 +17,10 @@
 #pragma once
 
 #include <v8-profiler.h>
-#include <unordered_map>
 
 namespace dd {
 
-struct NodeInfo {
-  v8::Local<v8::Array> contexts;
-  uint32_t hitcount;
-};
+v8::Local<v8::Value> TranslateAllocationProfile(
+    v8::AllocationProfile::Node* node);
 
-using ContextsByNode = std::unordered_map<const v8::CpuProfileNode*, NodeInfo>;
 }  // namespace dd

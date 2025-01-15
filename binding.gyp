@@ -16,6 +16,7 @@
                             "bindings/profilers/wall.cc",
                             "bindings/per-isolate-data.cc",
                             "bindings/thread-cpu-clock.cc",
+                            "bindings/translate-heap-profile.cc",
                             "bindings/translate-time-profile.cc",
                             "bindings/binding.cc"
                         ],
@@ -38,6 +39,7 @@
                             "bindings/profilers/wall.cc",
                             "bindings/per-isolate-data.cc",
                             "bindings/thread-cpu-clock.cc",
+                            "bindings/translate-heap-profile.cc",
                             "bindings/translate-time-profile.cc",
                             "bindings/test/binding.cc",
                         ],

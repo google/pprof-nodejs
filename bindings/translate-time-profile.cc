@@ -15,16 +15,14 @@
  */
 
 #include "translate-time-profile.hh"
-
-#include <vector>
+#include "profile-translator.hh"
 
 namespace dd {
 
 namespace {
-class ProfileTranslator {
+class TimeProfileTranslator : ProfileTranslator {
  private:
   ContextsByNode* contextsByNode;
-  v8::Isolate* isolate = v8::Isolate::GetCurrent();
   v8::Local<v8::Array> emptyArray = NewArray(0);
   v8::Local<v8::Integer> zero = NewInteger(0);
 
@@ -73,24 +71,12 @@ class ProfileTranslator {
                                        v8::Local<v8::Integer> hitCount,
                                        v8::Local<v8::Array> children,
                                        v8::Local<v8::Array> contexts) {
-    v8::Local<v8::Object> js_node = Nan::New<v8::Object>();
-#define X(name) Nan::Set(js_node, str_##name, name);
+    v8::Local<v8::Object> js_node = NewObject();
+#define X(name) Set(js_node, str_##name, name);
     FIELDS
 #undef X
 #undef FIELDS
     return js_node;
-  }
-
-  v8::Local<v8::Integer> NewInteger(int32_t x) {
-    return v8::Integer::New(isolate, x);
-  }
-
-  v8::Local<v8::Array> NewArray(int length) {
-    return v8::Array::New(isolate, length);
-  }
-
-  v8::Local<v8::String> NewString(const char* str) {
-    return Nan::New<v8::String>(str).ToLocalChecked();
   }
 
   v8::Local<v8::Array> GetLineNumberTimeProfileChildren(
@@ -107,39 +93,39 @@ class ProfileTranslator {
       node->GetLineTicks(&entries[0], hitLineCount);
       children = NewArray(count + hitLineCount);
       for (const v8::CpuProfileNode::LineTick entry : entries) {
-        Nan::Set(children,
-                 index++,
-                 CreateTimeNode(node->GetFunctionName(),
-                                node->GetScriptResourceName(),
-                                scriptId,
-                                NewInteger(entry.line),
-                                zero,
-                                NewInteger(entry.hit_count),
-                                emptyArray,
-                                emptyArray));
+        Set(children,
+            index++,
+            CreateTimeNode(node->GetFunctionName(),
+                           node->GetScriptResourceName(),
+                           scriptId,
+                           NewInteger(entry.line),
+                           zero,
+                           NewInteger(entry.hit_count),
+                           emptyArray,
+                           emptyArray));
       }
     } else if (hitCount > 0) {
       // Handle nodes for pseudo-functions like "process" and "garbage
       // collection" which do not have hit line counts.
       children = NewArray(count + 1);
-      Nan::Set(children,
-               index++,
-               CreateTimeNode(node->GetFunctionName(),
-                              node->GetScriptResourceName(),
-                              scriptId,
-                              NewInteger(node->GetLineNumber()),
-                              NewInteger(node->GetColumnNumber()),
-                              NewInteger(hitCount),
-                              emptyArray,
-                              emptyArray));
+      Set(children,
+          index++,
+          CreateTimeNode(node->GetFunctionName(),
+                         node->GetScriptResourceName(),
+                         scriptId,
+                         NewInteger(node->GetLineNumber()),
+                         NewInteger(node->GetColumnNumber()),
+                         NewInteger(hitCount),
+                         emptyArray,
+                         emptyArray));
     } else {
       children = NewArray(count);
     }
 
     for (int32_t i = 0; i < count; i++) {
-      Nan::Set(children,
-               index++,
-               TranslateLineNumbersTimeProfileNode(node, node->GetChild(i)));
+      Set(children,
+          index++,
+          TranslateLineNumbersTimeProfileNode(node, node->GetChild(i)));
     };
 
     return children;
@@ -177,7 +163,7 @@ class ProfileTranslator {
     for (int32_t i = 0; i < count; i++) {
       v8::Local<v8::Array> arr = childrenArrs[i];
       for (uint32_t j = 0; j < arr->Length(); j++) {
-        Nan::Set(children, idx, Nan::Get(arr, j).ToLocalChecked());
+        Set(children, idx, Get(arr, j).ToLocalChecked());
         idx++;
       }
     }
@@ -195,9 +181,9 @@ class ProfileTranslator {
   v8::Local<v8::Value> TranslateTimeProfileNode(
       const v8::CpuProfileNode* node) {
     int32_t count = node->GetChildrenCount();
-    v8::Local<v8::Array> children = Nan::New<v8::Array>(count);
+    v8::Local<v8::Array> children = NewArray(count);
     for (int32_t i = 0; i < count; i++) {
-      Nan::Set(children, i, TranslateTimeProfileNode(node->GetChild(i)));
+      Set(children, i, TranslateTimeProfileNode(node->GetChild(i)));
     }
 
     uint32_t hitcount = 0;
@@ -214,36 +200,31 @@ class ProfileTranslator {
   }
 
  public:
-  explicit ProfileTranslator(ContextsByNode* nls = nullptr)
+  explicit TimeProfileTranslator(ContextsByNode* nls = nullptr)
       : contextsByNode(nls) {}
 
   v8::Local<v8::Value> TranslateTimeProfile(const v8::CpuProfile* profile,
                                             bool includeLineInfo,
                                             bool hasCpuTime,
                                             int64_t nonJSThreadsCpuTime) {
-    v8::Local<v8::Object> js_profile = Nan::New<v8::Object>();
+    v8::Local<v8::Object> js_profile = NewObject();
 
     if (includeLineInfo) {
-      Nan::Set(js_profile,
-               NewString("topDownRoot"),
-               TranslateLineNumbersTimeProfileRoot(profile->GetTopDownRoot()));
+      Set(js_profile,
+          NewString("topDownRoot"),
+          TranslateLineNumbersTimeProfileRoot(profile->GetTopDownRoot()));
     } else {
-      Nan::Set(js_profile,
-               NewString("topDownRoot"),
-               TranslateTimeProfileNode(profile->GetTopDownRoot()));
+      Set(js_profile,
+          NewString("topDownRoot"),
+          TranslateTimeProfileNode(profile->GetTopDownRoot()));
     }
-    Nan::Set(js_profile,
-             NewString("startTime"),
-             Nan::New<v8::Number>(profile->GetStartTime()));
-    Nan::Set(js_profile,
-             NewString("endTime"),
-             Nan::New<v8::Number>(profile->GetEndTime()));
-    Nan::Set(
-        js_profile, NewString("hasCpuTime"), Nan::New<v8::Boolean>(hasCpuTime));
+    Set(js_profile, NewString("startTime"), NewNumber(profile->GetStartTime()));
+    Set(js_profile, NewString("endTime"), NewNumber(profile->GetEndTime()));
+    Set(js_profile, NewString("hasCpuTime"), NewBoolean(hasCpuTime));
 
-    Nan::Set(js_profile,
-             NewString("nonJSThreadsCpuTime"),
-             Nan::New<v8::Number>(nonJSThreadsCpuTime));
+    Set(js_profile,
+        NewString("nonJSThreadsCpuTime"),
+        NewNumber(nonJSThreadsCpuTime));
     return js_profile;
   }
 };
@@ -254,7 +235,7 @@ v8::Local<v8::Value> TranslateTimeProfile(const v8::CpuProfile* profile,
                                           ContextsByNode* contextsByNode,
                                           bool hasCpuTime,
                                           int64_t nonJSThreadsCpuTime) {
-  return ProfileTranslator(contextsByNode)
+  return TimeProfileTranslator(contextsByNode)
       .TranslateTimeProfile(
           profile, includeLineInfo, hasCpuTime, nonJSThreadsCpuTime);
 }

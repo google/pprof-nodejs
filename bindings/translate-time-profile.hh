@@ -16,10 +16,8 @@
 
 #pragma once
 
-#include "contexts.hh"
-
-#include <node.h>
 #include <v8-profiler.h>
+#include "contexts.hh"
 
 namespace dd {
 

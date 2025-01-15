@@ -18,6 +18,7 @@
 
 #include "defer.hh"
 #include "per-isolate-data.hh"
+#include "translate-heap-profile.hh"
 
 #include <chrono>
 #include <memory>
@@ -480,49 +481,6 @@ size_t NearHeapLimit(void* data,
     state->UninstallNearHeapLimitCallback();
   }
   return new_heap_limit;
-}
-
-v8::Local<v8::Value> TranslateAllocationProfile(
-    v8::AllocationProfile::Node* node) {
-  v8::Local<v8::Object> js_node = Nan::New<v8::Object>();
-
-  Nan::Set(js_node, Nan::New<v8::String>("name").ToLocalChecked(), node->name);
-  Nan::Set(js_node,
-           Nan::New<v8::String>("scriptName").ToLocalChecked(),
-           node->script_name);
-  Nan::Set(js_node,
-           Nan::New<v8::String>("scriptId").ToLocalChecked(),
-           Nan::New<v8::Integer>(node->script_id));
-  Nan::Set(js_node,
-           Nan::New<v8::String>("lineNumber").ToLocalChecked(),
-           Nan::New<v8::Integer>(node->line_number));
-  Nan::Set(js_node,
-           Nan::New<v8::String>("columnNumber").ToLocalChecked(),
-           Nan::New<v8::Integer>(node->column_number));
-
-  v8::Local<v8::Array> children = Nan::New<v8::Array>(node->children.size());
-  for (size_t i = 0; i < node->children.size(); i++) {
-    Nan::Set(children, i, TranslateAllocationProfile(node->children[i]));
-  }
-  Nan::Set(
-      js_node, Nan::New<v8::String>("children").ToLocalChecked(), children);
-  v8::Local<v8::Array> allocations =
-      Nan::New<v8::Array>(node->allocations.size());
-  for (size_t i = 0; i < node->allocations.size(); i++) {
-    v8::AllocationProfile::Allocation alloc = node->allocations[i];
-    v8::Local<v8::Object> js_alloc = Nan::New<v8::Object>();
-    Nan::Set(js_alloc,
-             Nan::New<v8::String>("sizeBytes").ToLocalChecked(),
-             Nan::New<v8::Number>(alloc.size));
-    Nan::Set(js_alloc,
-             Nan::New<v8::String>("count").ToLocalChecked(),
-             Nan::New<v8::Number>(alloc.count));
-    Nan::Set(allocations, i, js_alloc);
-  }
-  Nan::Set(js_node,
-           Nan::New<v8::String>("allocations").ToLocalChecked(),
-           allocations);
-  return js_node;
 }
 
 NAN_METHOD(HeapProfiler::StartSamplingHeapProfiler) {
