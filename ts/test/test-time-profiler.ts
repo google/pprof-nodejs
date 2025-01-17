@@ -135,6 +135,10 @@ describe('Time Profiler', () => {
         if (!context) {
           return {};
         }
+        assert(
+          typeof context.asyncId === 'number',
+          'context.asyncId should be a number'
+        );
         const labels: LabelSet = {};
         for (const [key, value] of Object.entries(context.context)) {
           if (typeof value === 'string') {

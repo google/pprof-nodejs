@@ -326,6 +326,7 @@ function updateTimeProfile(prof: TimeProfile): TimeProfile {
           context: {},
           timestamp: BigInt(0),
           cpuTime: prof.nonJSThreadsCpuTime,
+          asyncId: -1,
         },
       ],
     };

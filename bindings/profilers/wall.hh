@@ -82,6 +82,7 @@ class WallProfiler : public Nan::ObjectWrap {
     int64_t time_from;
     int64_t time_to;
     int64_t cpu_time;
+    double async_id;
   };
 
   using ContextBuffer = std::vector<SampleContext>;
@@ -118,7 +119,10 @@ class WallProfiler : public Nan::ObjectWrap {
 
   v8::Local<v8::Value> GetContext(v8::Isolate*);
   void SetContext(v8::Isolate*, v8::Local<v8::Value>);
-  void PushContext(int64_t time_from, int64_t time_to, int64_t cpu_time);
+  void PushContext(int64_t time_from,
+                   int64_t time_to,
+                   int64_t cpu_time,
+                   double async_id);
   Result StartImpl();
   std::string StartInternal();
   Result StopImpl(bool restart, v8::Local<v8::Value>& profile);

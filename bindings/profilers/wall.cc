@@ -321,7 +321,8 @@ void SignalHandler::HandleProfilerSignal(int sig,
   auto time_from = Now();
   old_handler(sig, info, context);
   auto time_to = Now();
-  prof->PushContext(time_from, time_to, cpu_time);
+  double async_id = node::AsyncHooksGetExecutionAsyncId(isolate);
+  prof->PushContext(time_from, time_to, cpu_time, async_id);
 }
 #else
 class SignalHandler {
@@ -388,6 +389,7 @@ ContextsByNode WallProfiler::GetContextsByNode(CpuProfile* profile,
   auto contextKey = Nan::New<v8::String>("context").ToLocalChecked();
   auto timestampKey = Nan::New<v8::String>("timestamp").ToLocalChecked();
   auto cpuTimeKey = Nan::New<v8::String>("cpuTime").ToLocalChecked();
+  auto asyncIdKey = Nan::New<v8::String>("asyncId").ToLocalChecked();
   auto V8toEpochOffset = GetV8ToEpochOffset();
   auto lastCpuTime = startCpuTime;
 
@@ -457,6 +459,9 @@ ContextsByNode WallProfiler::GetContextsByNode(CpuProfile* profile,
                 Nan::New<v8::Number>(sampleContext.cpu_time - lastCpuTime));
             lastCpuTime = sampleContext.cpu_time;
           }
+          Nan::Set(timedContext,
+                   asyncIdKey,
+                   Nan::New<v8::Number>(sampleContext.async_id));
           Nan::Set(array, array->Length(), timedContext);
         }
 
@@ -1003,14 +1008,15 @@ NAN_METHOD(WallProfiler::Dispose) {
 
 void WallProfiler::PushContext(int64_t time_from,
                                int64_t time_to,
-                               int64_t cpu_time) {
+                               int64_t cpu_time,
+                               double async_id) {
   // Be careful this is called in a signal handler context therefore all
   // operations must be async signal safe (in particular no allocations).
   // Our ring buffer avoids allocations.
   auto context = curContext_.load(std::memory_order_relaxed);
   std::atomic_signal_fence(std::memory_order_acquire);
   if (contexts_.size() < contexts_.capacity()) {
-    contexts_.push_back({*context, time_from, time_to, cpu_time});
+    contexts_.push_back({*context, time_from, time_to, cpu_time, async_id});
     std::atomic_fetch_add_explicit(
         reinterpret_cast<std::atomic<uint32_t>*>(&fields_[kSampleCount]),
         1U,
