@@ -380,16 +380,17 @@ ContextsByNode WallProfiler::GetContextsByNode(CpuProfile* profile,
   }
 
   auto isolate = Isolate::GetCurrent();
+  auto v8Context = isolate->GetCurrentContext();
   auto contextIt = contexts.begin();
 
   // deltaIdx is the offset of the sample to process compared to current
   // iteration index
   int deltaIdx = 0;
 
-  auto contextKey = Nan::New<v8::String>("context").ToLocalChecked();
-  auto timestampKey = Nan::New<v8::String>("timestamp").ToLocalChecked();
-  auto cpuTimeKey = Nan::New<v8::String>("cpuTime").ToLocalChecked();
-  auto asyncIdKey = Nan::New<v8::String>("asyncId").ToLocalChecked();
+  auto contextKey = String::NewFromUtf8Literal(isolate, "context");
+  auto timestampKey = String::NewFromUtf8Literal(isolate, "timestamp");
+  auto cpuTimeKey = String::NewFromUtf8Literal(isolate, "cpuTime");
+  auto asyncIdKey = String::NewFromUtf8Literal(isolate, "asyncId");
   auto V8toEpochOffset = GetV8ToEpochOffset();
   auto lastCpuTime = startCpuTime;
 
@@ -434,7 +435,7 @@ ContextsByNode WallProfiler::GetContextsByNode(CpuProfile* profile,
         auto it = contextsByNode.find(sample);
         Local<Array> array;
         if (it == contextsByNode.end()) {
-          array = Nan::New<Array>();
+          array = Array::New(isolate);
           contextsByNode[sample] = {array, 1};
         } else {
           array = it->second.contexts;
@@ -442,27 +443,35 @@ ContextsByNode WallProfiler::GetContextsByNode(CpuProfile* profile,
         }
         if (sampleContext.context) {
           // Conforms to TimeProfileNodeContext defined in v8-types.ts
-          v8::Local<v8::Object> timedContext = Nan::New<v8::Object>();
-          Nan::Set(timedContext,
-                   contextKey,
-                   sampleContext.context.get()->Get(isolate));
-          Nan::Set(timedContext,
-                   timestampKey,
-                   BigInt::New(isolate, sampleTimestamp + V8toEpochOffset));
+          Local<Object> timedContext = Object::New(isolate);
+          timedContext
+              ->Set(v8Context,
+                    contextKey,
+                    sampleContext.context.get()->Get(isolate))
+              .Check();
+          timedContext
+              ->Set(v8Context,
+                    timestampKey,
+                    BigInt::New(isolate, sampleTimestamp + V8toEpochOffset))
+              .Check();
 
           // if current sample is idle/program, reports its cpu time to the next
           // sample
           if (collectCpuTime_ && !isIdleOrProgram(sample)) {
-            Nan::Set(
-                timedContext,
-                cpuTimeKey,
-                Nan::New<v8::Number>(sampleContext.cpu_time - lastCpuTime));
+            timedContext
+                ->Set(
+                    v8Context,
+                    cpuTimeKey,
+                    Number::New(isolate, sampleContext.cpu_time - lastCpuTime))
+                .Check();
             lastCpuTime = sampleContext.cpu_time;
           }
-          Nan::Set(timedContext,
-                   asyncIdKey,
-                   Nan::New<v8::Number>(sampleContext.async_id));
-          Nan::Set(array, array->Length(), timedContext);
+          timedContext
+              ->Set(v8Context,
+                    asyncIdKey,
+                    Number::New(isolate, sampleContext.async_id))
+              .Check();
+          array->Set(v8Context, array->Length(), timedContext).Check();
         }
 
         // Sample context was consumed, fetch the next one
