@@ -515,11 +515,7 @@ WallProfiler::WallProfiler(std::chrono::microseconds samplingPeriod,
 
   v8::Local<v8::Uint32Array> jsArray =
       v8::Uint32Array::New(buffer, 0, kFieldCount);
-#if (V8_MAJOR_VERSION >= 8)
   fields_ = static_cast<uint32_t*>(buffer->GetBackingStore()->Data());
-#else
-  fields_ = static_cast<uint32_t*>(buffer->GetContents().Data());
-#endif
   jsArray_ = v8::Global<v8::Uint32Array>(isolate, jsArray);
   std::fill(fields_, fields_ + kFieldCount, 0);
 }
