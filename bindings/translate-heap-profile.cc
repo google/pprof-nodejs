@@ -41,7 +41,7 @@ class HeapProfileTranslator : ProfileTranslator {
 
  public:
   v8::Local<v8::Value> TranslateAllocationProfile(
-      v8::AllocationProfile::Node* node) {
+      v8::AllocationProfile::Node* node) GENERAL_REGS_ONLY {
     v8::Local<v8::Array> children = NewArray(node->children.size());
     for (size_t i = 0; i < node->children.size(); i++) {
       Set(children, i, TranslateAllocationProfile(node->children[i]));
@@ -71,7 +71,8 @@ class HeapProfileTranslator : ProfileTranslator {
                                    v8::Local<v8::Integer> lineNumber,
                                    v8::Local<v8::Integer> columnNumber,
                                    v8::Local<v8::Array> children,
-                                   v8::Local<v8::Array> allocations) {
+                                   v8::Local<v8::Array> allocations)
+      GENERAL_REGS_ONLY {
     v8::Local<v8::Object> js_node = NewObject();
 #define X(name) Set(js_node, str_##name, name);
     NODE_FIELDS
@@ -81,7 +82,8 @@ class HeapProfileTranslator : ProfileTranslator {
   }
 
   v8::Local<v8::Object> CreateAllocation(v8::Local<v8::Number> count,
-                                         v8::Local<v8::Number> sizeBytes) {
+                                         v8::Local<v8::Number> sizeBytes)
+      GENERAL_REGS_ONLY {
     v8::Local<v8::Object> js_alloc = NewObject();
 #define X(name) Set(js_alloc, str_##name, name);
     ALLOCATION_FIELDS
