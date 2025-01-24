@@ -16,12 +16,8 @@
 
 #pragma once
 
-#include <v8-profiler.h>
-#include "general-regs-only.hh"
-
-namespace dd {
-
-v8::Local<v8::Value> TranslateAllocationProfile(
-    v8::AllocationProfile::Node* node) GENERAL_REGS_ONLY;
-
-}  // namespace dd
+#if defined(__linux__) && defined(__aarch64__)
+#define GENERAL_REGS_ONLY __attribute__((target("general-regs-only")))
+#else
+#define GENERAL_REGS_ONLY
+#endif

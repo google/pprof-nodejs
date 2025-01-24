@@ -15,6 +15,7 @@
  */
 
 #include "translate-time-profile.hh"
+#include "general-regs-only.hh"
 #include "profile-translator.hh"
 
 namespace dd {
@@ -22,7 +23,7 @@ namespace dd {
 namespace {
 class TimeProfileTranslator : ProfileTranslator {
  private:
-  ContextsByNode* contextsByNode;
+  std::shared_ptr<ContextsByNode> contextsByNode;
   v8::Local<v8::Array> emptyArray = NewArray(0);
   v8::Local<v8::Integer> zero = NewInteger(0);
 
@@ -80,7 +81,7 @@ class TimeProfileTranslator : ProfileTranslator {
   }
 
   v8::Local<v8::Array> GetLineNumberTimeProfileChildren(
-      const v8::CpuProfileNode* node) {
+      const v8::CpuProfileNode* node) GENERAL_REGS_ONLY {
     unsigned int index = 0;
     v8::Local<v8::Array> children;
     int32_t count = node->GetChildrenCount();
@@ -200,7 +201,7 @@ class TimeProfileTranslator : ProfileTranslator {
   }
 
  public:
-  explicit TimeProfileTranslator(ContextsByNode* nls = nullptr)
+  explicit TimeProfileTranslator(std::shared_ptr<ContextsByNode> nls = nullptr)
       : contextsByNode(nls) {}
 
   v8::Local<v8::Value> TranslateTimeProfile(const v8::CpuProfile* profile,
@@ -230,11 +231,12 @@ class TimeProfileTranslator : ProfileTranslator {
 };
 }  // namespace
 
-v8::Local<v8::Value> TranslateTimeProfile(const v8::CpuProfile* profile,
-                                          bool includeLineInfo,
-                                          ContextsByNode* contextsByNode,
-                                          bool hasCpuTime,
-                                          int64_t nonJSThreadsCpuTime) {
+v8::Local<v8::Value> TranslateTimeProfile(
+    const v8::CpuProfile* profile,
+    bool includeLineInfo,
+    std::shared_ptr<ContextsByNode> contextsByNode,
+    bool hasCpuTime,
+    int64_t nonJSThreadsCpuTime) {
   return TimeProfileTranslator(contextsByNode)
       .TranslateTimeProfile(
           profile, includeLineInfo, hasCpuTime, nonJSThreadsCpuTime);

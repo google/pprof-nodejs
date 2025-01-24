@@ -24,7 +24,7 @@ namespace dd {
 v8::Local<v8::Value> TranslateTimeProfile(
     const v8::CpuProfile* profile,
     bool includeLineInfo,
-    ContextsByNode* contextsByNode = nullptr,
+    std::shared_ptr<ContextsByNode> contextsByNode = nullptr,
     bool hasCpuTime = false,
     int64_t nonJSThreadsCpuTime = 0);
 

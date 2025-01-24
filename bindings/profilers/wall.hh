@@ -17,6 +17,7 @@
 #pragma once
 
 #include "contexts.hh"
+#include "general-regs-only.hh"
 #include "thread-cpu-clock.hh"
 
 #include <nan.h>
@@ -82,7 +83,7 @@ class WallProfiler : public Nan::ObjectWrap {
     int64_t time_from;
     int64_t time_to;
     int64_t cpu_time;
-    double async_id;
+    int64_t async_id;
   };
 
   using ContextBuffer = std::vector<SampleContext>;
@@ -95,9 +96,10 @@ class WallProfiler : public Nan::ObjectWrap {
   // to work around https://bugs.chromium.org/p/v8/issues/detail?id=11051.
   v8::CpuProfiler* CreateV8CpuProfiler();
 
-  ContextsByNode GetContextsByNode(v8::CpuProfile* profile,
-                                   ContextBuffer& contexts,
-                                   int64_t startCpuTime);
+  std::shared_ptr<ContextsByNode> GetContextsByNode(v8::CpuProfile* profile,
+                                                    ContextBuffer& contexts,
+                                                    int64_t startCpuTime)
+      GENERAL_REGS_ONLY;
 
   bool waitForSignal(uint64_t targetCallCount = 0);
 
@@ -122,10 +124,11 @@ class WallProfiler : public Nan::ObjectWrap {
   void PushContext(int64_t time_from,
                    int64_t time_to,
                    int64_t cpu_time,
-                   double async_id);
+                   int64_t async_id);
   Result StartImpl();
   std::string StartInternal();
-  Result StopImpl(bool restart, v8::Local<v8::Value>& profile);
+  Result StopImpl(bool restart,
+                  v8::Local<v8::Value>& profile) GENERAL_REGS_ONLY;
 
   CollectionMode collectionMode() {
     auto res = collectionMode_.load(std::memory_order_relaxed);
@@ -146,12 +149,12 @@ class WallProfiler : public Nan::ObjectWrap {
     return threadCpuStopWatch_.GetAndReset();
   }
 
-  static NAN_METHOD(New);
+  static NAN_METHOD(New) GENERAL_REGS_ONLY;
   static NAN_METHOD(Start);
   static NAN_METHOD(Stop);
   static NAN_METHOD(V8ProfilerStuckEventLoopDetected);
   static NAN_METHOD(Dispose);
-  static NAN_MODULE_INIT(Init);
+  static NAN_MODULE_INIT(Init) GENERAL_REGS_ONLY;
   static NAN_GETTER(GetContext);
   static NAN_SETTER(SetContext);
   static NAN_GETTER(SharedArrayGetter);

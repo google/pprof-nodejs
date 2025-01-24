@@ -321,7 +321,8 @@ void SignalHandler::HandleProfilerSignal(int sig,
   auto time_from = Now();
   old_handler(sig, info, context);
   auto time_to = Now();
-  double async_id = node::AsyncHooksGetExecutionAsyncId(isolate);
+  int64_t async_id =
+      static_cast<int64_t>(node::AsyncHooksGetExecutionAsyncId(isolate));
   prof->PushContext(time_from, time_to, cpu_time, async_id);
 }
 #else
@@ -369,10 +370,17 @@ static int64_t GetV8ToEpochOffset() {
   return V8toEpochOffset;
 }
 
-ContextsByNode WallProfiler::GetContextsByNode(CpuProfile* profile,
-                                               ContextBuffer& contexts,
-                                               int64_t startCpuTime) {
-  ContextsByNode contextsByNode;
+Local<Number> NewNumberFromInt64(Isolate* isolate, int64_t value) {
+  return Number::New(isolate, static_cast<double>(value));
+}
+
+std::shared_ptr<ContextsByNode> CreateContextsByNode() {
+  return std::make_shared<ContextsByNode>();
+}
+
+std::shared_ptr<ContextsByNode> WallProfiler::GetContextsByNode(
+    CpuProfile* profile, ContextBuffer& contexts, int64_t startCpuTime) {
+  auto contextsByNode = CreateContextsByNode();
 
   auto sampleCount = profile->GetSamplesCount();
   if (contexts.empty() || sampleCount == 0) {
@@ -432,11 +440,11 @@ ContextsByNode WallProfiler::GetContextsByNode(CpuProfile* profile,
         break;
       } else {
         // This sample context is the closest to this sample.
-        auto it = contextsByNode.find(sample);
+        auto it = contextsByNode->find(sample);
         Local<Array> array;
-        if (it == contextsByNode.end()) {
+        if (it == contextsByNode->end()) {
           array = Array::New(isolate);
-          contextsByNode[sample] = {array, 1};
+          (*contextsByNode)[sample] = {array, 1};
         } else {
           array = it->second.contexts;
           ++it->second.hitcount;
@@ -459,17 +467,17 @@ ContextsByNode WallProfiler::GetContextsByNode(CpuProfile* profile,
           // sample
           if (collectCpuTime_ && !isIdleOrProgram(sample)) {
             timedContext
-                ->Set(
-                    v8Context,
-                    cpuTimeKey,
-                    Number::New(isolate, sampleContext.cpu_time - lastCpuTime))
+                ->Set(v8Context,
+                      cpuTimeKey,
+                      NewNumberFromInt64(isolate,
+                                         sampleContext.cpu_time - lastCpuTime))
                 .Check();
             lastCpuTime = sampleContext.cpu_time;
           }
           timedContext
               ->Set(v8Context,
                     asyncIdKey,
-                    Number::New(isolate, sampleContext.async_id))
+                    NewNumberFromInt64(isolate, sampleContext.async_id))
               .Check();
           array->Set(v8Context, array->Length(), timedContext).Check();
         }
@@ -877,7 +885,7 @@ Result WallProfiler::StopImpl(bool restart, v8::Local<v8::Value>& profile) {
 
     profile = TranslateTimeProfile(v8_profile,
                                    includeLines_,
-                                   &contextsByNode,
+                                   contextsByNode,
                                    collectCpuTime_,
                                    nonJSThreadsCpuTime);
 
@@ -1014,7 +1022,7 @@ NAN_METHOD(WallProfiler::Dispose) {
 void WallProfiler::PushContext(int64_t time_from,
                                int64_t time_to,
                                int64_t cpu_time,
-                               double async_id) {
+                               int64_t async_id) {
   // Be careful this is called in a signal handler context therefore all
   // operations must be async signal safe (in particular no allocations).
   // Our ring buffer avoids allocations.

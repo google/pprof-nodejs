@@ -33,10 +33,7 @@ class ProfileTranslator {
     return v8::Boolean::New(isolate, x);
   }
 
-  template <typename T>
-  v8::Local<v8::Number> NewNumber(T x) {
-    return v8::Number::New(isolate, x);
-  }
+  v8::Local<v8::Number> NewNumber(int64_t x);
 
   v8::Local<v8::Array> NewArray(int length) {
     return length == 0 ? emptyArray : v8::Array::New(isolate, length);

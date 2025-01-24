@@ -17,6 +17,7 @@
 #pragma once
 
 #include <nan.h>
+#include "general-regs-only.hh"
 
 namespace dd {
 
@@ -34,7 +35,7 @@ class HeapProfiler {
   // getAllocationProfile(): AllocationProfileNode
   static NAN_METHOD(GetAllocationProfile);
 
-  static NAN_METHOD(MonitorOutOfMemory);
+  static NAN_METHOD(MonitorOutOfMemory) GENERAL_REGS_ONLY;
 
   static NAN_MODULE_INIT(Init);
 };

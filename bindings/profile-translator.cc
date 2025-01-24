@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 Datadog, Inc
+ * Copyright 2025 Datadog, Inc
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,14 +14,9 @@
  * limitations under the License.
  */
 
-#pragma once
+#include "profile-translator.hh"
+#include <v8.h>
 
-#include <v8-profiler.h>
-#include "general-regs-only.hh"
-
-namespace dd {
-
-v8::Local<v8::Value> TranslateAllocationProfile(
-    v8::AllocationProfile::Node* node) GENERAL_REGS_ONLY;
-
-}  // namespace dd
+v8::Local<v8::Number> dd::ProfileTranslator::NewNumber(int64_t x) {
+  return v8::Number::New(isolate, static_cast<double>(x));
+}
