@@ -321,8 +321,9 @@ void SignalHandler::HandleProfilerSignal(int sig,
   auto time_from = Now();
   old_handler(sig, info, context);
   auto time_to = Now();
-  int64_t async_id =
-      static_cast<int64_t>(node::AsyncHooksGetExecutionAsyncId(isolate));
+  int64_t async_id = -1;
+  // don't capture for now until we work out the issues with GC and thread start
+  // static_cast<int64_t>(node::AsyncHooksGetExecutionAsyncId(isolate));
   prof->PushContext(time_from, time_to, cpu_time, async_id);
 }
 #else
