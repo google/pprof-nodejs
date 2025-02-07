@@ -38,7 +38,7 @@
     "findit2": "^2.2.3",
     "nan": "^2.22.0",
     "p-limit": "^3.0.0",
-    "protobufjs": "~7.2.4",
+    "protobufjs": "~7.4.0",
     "source-map": "~0.8.0-beta.0",
     "split": "^1.0.1"
   },
