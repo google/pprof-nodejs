@@ -15,6 +15,7 @@
  */
 
 import delay from 'delay';
+import type {perftools} from '../../proto/profile';
 
 import {serializeTimeProfile} from './profile-serializer';
 import {SourceMapper} from './sourcemapper/sourcemapper';
@@ -22,7 +23,7 @@ import {
   setSamplingInterval,
   startProfiling,
   stopProfiling,
-} from './time-profiler-bindings';
+} from './time-profiler-inspector';
 
 let profiling = false;
 
@@ -37,41 +38,29 @@ export interface TimeProfilerOptions {
   /** average time in microseconds between samples */
   intervalMicros?: Microseconds;
   sourceMapper?: SourceMapper;
-  name?: string;
-
-  /**
-   * This configuration option is experimental.
-   * When set to true, functions will be aggregated at the line level, rather
-   * than at the function level.
-   * This defaults to false.
-   */
-  lineNumbers?: boolean;
 }
 
-export async function profile(options: TimeProfilerOptions) {
-  const stop = start(
+export async function profile(
+  options: TimeProfilerOptions
+): Promise<perftools.profiles.IProfile> {
+  const stop = await start(
     options.intervalMicros || DEFAULT_INTERVAL_MICROS,
-    options.name,
-    options.sourceMapper,
-    options.lineNumbers
+    options.sourceMapper
   );
   await delay(options.durationMillis);
-  return stop();
+  return await stop();
 }
 
-export function start(
+export async function start(
   intervalMicros: Microseconds = DEFAULT_INTERVAL_MICROS,
-  name?: string,
-  sourceMapper?: SourceMapper,
-  lineNumbers?: boolean
-) {
+  sourceMapper?: SourceMapper
+): Promise<() => Promise<perftools.profiles.IProfile>> {
   if (profiling) {
     throw new Error('already profiling');
   }
 
   profiling = true;
-  const runName = name || `pprof-${Date.now()}-${Math.random()}`;
-  setSamplingInterval(intervalMicros);
+  await setSamplingInterval(intervalMicros);
   // Node.js contains an undocumented API for reporting idle status to V8.
   // This lets the profiler distinguish idle time from time spent in native
   // code. Ideally this should be default behavior. Until then, use the
@@ -79,10 +68,10 @@ export function start(
   // See https://github.com/nodejs/node/issues/19009#issuecomment-403161559.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   (process as any)._startProfilerIdleNotifier();
-  startProfiling(runName, lineNumbers);
-  return function stop() {
+  await startProfiling();
+  return async function stop() {
     profiling = false;
-    const result = stopProfiling(runName, lineNumbers);
+    const result = await stopProfiling();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (process as any)._stopProfilerIdleNotifier();
     const profile = serializeTimeProfile(result, intervalMicros, sourceMapper);

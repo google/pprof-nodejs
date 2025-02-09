@@ -37,12 +37,16 @@ export const heap = {
 
 // If loaded with --require, start profiling.
 if (module.parent && module.parent.id === 'internal/preload') {
-  const stop = time.start();
-  process.on('exit', () => {
-    // The process is going to terminate imminently. All work here needs to
-    // be synchronous.
-    const profile = stop();
-    const buffer = encodeSync(profile);
-    writeFileSync(`pprof-profile-${process.pid}.pb.gz`, buffer);
+  time.start().then(stop => {
+    process.on('exit', async () => {
+      // The process is going to terminate imminently. All work here needs to
+      // be synchronous.
+
+      // TODO #234: this code no longer works because stop() cannot be run synchronously.
+      // Remove this feature.
+      const profile = await stop();
+      const buffer = encodeSync(profile);
+      writeFileSync(`pprof-profile-${process.pid}.pb.gz`, buffer);
+    });
   });
 }
