@@ -60,7 +60,7 @@
     "protobufjs-cli": "1.1.2",
     "sinon": "^17.0.0",
     "source-map-support": "^0.5.12",
-    "tmp": "0.2.1",
+    "tmp": "0.2.3",
     "ts-mockito": "^2.2.5",
     "typescript": "^5.1.6"
   },
