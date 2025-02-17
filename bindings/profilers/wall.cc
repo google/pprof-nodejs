@@ -321,9 +321,7 @@ void SignalHandler::HandleProfilerSignal(int sig,
   auto time_from = Now();
   old_handler(sig, info, context);
   auto time_to = Now();
-  int64_t async_id = -1;
-  // don't capture for now until we work out the issues with GC and thread start
-  // static_cast<int64_t>(node::AsyncHooksGetExecutionAsyncId(isolate));
+  auto async_id = prof->GetAsyncId(isolate);
   prof->PushContext(time_from, time_to, cpu_time, async_id);
 }
 #else
@@ -493,6 +491,20 @@ std::shared_ptr<ContextsByNode> WallProfiler::GetContextsByNode(
   return contextsByNode;
 }
 
+void GCPrologueCallback(Isolate* isolate,
+                        GCType type,
+                        GCCallbackFlags flags,
+                        void* data) {
+  static_cast<WallProfiler*>(data)->OnGCStart(isolate);
+}
+
+void GCEpilogueCallback(Isolate* isolate,
+                        GCType type,
+                        GCCallbackFlags flags,
+                        void* data) {
+  static_cast<WallProfiler*>(data)->OnGCEnd();
+}
+
 WallProfiler::WallProfiler(std::chrono::microseconds samplingPeriod,
                            std::chrono::microseconds duration,
                            bool includeLines,
@@ -518,6 +530,7 @@ WallProfiler::WallProfiler(std::chrono::microseconds samplingPeriod,
   curContext_.store(&context1_, std::memory_order_relaxed);
   collectionMode_.store(CollectionMode::kNoCollect, std::memory_order_relaxed);
 
+  // TODO: bind to this isolate? Would fix the Dispose(nullptr) issue.
   auto isolate = v8::Isolate::GetCurrent();
   v8::Local<v8::ArrayBuffer> buffer =
       v8::ArrayBuffer::New(isolate, sizeof(uint32_t) * kFieldCount);
@@ -527,6 +540,10 @@ WallProfiler::WallProfiler(std::chrono::microseconds samplingPeriod,
   fields_ = static_cast<uint32_t*>(buffer->GetBackingStore()->Data());
   jsArray_ = v8::Global<v8::Uint32Array>(isolate, jsArray);
   std::fill(fields_, fields_ + kFieldCount, 0);
+
+  gcCount = 0;
+  isolate->AddGCPrologueCallback(&GCPrologueCallback, this);
+  isolate->AddGCEpilogueCallback(&GCEpilogueCallback, this);
 }
 
 WallProfiler::~WallProfiler() {
@@ -539,6 +556,11 @@ void WallProfiler::Dispose(Isolate* isolate) {
     cpuProfiler_ = nullptr;
 
     g_profilers.RemoveProfiler(isolate, this);
+
+    if (isolate != nullptr) {
+      isolate->RemoveGCPrologueCallback(&GCPrologueCallback, this);
+      isolate->RemoveGCEpilogueCallback(&GCEpilogueCallback, this);
+    }
   }
 }
 
