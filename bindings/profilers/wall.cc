@@ -475,12 +475,12 @@ std::shared_ptr<ContextsByNode> WallProfiler::GetContextsByNode(
                                          sampleContext.cpu_time - lastCpuTime))
                 .Check();
             lastCpuTime = sampleContext.cpu_time;
+            timedContext
+                ->Set(v8Context,
+                      asyncIdKey,
+                      NewNumberFromInt64(isolate, sampleContext.async_id))
+                .Check();
           }
-          timedContext
-              ->Set(v8Context,
-                    asyncIdKey,
-                    NewNumberFromInt64(isolate, sampleContext.async_id))
-              .Check();
           array->Set(v8Context, array->Length(), timedContext).Check();
         }
 
