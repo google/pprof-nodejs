@@ -155,8 +155,10 @@ class WallProfiler : public Nan::ObjectWrap {
   int64_t GetAsyncId(v8::Isolate* isolate) const {
     if (gcCount > 0) {
       return gcAsyncId;
+    } else if (isolate->InContext()) {
+      return static_cast<int64_t>(node::AsyncHooksGetExecutionAsyncId(isolate));
     }
-    return static_cast<int64_t>(node::AsyncHooksGetExecutionAsyncId(isolate));
+    return -1;
   }
 
   void OnGCStart(v8::Isolate* isolate) {
