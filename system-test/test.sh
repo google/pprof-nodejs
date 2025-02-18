@@ -55,17 +55,31 @@ if [[ "$VERIFY_TIME_LINE_NUMBERS" != "true" ]]; then
   npm run compile
 fi
 
+NODE_VERSION=$(node -v | cut -d. -f1 | tr -d 'v')
 node -v
 node --trace-warnings "$BENCHPATH" 10 $VERIFY_TIME_LINE_NUMBERS
 
 if [[ "$VERIFY_TIME_LINE_NUMBERS" == "true" ]]; then
-  pprof -lines -top -nodecount=2 time.pb.gz | tee $tty | \
-      grep "busyLoop.*src/busybench.js:[2-3][08-9]"
-  pprof -filefunctions -top -nodecount=2 heap.pb.gz | tee $tty | \
-      grep "busyLoop.*src/busybench.js"
+  output=$(pprof -lines -top -nodecount=2 time.pb.gz | tee $tty)
+
+  # Due to V8 changes in Node 21, the line numbers are different.
+  # It also emits "anonymous" and "idle" statuses in the output.
+  # E.G: 1877ms 74.93% 74.93%     1878ms 74.97%  (anonymous) file:/tmp/tmp.xyz/busybench/src/busybench.js:34
+  if [ "$NODE_VERSION" -ge 21 ]; then
+    grep "anonymous.*busybench.js:3[0-9]" <<< "$output"
+  else
+    grep "busyLoop.*src/busybench.js:[23][0-9]" <<< "$output"
+  fi
+
+  heap_output=$(pprof -filefunctions -top -nodecount=2 heap.pb.gz | tee $tty)
+  grep "busyLoop.*src/busybench.js" <<< "$heap_output"
 else
-  pprof -filefunctions -top -nodecount=2 time.pb.gz | tee $tty | \
-      grep "busyLoop.*src/busybench.ts"
+  output=$(pprof -filefunctions -top -nodecount=2 time.pb.gz | tee $tty)
+  if [ "$NODE_VERSION" -ge 21 ]; then
+    grep "anonymous.*busybench.ts" <<< "$output"
+  else
+    grep "busyLoop.*src/busybench.ts" <<< "$output"
+  fi
   pprof -filefunctions -top -nodecount=2 heap.pb.gz | tee $tty | \
       grep "busyLoop.*src/busybench.ts"
 fi
