@@ -17,6 +17,9 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
       - run: node --version
+      # Upgrade npm to newest supported version so it understands lockfile v3
+      - run: npm install -g npm@9.9.3
+        if: matrix.node == 14
       - run: npm install
       - run: npm test
       - name: coverage
@@ -30,5 +33,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 14
+      # Upgrade npm to newest supported version so it understands lockfile v3
+      - run: npm install -g npm@9.9.3
       - run: npm install
       - run: npm run lint
