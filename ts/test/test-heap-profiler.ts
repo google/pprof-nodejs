@@ -65,7 +65,7 @@ describe('HeapProfiler', () => {
       });
       const intervalBytes = 1024 * 512;
       const stackDepth = 32;
-      heapProfiler.start(intervalBytes, stackDepth);
+      await heapProfiler.start(intervalBytes, stackDepth);
       const profile = heapProfiler.profile();
       assert.deepEqual(heapProfileWithExternal, profile);
     });
@@ -83,7 +83,7 @@ describe('HeapProfiler', () => {
       });
       const intervalBytes = 1024 * 512;
       const stackDepth = 32;
-      heapProfiler.start(intervalBytes, stackDepth);
+      await heapProfiler.start(intervalBytes, stackDepth);
       const profile = heapProfiler.profile();
       assert.deepEqual(heapProfileIncludePath, profile);
     });
@@ -101,7 +101,7 @@ describe('HeapProfiler', () => {
       });
       const intervalBytes = 1024 * 512;
       const stackDepth = 32;
-      heapProfiler.start(intervalBytes, stackDepth);
+      await heapProfiler.start(intervalBytes, stackDepth);
       const profile = heapProfiler.profile('@google-cloud/profiler');
       assert.deepEqual(heapProfileExcludePath, profile);
     });
@@ -117,10 +117,10 @@ describe('HeapProfiler', () => {
       );
     });
 
-    it('should throw error when started then stopped', () => {
+    it('should throw error when started then stopped', async () => {
       const intervalBytes = 1024 * 512;
       const stackDepth = 32;
-      heapProfiler.start(intervalBytes, stackDepth);
+      await heapProfiler.start(intervalBytes, stackDepth);
       heapProfiler.stop();
       assert.throws(
         () => {
@@ -131,22 +131,39 @@ describe('HeapProfiler', () => {
         }
       );
     });
+    it('should return a non-empty profile when profiling immediately after starting', async () => {
+      profileStub = sinon
+        .stub(v8HeapProfiler, 'getAllocationProfile')
+        .returns(copy(v8HeapProfile));
+      memoryUsageStub = sinon.stub(process, 'memoryUsage').returns({
+        external: 0,
+        rss: 2048,
+        heapTotal: 4096,
+        heapUsed: 2048,
+        arrayBuffers: 512,
+      });
+      const intervalBytes = 1024 * 512;
+      const stackDepth = 32;
+      await heapProfiler.start(intervalBytes, stackDepth);
+      const profile = heapProfiler.profile();
+      assert.notDeepEqual({sample: []}, profile);
+    });
   });
 
   describe('start', () => {
-    it('should call startSamplingHeapProfiler', () => {
+    it('should call startSamplingHeapProfiler', async () => {
       const intervalBytes1 = 1024 * 512;
       const stackDepth1 = 32;
-      heapProfiler.start(intervalBytes1, stackDepth1);
+      await heapProfiler.start(intervalBytes1, stackDepth1);
       assert.ok(
         startStub.calledWith(intervalBytes1, stackDepth1),
         'expected startSamplingHeapProfiler to be called'
       );
     });
-    it('should throw error when enabled and started with different parameters', () => {
+    it('should throw error when enabled and started with different parameters', async () => {
       const intervalBytes1 = 1024 * 512;
       const stackDepth1 = 32;
-      heapProfiler.start(intervalBytes1, stackDepth1);
+      await heapProfiler.start(intervalBytes1, stackDepth1);
       assert.ok(
         startStub.calledWith(intervalBytes1, stackDepth1),
         'expected startSamplingHeapProfiler to be called'
@@ -155,7 +172,7 @@ describe('HeapProfiler', () => {
       const intervalBytes2 = 1024 * 128;
       const stackDepth2 = 64;
       try {
-        heapProfiler.start(intervalBytes2, stackDepth2);
+        await heapProfiler.start(intervalBytes2, stackDepth2);
       } catch (e) {
         assert.strictEqual(
           (e as Error).message,
@@ -175,8 +192,8 @@ describe('HeapProfiler', () => {
       heapProfiler.stop();
       assert.ok(!stopStub.called, 'stop() should have been no-op.');
     });
-    it('should call stopSamplingHeapProfiler if profiler started', () => {
-      heapProfiler.start(1024 * 512, 32);
+    it('should call stopSamplingHeapProfiler if profiler started', async () => {
+      await heapProfiler.start(1024 * 512, 32);
       heapProfiler.stop();
       assert.ok(
         stopStub.called,
