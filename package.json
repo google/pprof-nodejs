@@ -34,7 +34,7 @@
   "dependencies": {
     "@mapbox/node-pre-gyp": "^1.0.9",
     "bindings": "^1.2.1",
-    "delay": "^5.0.0",
+    "delay": "^6.0.0",
     "findit2": "^2.2.3",
     "nan": "^2.22.0",
     "p-limit": "^3.0.0",
