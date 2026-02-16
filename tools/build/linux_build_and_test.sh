@@ -55,12 +55,12 @@ GCS_LOCATION="cprof-e2e-nodejs-artifacts/pprof-nodejs/kokoro/${BUILD_TYPE}/${KOK
 retry gcloud auth activate-service-account  \
     --key-file="${KOKORO_KEYSTORE_DIR}/72935_cloud-profiler-e2e-service-account-key"
 
-retry gsutil cp -r "${BASE_DIR}/artifacts/." "gs://${GCS_LOCATION}/"
+retry gcloud storage cp --recursive "${BASE_DIR}/artifacts/." "gs://${GCS_LOCATION}/"
 
 # Test the agent
 export BINARY_HOST="https://storage.googleapis.com/${GCS_LOCATION}"
 "${BASE_DIR}/system-test/system_test.sh"
 
 if [ "$BUILD_TYPE" == "release" ]; then
-  retry gsutil cp -r "${BASE_DIR}/artifacts/." "gs://cloud-profiler/pprof-nodejs/release"
+  retry gcloud storage cp --recursive "${BASE_DIR}/artifacts/." "gs://cloud-profiler/pprof-nodejs/release"
 fi
