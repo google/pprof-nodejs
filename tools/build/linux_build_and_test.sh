@@ -61,6 +61,7 @@ retry gcloud storage cp --recursive "${BASE_DIR}/artifacts/." "gs://${GCS_LOCATI
 export BINARY_HOST="https://storage.googleapis.com/${GCS_LOCATION}"
 "${BASE_DIR}/system-test/system_test.sh"
 
+# Bump CI
 if [ "$BUILD_TYPE" == "release" ]; then
   retry gcloud storage cp --recursive "${BASE_DIR}/artifacts/." "gs://cloud-profiler/pprof-nodejs/release"
 fi
