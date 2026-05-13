@@ -42,6 +42,7 @@ jobs:
       cache: true # enable caching of dependencies based on lockfile
       min-node-version: 18
       skip: 'linux-arm,linux-ia32' # skip building for these platforms
+      node-gyp-build-major: 4
 
   build-successful:
     if: always()
