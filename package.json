@@ -56,7 +56,7 @@
     "nan": "^2.26.2",
     "nyc": "^18.0.0",
     "semver": "^7.8.0",
-    "sinon": "^21.1.2",
+    "sinon": "^22.0.0",
     "source-map-support": "^0.5.21",
     "tmp": "0.2.5",
     "typescript": "^6.0.3"
