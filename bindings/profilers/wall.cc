@@ -135,6 +135,15 @@ class PersistentContextPtr : public node::ObjectWrap {
   }
 };
 
+inline void* GetAlignedPointerFromInternalField(Object* object, int index) {
+#if NODE_MAJOR_VERSION >= 26
+  return object->GetAlignedPointerFromInternalField(
+      index, kEmbedderDataTypeTagDefault);
+#else
+  return object->GetAlignedPointerFromInternalField(index);
+#endif
+}
+
 // Maximum number of rounds in the GetV8ToEpochOffset
 static constexpr int MAX_EPOCH_OFFSET_ATTEMPTS = 20;
 
@@ -1274,7 +1283,7 @@ ContextPtr WallProfiler::GetContextPtr(Isolate* isolate) {
           auto wrapObj = reinterpret_cast<Object*>(wrapValue);
           if (wrapObj->InternalFieldCount() > 0) {
             return static_cast<PersistentContextPtr*>(
-                       wrapObj->GetAlignedPointerFromInternalField(0))
+                       GetAlignedPointerFromInternalField(wrapObj, 0))
                 ->Get();
           }
         }
