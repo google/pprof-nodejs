@@ -9,6 +9,7 @@ if [ -n "${MAJOR_NODE_VERSION:-}" ]; then
         source "${NVM_DIR:-usr/local/nvm}/nvm.sh"
     fi
 
+    nvm install "${MAJOR_NODE_VERSION}"
     nvm use "${MAJOR_NODE_VERSION}"
 
     pushd ../../

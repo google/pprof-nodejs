@@ -36,8 +36,7 @@ benchmarks:
       - MAJOR_NODE_VERSION: 20
       - MAJOR_NODE_VERSION: 22
       - MAJOR_NODE_VERSION: 24
-      # TODO: Re-enable this once support for Node 25 is merged on main
-      # - MAJOR_NODE_VERSION: 25
+      - MAJOR_NODE_VERSION: 25
   artifacts:
     name: "reports"
     paths:
