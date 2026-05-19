@@ -31,6 +31,10 @@ class HeapProfiler {
   static NAN_METHOD(StopSamplingHeapProfiler);
 
   // Signature:
+  // getAllocationProfile(): AllocationProfileNode
+  static NAN_METHOD(GetAllocationProfile);
+
+  // Signature:
   // mapAllocationProfile(callback): callback result
   static NAN_METHOD(MapAllocationProfile);
 

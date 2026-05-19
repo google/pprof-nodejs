@@ -17,6 +17,7 @@
 import {Profile} from 'pprof-format';
 
 import {
+  getAllocationProfile,
   mapAllocationProfile,
   startSamplingHeapProfiler,
   stopSamplingHeapProfiler,
@@ -33,6 +34,20 @@ import {isMainThread} from 'worker_threads';
 let enabled = false;
 let heapIntervalBytes = 0;
 let heapStackDepth = 0;
+
+/*
+ * Collects a heap profile when heapProfiler is enabled. Otherwise throws
+ * an error.
+ *
+ * Data is returned in V8 allocation profile format.
+ */
+export function v8Profile(): AllocationProfileNode {
+  if (!enabled) {
+    throw new Error('Heap profiler is not enabled.');
+  }
+  return getAllocationProfile();
+}
+
 /**
  * Collects a heap profile when heapProfiler is enabled. Otherwise throws
  * an error.
@@ -44,11 +59,33 @@ let heapStackDepth = 0;
  * @param callback - function to convert the heap profiler to a converted profile
  * @returns <T> converted profile
  */
-export function v8Profile<T>(callback: (root: AllocationProfileNode) => T): T {
+export function v8ProfileV2<T>(
+  callback: (root: AllocationProfileNode) => T,
+): T {
   if (!enabled) {
     throw new Error('Heap profiler is not enabled.');
   }
   return mapAllocationProfile(callback);
+}
+
+/**
+ * Collects a profile and returns it serialized in pprof format.
+ * Throws if heap profiler is not enabled.
+ *
+ * @param ignoreSamplePath
+ * @param sourceMapper
+ */
+export function profile(
+  ignoreSamplePath?: string,
+  sourceMapper?: SourceMapper,
+  generateLabels?: GenerateAllocationLabelsFunction,
+): Profile {
+  return convertProfile(
+    v8Profile(),
+    ignoreSamplePath,
+    sourceMapper,
+    generateLabels,
+  );
 }
 
 export function convertProfile(
@@ -93,12 +130,12 @@ export function convertProfile(
  * @param sourceMapper
  * @param generateLabels
  */
-export function profile(
+export function profileV2(
   ignoreSamplePath?: string,
   sourceMapper?: SourceMapper,
   generateLabels?: GenerateAllocationLabelsFunction,
 ): Profile {
-  return v8Profile(root => {
+  return v8ProfileV2(root => {
     return convertProfile(root, ignoreSamplePath, sourceMapper, generateLabels);
   });
 }

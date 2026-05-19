@@ -16,6 +16,7 @@
 
 import {setTimeout} from 'timers/promises';
 
+import {Profile} from 'pprof-format';
 import {
   serializeTimeProfile,
   GARBAGE_COLLECTION_FUNCTION_NAME,
@@ -43,7 +44,7 @@ type Microseconds = number;
 type Milliseconds = number;
 
 type NativeTimeProfiler = InstanceType<typeof TimeProfiler> & {
-  stopAndCollect: <T>(
+  stopAndCollect?: <T>(
     restart: boolean,
     callback: (profile: TimeProfile) => T,
   ) => T;
@@ -65,7 +66,7 @@ function handleStopRestart() {
   // a loop eating 100% CPU, leading to empty profiles.
   // Fully stop and restart the profiler to reset the profile to a valid state.
   if (gV8ProfilerStuckEventLoopDetected > 0) {
-    gProfiler.stopAndCollect(false, () => undefined);
+    gProfiler.stop(false);
     gProfiler.start();
   }
 }
@@ -119,11 +120,20 @@ const DEFAULT_OPTIONS: TimeProfilerOptions = {
   useCPED: false,
 };
 
-export async function profile(options: TimeProfilerOptions = {}) {
+export async function profile(
+  options: TimeProfilerOptions = {},
+): Promise<Profile> {
   options = {...DEFAULT_OPTIONS, ...options};
   start(options);
   await setTimeout(options.durationMillis!);
   return stop();
+}
+
+export async function profileV2(options: TimeProfilerOptions = {}) {
+  options = {...DEFAULT_OPTIONS, ...options};
+  start(options);
+  await setTimeout(options.durationMillis!);
+  return stopV2();
 }
 
 // Temporarily retained for backwards compatibility with older tracer
@@ -148,11 +158,39 @@ export function start(options: TimeProfilerOptions = {}) {
   }
 }
 
-/**
- * Serializes the profile inside a native callback while the V8 profile is
- * still alive. This reduces memory overhead.
- */
 export function stop(
+  restart = false,
+  generateLabels?: GenerateTimeLabelsFunction,
+  lowCardinalityLabels?: string[],
+): Profile {
+  if (!gProfiler) {
+    throw new Error('Wall profiler is not started');
+  }
+
+  const profile = gProfiler.stop(restart);
+  if (restart) {
+    handleStopRestart();
+  } else {
+    handleStopNoRestart();
+  }
+
+  const serializedProfile = serializeTimeProfile(
+    profile,
+    gIntervalMicros,
+    gSourceMapper,
+    true,
+    generateLabels,
+    lowCardinalityLabels,
+  );
+  return serializedProfile;
+}
+
+/**
+ * Same as stop() but uses the lazy callback path: serialization happens inside
+ * a native callback while the V8 profile is still alive.
+ * This reduces memory overhead.
+ */
+export function stopV2(
   restart = false,
   generateLabels?: GenerateTimeLabelsFunction,
   lowCardinalityLabels?: string[],

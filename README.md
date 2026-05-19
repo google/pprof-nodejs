@@ -97,14 +97,10 @@ Install [`pprof`][npm-url] with `npm` or add to your `package.json`.
         pprof -http=: heap.pb.gz
         ```
 
-    * Collecting a heap profile with V8 allocation profile format:
+    * Collecting a heap profile with  V8 allocation profile format:
         ```javascript
-          const profile = pprof.heap.v8Profile(pprof.heap.convertProfile);
+          const profile = await pprof.heap.v8Profile();
         ```
-        `v8Profile` accepts a callback and returns its result. Allocation nodes
-        are only valid during the callback, so copy/transform what you need
-        before returning. `heap.convertProfile` performs that conversion during
-        the callback, and `heap.profile()` uses it under the hood.
 
 [build-image]: https://github.com/Datadog/pprof-nodejs/actions/workflows/build.yml/badge.svg?branch=main
 [build-url]: https://github.com/Datadog/pprof-nodejs/actions/workflows/build.yml

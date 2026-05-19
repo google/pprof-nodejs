@@ -488,6 +488,23 @@ NAN_METHOD(HeapProfiler::StopSamplingHeapProfiler) {
   }
 }
 
+// Signature:
+// getAllocationProfile(): AllocationProfileNode
+NAN_METHOD(HeapProfiler::GetAllocationProfile) {
+  auto isolate = info.GetIsolate();
+  std::unique_ptr<v8::AllocationProfile> profile(
+      isolate->GetHeapProfiler()->GetAllocationProfile());
+  if (!profile) {
+    return Nan::ThrowError("Heap profiler is not enabled.");
+  }
+  v8::AllocationProfile::Node* root = profile->GetRootNode();
+  auto state = PerIsolateData::For(isolate)->GetHeapProfilerState();
+  if (state) {
+    state->OnNewProfile();
+  }
+  info.GetReturnValue().Set(TranslateAllocationProfile(root));
+}
+
 // mapAllocationProfile(callback): callback result
 NAN_METHOD(HeapProfiler::MapAllocationProfile) {
   if (info.Length() < 1 || !info[0]->IsFunction()) {
@@ -579,6 +596,7 @@ NAN_MODULE_INIT(HeapProfiler::Init) {
       heapProfiler, "startSamplingHeapProfiler", StartSamplingHeapProfiler);
   Nan::SetMethod(
       heapProfiler, "stopSamplingHeapProfiler", StopSamplingHeapProfiler);
+  Nan::SetMethod(heapProfiler, "getAllocationProfile", GetAllocationProfile);
   Nan::SetMethod(heapProfiler, "mapAllocationProfile", MapAllocationProfile);
   Nan::SetMethod(heapProfiler, "monitorOutOfMemory", MonitorOutOfMemory);
   Nan::Set(target,

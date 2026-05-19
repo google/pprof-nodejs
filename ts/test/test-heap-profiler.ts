@@ -35,30 +35,10 @@ import {
 const copy = require('deep-copy');
 const assert = require('assert');
 
-function mapToGetterNode(node: AllocationProfileNode): AllocationProfileNode {
-  const children = (node.children || []).map(mapToGetterNode);
-  const allocations = node.allocations || [];
-  const result = {};
-
-  Object.defineProperties(result, {
-    name: {get: () => node.name},
-    scriptName: {get: () => node.scriptName},
-    scriptId: {get: () => node.scriptId},
-    lineNumber: {get: () => node.lineNumber},
-    columnNumber: {get: () => node.columnNumber},
-    allocations: {get: () => allocations},
-    children: {get: () => children},
-  });
-  return result as AllocationProfileNode;
-}
-
 describe('HeapProfiler', () => {
   let startStub: sinon.SinonStub<[number, number], void>;
   let stopStub: sinon.SinonStub<[], void>;
-  let profileStub: sinon.SinonStub<
-    [(root: AllocationProfileNode) => unknown],
-    unknown
-  >;
+  let profileStub: sinon.SinonStub<[], AllocationProfileNode>;
   let dateStub: sinon.SinonStub<[], number>;
   let memoryUsageStub: sinon.SinonStub<[], NodeJS.MemoryUsage>;
   beforeEach(() => {
@@ -78,8 +58,8 @@ describe('HeapProfiler', () => {
   describe('profile', () => {
     it('should return a profile equal to the expected profile when external memory is allocated', async () => {
       profileStub = sinon
-        .stub(v8HeapProfiler, 'mapAllocationProfile')
-        .callsFake(callback => callback(mapToGetterNode(copy(v8HeapProfile))));
+        .stub(v8HeapProfiler, 'getAllocationProfile')
+        .returns(copy(v8HeapProfile));
       memoryUsageStub = sinon.stub(process, 'memoryUsage').returns({
         external: 1024,
         rss: 2048,
@@ -96,10 +76,8 @@ describe('HeapProfiler', () => {
 
     it('should return a profile equal to the expected profile when including all samples', async () => {
       profileStub = sinon
-        .stub(v8HeapProfiler, 'mapAllocationProfile')
-        .callsFake(callback =>
-          callback(mapToGetterNode(copy(v8HeapWithPathProfile))),
-        );
+        .stub(v8HeapProfiler, 'getAllocationProfile')
+        .returns(copy(v8HeapWithPathProfile));
       memoryUsageStub = sinon.stub(process, 'memoryUsage').returns({
         external: 0,
         rss: 2048,
@@ -116,10 +94,8 @@ describe('HeapProfiler', () => {
 
     it('should return a profile equal to the expected profile when excluding profiler samples', async () => {
       profileStub = sinon
-        .stub(v8HeapProfiler, 'mapAllocationProfile')
-        .callsFake(callback =>
-          callback(mapToGetterNode(copy(v8HeapWithPathProfile))),
-        );
+        .stub(v8HeapProfiler, 'getAllocationProfile')
+        .returns(copy(v8HeapWithPathProfile));
       memoryUsageStub = sinon.stub(process, 'memoryUsage').returns({
         external: 0,
         rss: 2048,
@@ -136,10 +112,8 @@ describe('HeapProfiler', () => {
 
     it('should return a profile equal to the expected profile when adding labels', async () => {
       profileStub = sinon
-        .stub(v8HeapProfiler, 'mapAllocationProfile')
-        .callsFake(callback =>
-          callback(mapToGetterNode(copy(v8HeapWithPathProfile))),
-        );
+        .stub(v8HeapProfiler, 'getAllocationProfile')
+        .returns(copy(v8HeapWithPathProfile));
       memoryUsageStub = sinon.stub(process, 'memoryUsage').returns({
         external: 0,
         rss: 2048,

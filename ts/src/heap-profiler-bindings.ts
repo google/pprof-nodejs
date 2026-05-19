@@ -37,6 +37,10 @@ export function stopSamplingHeapProfiler() {
   profiler.heapProfiler.stopSamplingHeapProfiler();
 }
 
+export function getAllocationProfile(): AllocationProfileNode {
+  return profiler.heapProfiler.getAllocationProfile();
+}
+
 export function mapAllocationProfile<T>(
   callback: (root: AllocationProfileNode) => T,
 ): T {

@@ -929,6 +929,28 @@ v8::ProfilerId WallProfiler::StartInternal() {
   return result.id;
 }
 
+NAN_METHOD(WallProfiler::Stop) {
+  if (info.Length() != 1) {
+    return Nan::ThrowTypeError("Stop must have one argument.");
+  }
+  if (!info[0]->IsBoolean()) {
+    return Nan::ThrowTypeError("Restart must be a boolean.");
+  }
+
+  bool restart = info[0].As<Boolean>()->Value();
+
+  WallProfiler* wallProfiler =
+      Nan::ObjectWrap::Unwrap<WallProfiler>(info.This());
+
+  v8::Local<v8::Value> profile;
+  auto err = wallProfiler->StopImpl(restart, profile);
+
+  if (!err.success) {
+    return Nan::ThrowTypeError(err.msg.c_str());
+  }
+  info.GetReturnValue().Set(profile);
+}
+
 // stopAndCollect(restart, callback): callback result
 NAN_METHOD(WallProfiler::StopAndCollect) {
   if (info.Length() != 2) {
@@ -1087,6 +1109,20 @@ Result WallProfiler::StopCore(bool restart, ProfileBuilder&& buildProfile) {
   return {};
 }
 
+Result WallProfiler::StopImpl(bool restart, v8::Local<v8::Value>& profile) {
+  return StopCore(restart,
+                  [&](const v8::CpuProfile* v8_profile,
+                      bool hasCpuTime,
+                      int64_t nonJSThreadsCpuTime,
+                      ContextsByNode* contextsByNodePtr) {
+                    profile = TranslateTimeProfile(v8_profile,
+                                                   includeLines_,
+                                                   contextsByNodePtr,
+                                                   hasCpuTime,
+                                                   nonJSThreadsCpuTime);
+                  });
+}
+
 Result WallProfiler::StopAndCollectImpl(bool restart,
                                         v8::Local<v8::Function> callback,
                                         v8::Local<v8::Value>& result) {
@@ -1121,6 +1157,7 @@ NAN_MODULE_INIT(WallProfiler::Init) {
                    SetContext);
 
   Nan::SetPrototypeMethod(tpl, "start", Start);
+  Nan::SetPrototypeMethod(tpl, "stop", Stop);
   Nan::SetPrototypeMethod(tpl, "stopAndCollect", StopAndCollect);
   Nan::SetPrototypeMethod(tpl, "dispose", Dispose);
   Nan::SetPrototypeMethod(tpl,
