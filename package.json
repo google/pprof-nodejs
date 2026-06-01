@@ -32,7 +32,7 @@
   },
   "license": "Apache-2.0",
   "dependencies": {
-    "@mapbox/node-pre-gyp": "^1.0.9",
+    "@mapbox/node-pre-gyp": "^2.0.0",
     "bindings": "^1.2.1",
     "delay": "^5.0.0",
     "findit2": "^2.2.3",
