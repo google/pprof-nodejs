@@ -1,0 +1,8 @@
+{
+  "packageAllowlist": [
+    "tar",
+    "minipass",
+    "chownr",
+    "yallist"
+  ]
+}
