@@ -7,16 +7,14 @@
 [pprof][pprof-url] support for Node.js.
 
 ## Prerequisites
-1. Your application will need to be using Node.js 14 or greater. This package is tested against
-[current versions of Node.js][node-versions]: 14, 16, 18, and 20.
+1. Your application will need to be using Node.js 18 or greater. This package is tested against
+[current versions of Node.js][node-versions]: 18, 20, and 22.
 
-2. The `pprof` module has a native component that is used to collect profiles 
-with v8's CPU and Heap profilers. You may need to install additional
-dependencies to build this module.
-The module [`node-gyp`](https://www.npmjs.com/package/node-gyp) is used to
-build the native component. See `node-gyp`'s
-[documentation](https://github.com/nodejs/node-gyp#installation)
-for information on dependencies required to build binaries with `node-gyp`.
+2. The `pprof` module has a native component that is compiled on installation using
+[`node-gyp`](https://www.npmjs.com/package/node-gyp). You will need to install the build
+dependencies for `node-gyp`. See `node-gyp`'s
+[documentation](https://github.com/nodejs/node-gyp#installation) for details on
+the dependencies required for your platform.
 
 3. The [`pprof`][pprof-url] CLI can be used to view profiles collected with 
 this module. Instructions for installing the `pprof` CLI can be found
