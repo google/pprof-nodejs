@@ -14,15 +14,9 @@
  * limitations under the License.
  */
 
-import * as path from 'path';
-
 import {AllocationProfileNode} from './v8-types';
 
-const binary = require('@mapbox/node-pre-gyp');
-const bindingPath = binary.find(
-  path.resolve(path.join(__dirname, '../../package.json'))
-);
-const profiler = require(bindingPath);
+const profiler = require('bindings')('pprof.node');
 
 // Wrappers around native heap profiler functions.
 

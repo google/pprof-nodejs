@@ -13,14 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import * as path from 'path';
 import {TimeProfile} from './v8-types';
 
-const binary = require('@mapbox/node-pre-gyp');
-const bindingPath = binary.find(
-  path.resolve(path.join(__dirname, '../../package.json'))
-);
-const profiler = require(bindingPath);
+const profiler = require('bindings')('pprof.node');
 
 // Wrappers around native time profiler functions.
 export function startProfiling(runName: string, includeLineInfo?: boolean) {
