@@ -9,7 +9,6 @@
   "main": "out/src/index.js",
   "types": "out/src/index.d.ts",
   "scripts": {
-    "install": "node-pre-gyp install --fallback-to-build",
     "test": "nyc mocha  out/test/test-*.js",
     "check": "gts check",
     "clean": "gts clean && node-gyp clean",
@@ -19,7 +18,7 @@
     "lint": "gts check",
     "docs": "echo 'no docs yet'",
     "prepare": "npm run compile",
-    "pretest": "npm run compile && node-pre-gyp install --build-from-source",
+    "pretest": "npm run compile && node-gyp rebuild",
     "posttest": "npm run check && npm run license-check",
     "proto": "npm run proto:profile",
     "proto:profile": "mkdir -p proto && pbjs -t static-module -w commonjs -o proto/profile.js third_party/proto/profile.proto && pbts -o proto/profile.d.ts proto/profile.js",
@@ -32,7 +31,6 @@
   },
   "license": "Apache-2.0",
   "dependencies": {
-    "@mapbox/node-pre-gyp": "^1.0.9",
     "bindings": "^1.2.1",
     "delay": "^5.0.0",
     "findit2": "^2.2.3",
@@ -83,13 +81,6 @@
   },
   "engines": {
     "node": ">=14.0.0"
-  },
-  "binary": {
-    "module_name": "pprof",
-    "module_path": "./build/{node_abi}-{platform}-{arch}-{libc}",
-    "host": "https://storage.googleapis.com/cloud-profiler/pprof-nodejs/release",
-    "remote_path": "v{version}",
-    "package_name": "{node_abi}-{platform}-{arch}-{libc}.tar.gz"
   },
   "publishConfig": {
     "registry": "https://wombat-dressing-room.appspot.com"
