@@ -31,7 +31,10 @@ function busyLoop(durationSeconds) {
     }
   }
   if (Date.now() - startTime < 1000 * durationSeconds) {
-    setTimeout(() => busyLoop(durationSeconds), 5);
+    const busyLoopTick = () => {
+      busyLoop(durationSeconds);
+    };
+    setTimeout(busyLoopTick, 5);
   }
 }
 

@@ -1,6 +1,6 @@
 ARG NODE_VERSION
 
-FROM golang:1.22-alpine as builder
+FROM golang:1.24-alpine as builder
 RUN apk add --no-cache git
 WORKDIR /root/
 RUN go install github.com/google/pprof@v0.0.0-20240827171923-fa2c70bbbfe5
