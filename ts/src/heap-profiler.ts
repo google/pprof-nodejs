@@ -86,7 +86,10 @@ export function profile(
  * @param intervalBytes - average number of bytes between samples.
  * @param stackDepth - maximum stack depth for samples collected.
  */
-export function start(intervalBytes: number, stackDepth: number) {
+export async function start(
+  intervalBytes: number,
+  stackDepth: number
+): Promise<void> {
   if (enabled) {
     throw new Error(
       `Heap profiler is already started  with intervalBytes ${heapIntervalBytes} and stackDepth ${stackDepth}`
@@ -96,6 +99,10 @@ export function start(intervalBytes: number, stackDepth: number) {
   heapStackDepth = stackDepth;
   startSamplingHeapProfiler(heapIntervalBytes, heapStackDepth);
   enabled = true;
+  // Wait for 100ms to give the profiler time to initialize.
+  // This is a workaround for a race condition where the profiler is not
+  // ready to collect samples immediately after it is started.
+  await new Promise(resolve => setTimeout(resolve, 100));
 }
 
 // Stops heap profiling. If heap profiling has not been started, does nothing.
