@@ -60,7 +60,7 @@ node --trace-warnings "$BENCHPATH" 10 $VERIFY_TIME_LINE_NUMBERS
 
 if [[ "$VERIFY_TIME_LINE_NUMBERS" == "true" ]]; then
   pprof -lines -top -nodecount=2 time.pb.gz | tee $tty | \
-      grep "busyLoop.*src/busybench.js:[2-3][08-9]"
+      grep "busyLoop.*src/busybench.js:27"
   pprof -filefunctions -top -nodecount=2 heap.pb.gz | tee $tty | \
       grep "busyLoop.*src/busybench.js"
 else
