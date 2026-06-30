@@ -13,14 +13,10 @@
 2. The `pprof` module has a native component that is used to collect profiles 
 with v8's CPU and Heap profilers. You may need to install additional
 dependencies to build this module.
-    * For Linux: `pprof` has prebuilt binaries available for Linux and Alpine
-    Linux for Node 14 and 16. No additional dependencies are required.
-    * For other environments: when using `@google-cloud/profiler` on environments
-    that `pprof` does not have prebuilt binaries for, the module
-    [`node-gyp`](https://www.npmjs.com/package/node-gyp) will be used to
-    build binaries. See `node-gyp`'s
-    [documentation](https://github.com/nodejs/node-gyp#installation)
-    for information on dependencies required to build binaries with `node-gyp`.
+The module [`node-gyp`](https://www.npmjs.com/package/node-gyp) is used to
+build the native component. See `node-gyp`'s
+[documentation](https://github.com/nodejs/node-gyp#installation)
+for information on dependencies required to build binaries with `node-gyp`.
 
 3. The [`pprof`][pprof-url] CLI can be used to view profiles collected with 
 this module. Instructions for installing the `pprof` CLI can be found
