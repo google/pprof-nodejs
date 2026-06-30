@@ -20,14 +20,13 @@ import {
   getAllocationProfile,
   startSamplingHeapProfiler,
   stopSamplingHeapProfiler,
-} from './heap-profiler-bindings';
+} from './heap-profiler-inspector';
 import {serializeHeapProfile} from './profile-serializer';
 import {SourceMapper} from './sourcemapper/sourcemapper';
 import {AllocationProfileNode} from './v8-types';
 
 let enabled = false;
 let heapIntervalBytes = 0;
-let heapStackDepth = 0;
 
 /*
  * Collects a heap profile when heapProfiler is enabled. Otherwise throws
@@ -35,11 +34,11 @@ let heapStackDepth = 0;
  *
  * Data is returned in V8 allocation profile format.
  */
-export function v8Profile(): AllocationProfileNode {
+export async function v8Profile(): Promise<AllocationProfileNode> {
   if (!enabled) {
     throw new Error('Heap profiler is not enabled.');
   }
-  return getAllocationProfile();
+  return await getAllocationProfile();
 }
 
 /**
@@ -49,12 +48,12 @@ export function v8Profile(): AllocationProfileNode {
  * @param ignoreSamplePath
  * @param sourceMapper
  */
-export function profile(
+export async function profile(
   ignoreSamplePath?: string,
   sourceMapper?: SourceMapper
-): perftools.profiles.IProfile {
+): Promise<perftools.profiles.IProfile> {
   const startTimeNanos = Date.now() * 1000 * 1000;
-  const result = v8Profile();
+  const result = await v8Profile();
   // Add node for external memory usage.
   // Current type definitions do not have external.
   // TODO: remove any once type definition is updated to include external.
@@ -84,17 +83,17 @@ export function profile(
  * started with different parameters, this throws an error.
  *
  * @param intervalBytes - average number of bytes between samples.
- * @param stackDepth - maximum stack depth for samples collected.
+ * @param stackDepth - maximum stack depth for samples collected. This is currently no-op.
+ *                     Default stack depth of 128 will be used. Kept to avoid making breaking change.
  */
 export function start(intervalBytes: number, stackDepth: number) {
   if (enabled) {
     throw new Error(
-      `Heap profiler is already started  with intervalBytes ${heapIntervalBytes} and stackDepth ${stackDepth}`
+      `Heap profiler is already started  with intervalBytes ${heapIntervalBytes} and stackDepth 128`
     );
   }
   heapIntervalBytes = intervalBytes;
-  heapStackDepth = stackDepth;
-  startSamplingHeapProfiler(heapIntervalBytes, heapStackDepth);
+  startSamplingHeapProfiler(heapIntervalBytes, stackDepth);
   enabled = true;
 }
 
