@@ -67,7 +67,7 @@ $root.perftools = (function() {
                 this.comment = [];
                 if (properties)
                     for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                        if (properties[keys[i]] != null)
+                        if (properties[keys[i]] != null && keys[i] !== "__proto__")
                             this[keys[i]] = properties[keys[i]];
             }
 
@@ -204,24 +204,28 @@ $root.perftools = (function() {
              * @param {$protobuf.Writer} [writer] Writer to encode to
              * @returns {$protobuf.Writer} Writer
              */
-            Profile.encode = function encode(message, writer) {
+            Profile.encode = function encode(message, writer, q) {
                 if (!writer)
                     writer = $Writer.create();
+                if (q === undefined)
+                    q = 0;
+                if (q > $util.recursionLimit)
+                    throw Error("max depth exceeded");
                 if (message.sampleType != null && message.sampleType.length)
                     for (var i = 0; i < message.sampleType.length; ++i)
-                        $root.perftools.profiles.ValueType.encode(message.sampleType[i], writer.uint32(/* id 1, wireType 2 =*/10).fork()).ldelim();
+                        $root.perftools.profiles.ValueType.encode(message.sampleType[i], writer.uint32(/* id 1, wireType 2 =*/10).fork(), q + 1).ldelim();
                 if (message.sample != null && message.sample.length)
                     for (var i = 0; i < message.sample.length; ++i)
-                        $root.perftools.profiles.Sample.encode(message.sample[i], writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim();
+                        $root.perftools.profiles.Sample.encode(message.sample[i], writer.uint32(/* id 2, wireType 2 =*/18).fork(), q + 1).ldelim();
                 if (message.mapping != null && message.mapping.length)
                     for (var i = 0; i < message.mapping.length; ++i)
-                        $root.perftools.profiles.Mapping.encode(message.mapping[i], writer.uint32(/* id 3, wireType 2 =*/26).fork()).ldelim();
+                        $root.perftools.profiles.Mapping.encode(message.mapping[i], writer.uint32(/* id 3, wireType 2 =*/26).fork(), q + 1).ldelim();
                 if (message.location != null && message.location.length)
                     for (var i = 0; i < message.location.length; ++i)
-                        $root.perftools.profiles.Location.encode(message.location[i], writer.uint32(/* id 4, wireType 2 =*/34).fork()).ldelim();
+                        $root.perftools.profiles.Location.encode(message.location[i], writer.uint32(/* id 4, wireType 2 =*/34).fork(), q + 1).ldelim();
                 if (message["function"] != null && message["function"].length)
                     for (var i = 0; i < message["function"].length; ++i)
-                        $root.perftools.profiles.Function.encode(message["function"][i], writer.uint32(/* id 5, wireType 2 =*/42).fork()).ldelim();
+                        $root.perftools.profiles.Function.encode(message["function"][i], writer.uint32(/* id 5, wireType 2 =*/42).fork(), q + 1).ldelim();
                 if (message.stringTable != null && message.stringTable.length)
                     for (var i = 0; i < message.stringTable.length; ++i)
                         writer.uint32(/* id 6, wireType 2 =*/50).string(message.stringTable[i]);
@@ -234,7 +238,7 @@ $root.perftools = (function() {
                 if (message.durationNanos != null && Object.hasOwnProperty.call(message, "durationNanos"))
                     writer.uint32(/* id 10, wireType 0 =*/80).int64(message.durationNanos);
                 if (message.periodType != null && Object.hasOwnProperty.call(message, "periodType"))
-                    $root.perftools.profiles.ValueType.encode(message.periodType, writer.uint32(/* id 11, wireType 2 =*/90).fork()).ldelim();
+                    $root.perftools.profiles.ValueType.encode(message.periodType, writer.uint32(/* id 11, wireType 2 =*/90).fork(), q + 1).ldelim();
                 if (message.period != null && Object.hasOwnProperty.call(message, "period"))
                     writer.uint32(/* id 12, wireType 0 =*/96).int64(message.period);
                 if (message.comment != null && message.comment.length) {
@@ -272,41 +276,47 @@ $root.perftools = (function() {
              * @throws {Error} If the payload is not a reader or valid buffer
              * @throws {$protobuf.util.ProtocolError} If required fields are missing
              */
-            Profile.decode = function decode(reader, length) {
+            Profile.decode = function decode(reader, length, error, long) {
                 if (!(reader instanceof $Reader))
                     reader = $Reader.create(reader);
+                if (long === undefined)
+                    long = 0;
+                if (long > $Reader.recursionLimit)
+                    throw Error("maximum nesting depth exceeded");
                 var end = length === undefined ? reader.len : reader.pos + length, message = new $root.perftools.profiles.Profile();
                 while (reader.pos < end) {
                     var tag = reader.uint32();
+                    if (tag === error)
+                        break;
                     switch (tag >>> 3) {
                     case 1: {
                             if (!(message.sampleType && message.sampleType.length))
                                 message.sampleType = [];
-                            message.sampleType.push($root.perftools.profiles.ValueType.decode(reader, reader.uint32()));
+                            message.sampleType.push($root.perftools.profiles.ValueType.decode(reader, reader.uint32(), undefined, long + 1));
                             break;
                         }
                     case 2: {
                             if (!(message.sample && message.sample.length))
                                 message.sample = [];
-                            message.sample.push($root.perftools.profiles.Sample.decode(reader, reader.uint32()));
+                            message.sample.push($root.perftools.profiles.Sample.decode(reader, reader.uint32(), undefined, long + 1));
                             break;
                         }
                     case 3: {
                             if (!(message.mapping && message.mapping.length))
                                 message.mapping = [];
-                            message.mapping.push($root.perftools.profiles.Mapping.decode(reader, reader.uint32()));
+                            message.mapping.push($root.perftools.profiles.Mapping.decode(reader, reader.uint32(), undefined, long + 1));
                             break;
                         }
                     case 4: {
                             if (!(message.location && message.location.length))
                                 message.location = [];
-                            message.location.push($root.perftools.profiles.Location.decode(reader, reader.uint32()));
+                            message.location.push($root.perftools.profiles.Location.decode(reader, reader.uint32(), undefined, long + 1));
                             break;
                         }
                     case 5: {
                             if (!(message["function"] && message["function"].length))
                                 message["function"] = [];
-                            message["function"].push($root.perftools.profiles.Function.decode(reader, reader.uint32()));
+                            message["function"].push($root.perftools.profiles.Function.decode(reader, reader.uint32(), undefined, long + 1));
                             break;
                         }
                     case 6: {
@@ -332,7 +342,7 @@ $root.perftools = (function() {
                             break;
                         }
                     case 11: {
-                            message.periodType = $root.perftools.profiles.ValueType.decode(reader, reader.uint32());
+                            message.periodType = $root.perftools.profiles.ValueType.decode(reader, reader.uint32(), undefined, long + 1);
                             break;
                         }
                     case 12: {
@@ -355,7 +365,7 @@ $root.perftools = (function() {
                             break;
                         }
                     default:
-                        reader.skipType(tag & 7);
+                        reader.skipType(tag & 7, long);
                         break;
                     }
                 }
@@ -386,89 +396,93 @@ $root.perftools = (function() {
              * @param {Object.<string,*>} message Plain object to verify
              * @returns {string|null} `null` if valid, otherwise the reason why it is not
              */
-            Profile.verify = function verify(message) {
+            Profile.verify = function verify(message, long) {
                 if (typeof message !== "object" || message === null)
                     return "object expected";
-                if (message.sampleType != null && message.hasOwnProperty("sampleType")) {
+                if (long === undefined)
+                    long = 0;
+                if (long > $util.recursionLimit)
+                    return "maximum nesting depth exceeded";
+                if (message.sampleType != null && Object.hasOwnProperty.call(message, "sampleType")) {
                     if (!Array.isArray(message.sampleType))
                         return "sampleType: array expected";
                     for (var i = 0; i < message.sampleType.length; ++i) {
-                        var error = $root.perftools.profiles.ValueType.verify(message.sampleType[i]);
+                        var error = $root.perftools.profiles.ValueType.verify(message.sampleType[i], long + 1);
                         if (error)
                             return "sampleType." + error;
                     }
                 }
-                if (message.sample != null && message.hasOwnProperty("sample")) {
+                if (message.sample != null && Object.hasOwnProperty.call(message, "sample")) {
                     if (!Array.isArray(message.sample))
                         return "sample: array expected";
                     for (var i = 0; i < message.sample.length; ++i) {
-                        var error = $root.perftools.profiles.Sample.verify(message.sample[i]);
+                        var error = $root.perftools.profiles.Sample.verify(message.sample[i], long + 1);
                         if (error)
                             return "sample." + error;
                     }
                 }
-                if (message.mapping != null && message.hasOwnProperty("mapping")) {
+                if (message.mapping != null && Object.hasOwnProperty.call(message, "mapping")) {
                     if (!Array.isArray(message.mapping))
                         return "mapping: array expected";
                     for (var i = 0; i < message.mapping.length; ++i) {
-                        var error = $root.perftools.profiles.Mapping.verify(message.mapping[i]);
+                        var error = $root.perftools.profiles.Mapping.verify(message.mapping[i], long + 1);
                         if (error)
                             return "mapping." + error;
                     }
                 }
-                if (message.location != null && message.hasOwnProperty("location")) {
+                if (message.location != null && Object.hasOwnProperty.call(message, "location")) {
                     if (!Array.isArray(message.location))
                         return "location: array expected";
                     for (var i = 0; i < message.location.length; ++i) {
-                        var error = $root.perftools.profiles.Location.verify(message.location[i]);
+                        var error = $root.perftools.profiles.Location.verify(message.location[i], long + 1);
                         if (error)
                             return "location." + error;
                     }
                 }
-                if (message["function"] != null && message.hasOwnProperty("function")) {
+                if (message["function"] != null && Object.hasOwnProperty.call(message, "function")) {
                     if (!Array.isArray(message["function"]))
                         return "function: array expected";
                     for (var i = 0; i < message["function"].length; ++i) {
-                        var error = $root.perftools.profiles.Function.verify(message["function"][i]);
+                        var error = $root.perftools.profiles.Function.verify(message["function"][i], long + 1);
                         if (error)
                             return "function." + error;
                     }
                 }
-                if (message.stringTable != null && message.hasOwnProperty("stringTable")) {
+                if (message.stringTable != null && Object.hasOwnProperty.call(message, "stringTable")) {
                     if (!Array.isArray(message.stringTable))
                         return "stringTable: array expected";
                     for (var i = 0; i < message.stringTable.length; ++i)
                         if (!$util.isString(message.stringTable[i]))
                             return "stringTable: string[] expected";
                 }
-                if (message.dropFrames != null && message.hasOwnProperty("dropFrames"))
+                if (message.dropFrames != null && Object.hasOwnProperty.call(message, "dropFrames"))
                     if (!$util.isInteger(message.dropFrames) && !(message.dropFrames && $util.isInteger(message.dropFrames.low) && $util.isInteger(message.dropFrames.high)))
                         return "dropFrames: integer|Long expected";
-                if (message.keepFrames != null && message.hasOwnProperty("keepFrames"))
+                if (message.keepFrames != null && Object.hasOwnProperty.call(message, "keepFrames"))
                     if (!$util.isInteger(message.keepFrames) && !(message.keepFrames && $util.isInteger(message.keepFrames.low) && $util.isInteger(message.keepFrames.high)))
                         return "keepFrames: integer|Long expected";
-                if (message.timeNanos != null && message.hasOwnProperty("timeNanos"))
+                if (message.timeNanos != null && Object.hasOwnProperty.call(message, "timeNanos"))
                     if (!$util.isInteger(message.timeNanos) && !(message.timeNanos && $util.isInteger(message.timeNanos.low) && $util.isInteger(message.timeNanos.high)))
                         return "timeNanos: integer|Long expected";
-                if (message.durationNanos != null && message.hasOwnProperty("durationNanos"))
+                if (message.durationNanos != null && Object.hasOwnProperty.call(message, "durationNanos"))
                     if (!$util.isInteger(message.durationNanos) && !(message.durationNanos && $util.isInteger(message.durationNanos.low) && $util.isInteger(message.durationNanos.high)))
                         return "durationNanos: integer|Long expected";
-                if (message.periodType != null && message.hasOwnProperty("periodType")) {
-                    var error = $root.perftools.profiles.ValueType.verify(message.periodType);
+                if (message.periodType != null && Object.hasOwnProperty.call(message, "periodType")) {
+                    var error = $root.perftools.profiles.ValueType.verify(message.periodType, long + 1);
                     if (error)
                         return "periodType." + error;
                 }
-                if (message.period != null && message.hasOwnProperty("period"))
+                if (message.period != null && Object.hasOwnProperty.call(message, "period"))
                     if (!$util.isInteger(message.period) && !(message.period && $util.isInteger(message.period.low) && $util.isInteger(message.period.high)))
                         return "period: integer|Long expected";
-                if (message.comment != null && message.hasOwnProperty("comment")) {
+                if (message.comment != null && Object.hasOwnProperty.call(message, "comment")) {
                     if (!Array.isArray(message.comment))
                         return "comment: array expected";
                     for (var i = 0; i < message.comment.length; ++i)
                         if (!$util.isInteger(message.comment[i]) && !(message.comment[i] && $util.isInteger(message.comment[i].low) && $util.isInteger(message.comment[i].high)))
                             return "comment: integer|Long[] expected";
                 }
-                if (message.defaultSampleType != null && message.hasOwnProperty("defaultSampleType"))
+                if (message.defaultSampleType != null && Object.hasOwnProperty.call(message, "defaultSampleType"))
                     if (!$util.isInteger(message.defaultSampleType) && !(message.defaultSampleType && $util.isInteger(message.defaultSampleType.low) && $util.isInteger(message.defaultSampleType.high)))
                         return "defaultSampleType: integer|Long expected";
                 return null;
@@ -482,18 +496,24 @@ $root.perftools = (function() {
              * @param {Object.<string,*>} object Plain object
              * @returns {perftools.profiles.Profile} Profile
              */
-            Profile.fromObject = function fromObject(object) {
+            Profile.fromObject = function fromObject(object, long) {
                 if (object instanceof $root.perftools.profiles.Profile)
                     return object;
+                if (!$util.isObject(object))
+                    throw TypeError(".perftools.profiles.Profile: object expected");
+                if (long === undefined)
+                    long = 0;
+                if (long > $util.recursionLimit)
+                    throw Error("maximum nesting depth exceeded");
                 var message = new $root.perftools.profiles.Profile();
                 if (object.sampleType) {
                     if (!Array.isArray(object.sampleType))
                         throw TypeError(".perftools.profiles.Profile.sampleType: array expected");
                     message.sampleType = [];
                     for (var i = 0; i < object.sampleType.length; ++i) {
-                        if (typeof object.sampleType[i] !== "object")
+                        if (!$util.isObject(object.sampleType[i]))
                             throw TypeError(".perftools.profiles.Profile.sampleType: object expected");
-                        message.sampleType[i] = $root.perftools.profiles.ValueType.fromObject(object.sampleType[i]);
+                        message.sampleType[i] = $root.perftools.profiles.ValueType.fromObject(object.sampleType[i], long + 1);
                     }
                 }
                 if (object.sample) {
@@ -501,9 +521,9 @@ $root.perftools = (function() {
                         throw TypeError(".perftools.profiles.Profile.sample: array expected");
                     message.sample = [];
                     for (var i = 0; i < object.sample.length; ++i) {
-                        if (typeof object.sample[i] !== "object")
+                        if (!$util.isObject(object.sample[i]))
                             throw TypeError(".perftools.profiles.Profile.sample: object expected");
-                        message.sample[i] = $root.perftools.profiles.Sample.fromObject(object.sample[i]);
+                        message.sample[i] = $root.perftools.profiles.Sample.fromObject(object.sample[i], long + 1);
                     }
                 }
                 if (object.mapping) {
@@ -511,9 +531,9 @@ $root.perftools = (function() {
                         throw TypeError(".perftools.profiles.Profile.mapping: array expected");
                     message.mapping = [];
                     for (var i = 0; i < object.mapping.length; ++i) {
-                        if (typeof object.mapping[i] !== "object")
+                        if (!$util.isObject(object.mapping[i]))
                             throw TypeError(".perftools.profiles.Profile.mapping: object expected");
-                        message.mapping[i] = $root.perftools.profiles.Mapping.fromObject(object.mapping[i]);
+                        message.mapping[i] = $root.perftools.profiles.Mapping.fromObject(object.mapping[i], long + 1);
                     }
                 }
                 if (object.location) {
@@ -521,9 +541,9 @@ $root.perftools = (function() {
                         throw TypeError(".perftools.profiles.Profile.location: array expected");
                     message.location = [];
                     for (var i = 0; i < object.location.length; ++i) {
-                        if (typeof object.location[i] !== "object")
+                        if (!$util.isObject(object.location[i]))
                             throw TypeError(".perftools.profiles.Profile.location: object expected");
-                        message.location[i] = $root.perftools.profiles.Location.fromObject(object.location[i]);
+                        message.location[i] = $root.perftools.profiles.Location.fromObject(object.location[i], long + 1);
                     }
                 }
                 if (object["function"]) {
@@ -531,9 +551,9 @@ $root.perftools = (function() {
                         throw TypeError(".perftools.profiles.Profile.function: array expected");
                     message["function"] = [];
                     for (var i = 0; i < object["function"].length; ++i) {
-                        if (typeof object["function"][i] !== "object")
+                        if (!$util.isObject(object["function"][i]))
                             throw TypeError(".perftools.profiles.Profile.function: object expected");
-                        message["function"][i] = $root.perftools.profiles.Function.fromObject(object["function"][i]);
+                        message["function"][i] = $root.perftools.profiles.Function.fromObject(object["function"][i], long + 1);
                     }
                 }
                 if (object.stringTable) {
@@ -545,7 +565,7 @@ $root.perftools = (function() {
                 }
                 if (object.dropFrames != null)
                     if ($util.Long)
-                        (message.dropFrames = $util.Long.fromValue(object.dropFrames)).unsigned = false;
+                        message.dropFrames = $util.Long.fromValue(object.dropFrames, false);
                     else if (typeof object.dropFrames === "string")
                         message.dropFrames = parseInt(object.dropFrames, 10);
                     else if (typeof object.dropFrames === "number")
@@ -554,7 +574,7 @@ $root.perftools = (function() {
                         message.dropFrames = new $util.LongBits(object.dropFrames.low >>> 0, object.dropFrames.high >>> 0).toNumber();
                 if (object.keepFrames != null)
                     if ($util.Long)
-                        (message.keepFrames = $util.Long.fromValue(object.keepFrames)).unsigned = false;
+                        message.keepFrames = $util.Long.fromValue(object.keepFrames, false);
                     else if (typeof object.keepFrames === "string")
                         message.keepFrames = parseInt(object.keepFrames, 10);
                     else if (typeof object.keepFrames === "number")
@@ -563,7 +583,7 @@ $root.perftools = (function() {
                         message.keepFrames = new $util.LongBits(object.keepFrames.low >>> 0, object.keepFrames.high >>> 0).toNumber();
                 if (object.timeNanos != null)
                     if ($util.Long)
-                        (message.timeNanos = $util.Long.fromValue(object.timeNanos)).unsigned = false;
+                        message.timeNanos = $util.Long.fromValue(object.timeNanos, false);
                     else if (typeof object.timeNanos === "string")
                         message.timeNanos = parseInt(object.timeNanos, 10);
                     else if (typeof object.timeNanos === "number")
@@ -572,7 +592,7 @@ $root.perftools = (function() {
                         message.timeNanos = new $util.LongBits(object.timeNanos.low >>> 0, object.timeNanos.high >>> 0).toNumber();
                 if (object.durationNanos != null)
                     if ($util.Long)
-                        (message.durationNanos = $util.Long.fromValue(object.durationNanos)).unsigned = false;
+                        message.durationNanos = $util.Long.fromValue(object.durationNanos, false);
                     else if (typeof object.durationNanos === "string")
                         message.durationNanos = parseInt(object.durationNanos, 10);
                     else if (typeof object.durationNanos === "number")
@@ -580,13 +600,13 @@ $root.perftools = (function() {
                     else if (typeof object.durationNanos === "object")
                         message.durationNanos = new $util.LongBits(object.durationNanos.low >>> 0, object.durationNanos.high >>> 0).toNumber();
                 if (object.periodType != null) {
-                    if (typeof object.periodType !== "object")
+                    if (!$util.isObject(object.periodType))
                         throw TypeError(".perftools.profiles.Profile.periodType: object expected");
-                    message.periodType = $root.perftools.profiles.ValueType.fromObject(object.periodType);
+                    message.periodType = $root.perftools.profiles.ValueType.fromObject(object.periodType, long + 1);
                 }
                 if (object.period != null)
                     if ($util.Long)
-                        (message.period = $util.Long.fromValue(object.period)).unsigned = false;
+                        message.period = $util.Long.fromValue(object.period, false);
                     else if (typeof object.period === "string")
                         message.period = parseInt(object.period, 10);
                     else if (typeof object.period === "number")
@@ -599,7 +619,7 @@ $root.perftools = (function() {
                     message.comment = [];
                     for (var i = 0; i < object.comment.length; ++i)
                         if ($util.Long)
-                            (message.comment[i] = $util.Long.fromValue(object.comment[i])).unsigned = false;
+                            message.comment[i] = $util.Long.fromValue(object.comment[i], false);
                         else if (typeof object.comment[i] === "string")
                             message.comment[i] = parseInt(object.comment[i], 10);
                         else if (typeof object.comment[i] === "number")
@@ -609,7 +629,7 @@ $root.perftools = (function() {
                 }
                 if (object.defaultSampleType != null)
                     if ($util.Long)
-                        (message.defaultSampleType = $util.Long.fromValue(object.defaultSampleType)).unsigned = false;
+                        message.defaultSampleType = $util.Long.fromValue(object.defaultSampleType, false);
                     else if (typeof object.defaultSampleType === "string")
                         message.defaultSampleType = parseInt(object.defaultSampleType, 10);
                     else if (typeof object.defaultSampleType === "number")
@@ -628,9 +648,13 @@ $root.perftools = (function() {
              * @param {$protobuf.IConversionOptions} [options] Conversion options
              * @returns {Object.<string,*>} Plain object
              */
-            Profile.toObject = function toObject(message, options) {
+            Profile.toObject = function toObject(message, options, q) {
                 if (!options)
                     options = {};
+                if (q === undefined)
+                    q = 0;
+                if (q > $util.recursionLimit)
+                    throw Error("max depth exceeded");
                 var object = {};
                 if (options.arrays || options.defaults) {
                     object.sampleType = [];
@@ -644,103 +668,117 @@ $root.perftools = (function() {
                 if (options.defaults) {
                     if ($util.Long) {
                         var long = new $util.Long(0, 0, false);
-                        object.dropFrames = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
+                        object.dropFrames = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : typeof BigInt !== "undefined" && options.longs === BigInt ? long.toBigInt() : long;
                     } else
-                        object.dropFrames = options.longs === String ? "0" : 0;
+                        object.dropFrames = options.longs === String ? "0" : typeof BigInt !== "undefined" && options.longs === BigInt ? BigInt("0") : 0;
                     if ($util.Long) {
                         var long = new $util.Long(0, 0, false);
-                        object.keepFrames = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
+                        object.keepFrames = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : typeof BigInt !== "undefined" && options.longs === BigInt ? long.toBigInt() : long;
                     } else
-                        object.keepFrames = options.longs === String ? "0" : 0;
+                        object.keepFrames = options.longs === String ? "0" : typeof BigInt !== "undefined" && options.longs === BigInt ? BigInt("0") : 0;
                     if ($util.Long) {
                         var long = new $util.Long(0, 0, false);
-                        object.timeNanos = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
+                        object.timeNanos = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : typeof BigInt !== "undefined" && options.longs === BigInt ? long.toBigInt() : long;
                     } else
-                        object.timeNanos = options.longs === String ? "0" : 0;
+                        object.timeNanos = options.longs === String ? "0" : typeof BigInt !== "undefined" && options.longs === BigInt ? BigInt("0") : 0;
                     if ($util.Long) {
                         var long = new $util.Long(0, 0, false);
-                        object.durationNanos = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
+                        object.durationNanos = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : typeof BigInt !== "undefined" && options.longs === BigInt ? long.toBigInt() : long;
                     } else
-                        object.durationNanos = options.longs === String ? "0" : 0;
+                        object.durationNanos = options.longs === String ? "0" : typeof BigInt !== "undefined" && options.longs === BigInt ? BigInt("0") : 0;
                     object.periodType = null;
                     if ($util.Long) {
                         var long = new $util.Long(0, 0, false);
-                        object.period = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
+                        object.period = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : typeof BigInt !== "undefined" && options.longs === BigInt ? long.toBigInt() : long;
                     } else
-                        object.period = options.longs === String ? "0" : 0;
+                        object.period = options.longs === String ? "0" : typeof BigInt !== "undefined" && options.longs === BigInt ? BigInt("0") : 0;
                     if ($util.Long) {
                         var long = new $util.Long(0, 0, false);
-                        object.defaultSampleType = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
+                        object.defaultSampleType = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : typeof BigInt !== "undefined" && options.longs === BigInt ? long.toBigInt() : long;
                     } else
-                        object.defaultSampleType = options.longs === String ? "0" : 0;
+                        object.defaultSampleType = options.longs === String ? "0" : typeof BigInt !== "undefined" && options.longs === BigInt ? BigInt("0") : 0;
                 }
                 if (message.sampleType && message.sampleType.length) {
                     object.sampleType = [];
                     for (var j = 0; j < message.sampleType.length; ++j)
-                        object.sampleType[j] = $root.perftools.profiles.ValueType.toObject(message.sampleType[j], options);
+                        object.sampleType[j] = $root.perftools.profiles.ValueType.toObject(message.sampleType[j], options, q + 1);
                 }
                 if (message.sample && message.sample.length) {
                     object.sample = [];
                     for (var j = 0; j < message.sample.length; ++j)
-                        object.sample[j] = $root.perftools.profiles.Sample.toObject(message.sample[j], options);
+                        object.sample[j] = $root.perftools.profiles.Sample.toObject(message.sample[j], options, q + 1);
                 }
                 if (message.mapping && message.mapping.length) {
                     object.mapping = [];
                     for (var j = 0; j < message.mapping.length; ++j)
-                        object.mapping[j] = $root.perftools.profiles.Mapping.toObject(message.mapping[j], options);
+                        object.mapping[j] = $root.perftools.profiles.Mapping.toObject(message.mapping[j], options, q + 1);
                 }
                 if (message.location && message.location.length) {
                     object.location = [];
                     for (var j = 0; j < message.location.length; ++j)
-                        object.location[j] = $root.perftools.profiles.Location.toObject(message.location[j], options);
+                        object.location[j] = $root.perftools.profiles.Location.toObject(message.location[j], options, q + 1);
                 }
                 if (message["function"] && message["function"].length) {
                     object["function"] = [];
                     for (var j = 0; j < message["function"].length; ++j)
-                        object["function"][j] = $root.perftools.profiles.Function.toObject(message["function"][j], options);
+                        object["function"][j] = $root.perftools.profiles.Function.toObject(message["function"][j], options, q + 1);
                 }
                 if (message.stringTable && message.stringTable.length) {
                     object.stringTable = [];
                     for (var j = 0; j < message.stringTable.length; ++j)
                         object.stringTable[j] = message.stringTable[j];
                 }
-                if (message.dropFrames != null && message.hasOwnProperty("dropFrames"))
-                    if (typeof message.dropFrames === "number")
+                if (message.dropFrames != null && Object.hasOwnProperty.call(message, "dropFrames"))
+                    if (typeof BigInt !== "undefined" && options.longs === BigInt)
+                        object.dropFrames = typeof message.dropFrames === "number" ? BigInt(message.dropFrames) : $util.Long.fromBits(message.dropFrames.low >>> 0, message.dropFrames.high >>> 0, false).toBigInt();
+                    else if (typeof message.dropFrames === "number")
                         object.dropFrames = options.longs === String ? String(message.dropFrames) : message.dropFrames;
                     else
                         object.dropFrames = options.longs === String ? $util.Long.prototype.toString.call(message.dropFrames) : options.longs === Number ? new $util.LongBits(message.dropFrames.low >>> 0, message.dropFrames.high >>> 0).toNumber() : message.dropFrames;
-                if (message.keepFrames != null && message.hasOwnProperty("keepFrames"))
-                    if (typeof message.keepFrames === "number")
+                if (message.keepFrames != null && Object.hasOwnProperty.call(message, "keepFrames"))
+                    if (typeof BigInt !== "undefined" && options.longs === BigInt)
+                        object.keepFrames = typeof message.keepFrames === "number" ? BigInt(message.keepFrames) : $util.Long.fromBits(message.keepFrames.low >>> 0, message.keepFrames.high >>> 0, false).toBigInt();
+                    else if (typeof message.keepFrames === "number")
                         object.keepFrames = options.longs === String ? String(message.keepFrames) : message.keepFrames;
                     else
                         object.keepFrames = options.longs === String ? $util.Long.prototype.toString.call(message.keepFrames) : options.longs === Number ? new $util.LongBits(message.keepFrames.low >>> 0, message.keepFrames.high >>> 0).toNumber() : message.keepFrames;
-                if (message.timeNanos != null && message.hasOwnProperty("timeNanos"))
-                    if (typeof message.timeNanos === "number")
+                if (message.timeNanos != null && Object.hasOwnProperty.call(message, "timeNanos"))
+                    if (typeof BigInt !== "undefined" && options.longs === BigInt)
+                        object.timeNanos = typeof message.timeNanos === "number" ? BigInt(message.timeNanos) : $util.Long.fromBits(message.timeNanos.low >>> 0, message.timeNanos.high >>> 0, false).toBigInt();
+                    else if (typeof message.timeNanos === "number")
                         object.timeNanos = options.longs === String ? String(message.timeNanos) : message.timeNanos;
                     else
                         object.timeNanos = options.longs === String ? $util.Long.prototype.toString.call(message.timeNanos) : options.longs === Number ? new $util.LongBits(message.timeNanos.low >>> 0, message.timeNanos.high >>> 0).toNumber() : message.timeNanos;
-                if (message.durationNanos != null && message.hasOwnProperty("durationNanos"))
-                    if (typeof message.durationNanos === "number")
+                if (message.durationNanos != null && Object.hasOwnProperty.call(message, "durationNanos"))
+                    if (typeof BigInt !== "undefined" && options.longs === BigInt)
+                        object.durationNanos = typeof message.durationNanos === "number" ? BigInt(message.durationNanos) : $util.Long.fromBits(message.durationNanos.low >>> 0, message.durationNanos.high >>> 0, false).toBigInt();
+                    else if (typeof message.durationNanos === "number")
                         object.durationNanos = options.longs === String ? String(message.durationNanos) : message.durationNanos;
                     else
                         object.durationNanos = options.longs === String ? $util.Long.prototype.toString.call(message.durationNanos) : options.longs === Number ? new $util.LongBits(message.durationNanos.low >>> 0, message.durationNanos.high >>> 0).toNumber() : message.durationNanos;
-                if (message.periodType != null && message.hasOwnProperty("periodType"))
-                    object.periodType = $root.perftools.profiles.ValueType.toObject(message.periodType, options);
-                if (message.period != null && message.hasOwnProperty("period"))
-                    if (typeof message.period === "number")
+                if (message.periodType != null && Object.hasOwnProperty.call(message, "periodType"))
+                    object.periodType = $root.perftools.profiles.ValueType.toObject(message.periodType, options, q + 1);
+                if (message.period != null && Object.hasOwnProperty.call(message, "period"))
+                    if (typeof BigInt !== "undefined" && options.longs === BigInt)
+                        object.period = typeof message.period === "number" ? BigInt(message.period) : $util.Long.fromBits(message.period.low >>> 0, message.period.high >>> 0, false).toBigInt();
+                    else if (typeof message.period === "number")
                         object.period = options.longs === String ? String(message.period) : message.period;
                     else
                         object.period = options.longs === String ? $util.Long.prototype.toString.call(message.period) : options.longs === Number ? new $util.LongBits(message.period.low >>> 0, message.period.high >>> 0).toNumber() : message.period;
                 if (message.comment && message.comment.length) {
                     object.comment = [];
                     for (var j = 0; j < message.comment.length; ++j)
-                        if (typeof message.comment[j] === "number")
+                        if (typeof BigInt !== "undefined" && options.longs === BigInt)
+                            object.comment[j] = typeof message.comment[j] === "number" ? BigInt(message.comment[j]) : $util.Long.fromBits(message.comment[j].low >>> 0, message.comment[j].high >>> 0, false).toBigInt();
+                        else if (typeof message.comment[j] === "number")
                             object.comment[j] = options.longs === String ? String(message.comment[j]) : message.comment[j];
                         else
                             object.comment[j] = options.longs === String ? $util.Long.prototype.toString.call(message.comment[j]) : options.longs === Number ? new $util.LongBits(message.comment[j].low >>> 0, message.comment[j].high >>> 0).toNumber() : message.comment[j];
                 }
-                if (message.defaultSampleType != null && message.hasOwnProperty("defaultSampleType"))
-                    if (typeof message.defaultSampleType === "number")
+                if (message.defaultSampleType != null && Object.hasOwnProperty.call(message, "defaultSampleType"))
+                    if (typeof BigInt !== "undefined" && options.longs === BigInt)
+                        object.defaultSampleType = typeof message.defaultSampleType === "number" ? BigInt(message.defaultSampleType) : $util.Long.fromBits(message.defaultSampleType.low >>> 0, message.defaultSampleType.high >>> 0, false).toBigInt();
+                    else if (typeof message.defaultSampleType === "number")
                         object.defaultSampleType = options.longs === String ? String(message.defaultSampleType) : message.defaultSampleType;
                     else
                         object.defaultSampleType = options.longs === String ? $util.Long.prototype.toString.call(message.defaultSampleType) : options.longs === Number ? new $util.LongBits(message.defaultSampleType.low >>> 0, message.defaultSampleType.high >>> 0).toNumber() : message.defaultSampleType;
@@ -797,7 +835,7 @@ $root.perftools = (function() {
             function ValueType(properties) {
                 if (properties)
                     for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                        if (properties[keys[i]] != null)
+                        if (properties[keys[i]] != null && keys[i] !== "__proto__")
                             this[keys[i]] = properties[keys[i]];
             }
 
@@ -838,9 +876,13 @@ $root.perftools = (function() {
              * @param {$protobuf.Writer} [writer] Writer to encode to
              * @returns {$protobuf.Writer} Writer
              */
-            ValueType.encode = function encode(message, writer) {
+            ValueType.encode = function encode(message, writer, q) {
                 if (!writer)
                     writer = $Writer.create();
+                if (q === undefined)
+                    q = 0;
+                if (q > $util.recursionLimit)
+                    throw Error("max depth exceeded");
                 if (message.type != null && Object.hasOwnProperty.call(message, "type"))
                     writer.uint32(/* id 1, wireType 0 =*/8).int64(message.type);
                 if (message.unit != null && Object.hasOwnProperty.call(message, "unit"))
@@ -872,12 +914,18 @@ $root.perftools = (function() {
              * @throws {Error} If the payload is not a reader or valid buffer
              * @throws {$protobuf.util.ProtocolError} If required fields are missing
              */
-            ValueType.decode = function decode(reader, length) {
+            ValueType.decode = function decode(reader, length, error, long) {
                 if (!(reader instanceof $Reader))
                     reader = $Reader.create(reader);
+                if (long === undefined)
+                    long = 0;
+                if (long > $Reader.recursionLimit)
+                    throw Error("maximum nesting depth exceeded");
                 var end = length === undefined ? reader.len : reader.pos + length, message = new $root.perftools.profiles.ValueType();
                 while (reader.pos < end) {
                     var tag = reader.uint32();
+                    if (tag === error)
+                        break;
                     switch (tag >>> 3) {
                     case 1: {
                             message.type = reader.int64();
@@ -888,7 +936,7 @@ $root.perftools = (function() {
                             break;
                         }
                     default:
-                        reader.skipType(tag & 7);
+                        reader.skipType(tag & 7, long);
                         break;
                     }
                 }
@@ -919,13 +967,17 @@ $root.perftools = (function() {
              * @param {Object.<string,*>} message Plain object to verify
              * @returns {string|null} `null` if valid, otherwise the reason why it is not
              */
-            ValueType.verify = function verify(message) {
+            ValueType.verify = function verify(message, long) {
                 if (typeof message !== "object" || message === null)
                     return "object expected";
-                if (message.type != null && message.hasOwnProperty("type"))
+                if (long === undefined)
+                    long = 0;
+                if (long > $util.recursionLimit)
+                    return "maximum nesting depth exceeded";
+                if (message.type != null && Object.hasOwnProperty.call(message, "type"))
                     if (!$util.isInteger(message.type) && !(message.type && $util.isInteger(message.type.low) && $util.isInteger(message.type.high)))
                         return "type: integer|Long expected";
-                if (message.unit != null && message.hasOwnProperty("unit"))
+                if (message.unit != null && Object.hasOwnProperty.call(message, "unit"))
                     if (!$util.isInteger(message.unit) && !(message.unit && $util.isInteger(message.unit.low) && $util.isInteger(message.unit.high)))
                         return "unit: integer|Long expected";
                 return null;
@@ -939,13 +991,19 @@ $root.perftools = (function() {
              * @param {Object.<string,*>} object Plain object
              * @returns {perftools.profiles.ValueType} ValueType
              */
-            ValueType.fromObject = function fromObject(object) {
+            ValueType.fromObject = function fromObject(object, long) {
                 if (object instanceof $root.perftools.profiles.ValueType)
                     return object;
+                if (!$util.isObject(object))
+                    throw TypeError(".perftools.profiles.ValueType: object expected");
+                if (long === undefined)
+                    long = 0;
+                if (long > $util.recursionLimit)
+                    throw Error("maximum nesting depth exceeded");
                 var message = new $root.perftools.profiles.ValueType();
                 if (object.type != null)
                     if ($util.Long)
-                        (message.type = $util.Long.fromValue(object.type)).unsigned = false;
+                        message.type = $util.Long.fromValue(object.type, false);
                     else if (typeof object.type === "string")
                         message.type = parseInt(object.type, 10);
                     else if (typeof object.type === "number")
@@ -954,7 +1012,7 @@ $root.perftools = (function() {
                         message.type = new $util.LongBits(object.type.low >>> 0, object.type.high >>> 0).toNumber();
                 if (object.unit != null)
                     if ($util.Long)
-                        (message.unit = $util.Long.fromValue(object.unit)).unsigned = false;
+                        message.unit = $util.Long.fromValue(object.unit, false);
                     else if (typeof object.unit === "string")
                         message.unit = parseInt(object.unit, 10);
                     else if (typeof object.unit === "number")
@@ -973,29 +1031,37 @@ $root.perftools = (function() {
              * @param {$protobuf.IConversionOptions} [options] Conversion options
              * @returns {Object.<string,*>} Plain object
              */
-            ValueType.toObject = function toObject(message, options) {
+            ValueType.toObject = function toObject(message, options, q) {
                 if (!options)
                     options = {};
+                if (q === undefined)
+                    q = 0;
+                if (q > $util.recursionLimit)
+                    throw Error("max depth exceeded");
                 var object = {};
                 if (options.defaults) {
                     if ($util.Long) {
                         var long = new $util.Long(0, 0, false);
-                        object.type = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
+                        object.type = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : typeof BigInt !== "undefined" && options.longs === BigInt ? long.toBigInt() : long;
                     } else
-                        object.type = options.longs === String ? "0" : 0;
+                        object.type = options.longs === String ? "0" : typeof BigInt !== "undefined" && options.longs === BigInt ? BigInt("0") : 0;
                     if ($util.Long) {
                         var long = new $util.Long(0, 0, false);
-                        object.unit = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
+                        object.unit = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : typeof BigInt !== "undefined" && options.longs === BigInt ? long.toBigInt() : long;
                     } else
-                        object.unit = options.longs === String ? "0" : 0;
+                        object.unit = options.longs === String ? "0" : typeof BigInt !== "undefined" && options.longs === BigInt ? BigInt("0") : 0;
                 }
-                if (message.type != null && message.hasOwnProperty("type"))
-                    if (typeof message.type === "number")
+                if (message.type != null && Object.hasOwnProperty.call(message, "type"))
+                    if (typeof BigInt !== "undefined" && options.longs === BigInt)
+                        object.type = typeof message.type === "number" ? BigInt(message.type) : $util.Long.fromBits(message.type.low >>> 0, message.type.high >>> 0, false).toBigInt();
+                    else if (typeof message.type === "number")
                         object.type = options.longs === String ? String(message.type) : message.type;
                     else
                         object.type = options.longs === String ? $util.Long.prototype.toString.call(message.type) : options.longs === Number ? new $util.LongBits(message.type.low >>> 0, message.type.high >>> 0).toNumber() : message.type;
-                if (message.unit != null && message.hasOwnProperty("unit"))
-                    if (typeof message.unit === "number")
+                if (message.unit != null && Object.hasOwnProperty.call(message, "unit"))
+                    if (typeof BigInt !== "undefined" && options.longs === BigInt)
+                        object.unit = typeof message.unit === "number" ? BigInt(message.unit) : $util.Long.fromBits(message.unit.low >>> 0, message.unit.high >>> 0, false).toBigInt();
+                    else if (typeof message.unit === "number")
                         object.unit = options.longs === String ? String(message.unit) : message.unit;
                     else
                         object.unit = options.longs === String ? $util.Long.prototype.toString.call(message.unit) : options.longs === Number ? new $util.LongBits(message.unit.low >>> 0, message.unit.high >>> 0).toNumber() : message.unit;
@@ -1056,7 +1122,7 @@ $root.perftools = (function() {
                 this.label = [];
                 if (properties)
                     for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                        if (properties[keys[i]] != null)
+                        if (properties[keys[i]] != null && keys[i] !== "__proto__")
                             this[keys[i]] = properties[keys[i]];
             }
 
@@ -1105,9 +1171,13 @@ $root.perftools = (function() {
              * @param {$protobuf.Writer} [writer] Writer to encode to
              * @returns {$protobuf.Writer} Writer
              */
-            Sample.encode = function encode(message, writer) {
+            Sample.encode = function encode(message, writer, q) {
                 if (!writer)
                     writer = $Writer.create();
+                if (q === undefined)
+                    q = 0;
+                if (q > $util.recursionLimit)
+                    throw Error("max depth exceeded");
                 if (message.locationId != null && message.locationId.length) {
                     writer.uint32(/* id 1, wireType 2 =*/10).fork();
                     for (var i = 0; i < message.locationId.length; ++i)
@@ -1122,7 +1192,7 @@ $root.perftools = (function() {
                 }
                 if (message.label != null && message.label.length)
                     for (var i = 0; i < message.label.length; ++i)
-                        $root.perftools.profiles.Label.encode(message.label[i], writer.uint32(/* id 3, wireType 2 =*/26).fork()).ldelim();
+                        $root.perftools.profiles.Label.encode(message.label[i], writer.uint32(/* id 3, wireType 2 =*/26).fork(), q + 1).ldelim();
                 return writer;
             };
 
@@ -1150,12 +1220,18 @@ $root.perftools = (function() {
              * @throws {Error} If the payload is not a reader or valid buffer
              * @throws {$protobuf.util.ProtocolError} If required fields are missing
              */
-            Sample.decode = function decode(reader, length) {
+            Sample.decode = function decode(reader, length, error, long) {
                 if (!(reader instanceof $Reader))
                     reader = $Reader.create(reader);
+                if (long === undefined)
+                    long = 0;
+                if (long > $Reader.recursionLimit)
+                    throw Error("maximum nesting depth exceeded");
                 var end = length === undefined ? reader.len : reader.pos + length, message = new $root.perftools.profiles.Sample();
                 while (reader.pos < end) {
                     var tag = reader.uint32();
+                    if (tag === error)
+                        break;
                     switch (tag >>> 3) {
                     case 1: {
                             if (!(message.locationId && message.locationId.length))
@@ -1182,11 +1258,11 @@ $root.perftools = (function() {
                     case 3: {
                             if (!(message.label && message.label.length))
                                 message.label = [];
-                            message.label.push($root.perftools.profiles.Label.decode(reader, reader.uint32()));
+                            message.label.push($root.perftools.profiles.Label.decode(reader, reader.uint32(), undefined, long + 1));
                             break;
                         }
                     default:
-                        reader.skipType(tag & 7);
+                        reader.skipType(tag & 7, long);
                         break;
                     }
                 }
@@ -1217,28 +1293,32 @@ $root.perftools = (function() {
              * @param {Object.<string,*>} message Plain object to verify
              * @returns {string|null} `null` if valid, otherwise the reason why it is not
              */
-            Sample.verify = function verify(message) {
+            Sample.verify = function verify(message, long) {
                 if (typeof message !== "object" || message === null)
                     return "object expected";
-                if (message.locationId != null && message.hasOwnProperty("locationId")) {
+                if (long === undefined)
+                    long = 0;
+                if (long > $util.recursionLimit)
+                    return "maximum nesting depth exceeded";
+                if (message.locationId != null && Object.hasOwnProperty.call(message, "locationId")) {
                     if (!Array.isArray(message.locationId))
                         return "locationId: array expected";
                     for (var i = 0; i < message.locationId.length; ++i)
                         if (!$util.isInteger(message.locationId[i]) && !(message.locationId[i] && $util.isInteger(message.locationId[i].low) && $util.isInteger(message.locationId[i].high)))
                             return "locationId: integer|Long[] expected";
                 }
-                if (message.value != null && message.hasOwnProperty("value")) {
+                if (message.value != null && Object.hasOwnProperty.call(message, "value")) {
                     if (!Array.isArray(message.value))
                         return "value: array expected";
                     for (var i = 0; i < message.value.length; ++i)
                         if (!$util.isInteger(message.value[i]) && !(message.value[i] && $util.isInteger(message.value[i].low) && $util.isInteger(message.value[i].high)))
                             return "value: integer|Long[] expected";
                 }
-                if (message.label != null && message.hasOwnProperty("label")) {
+                if (message.label != null && Object.hasOwnProperty.call(message, "label")) {
                     if (!Array.isArray(message.label))
                         return "label: array expected";
                     for (var i = 0; i < message.label.length; ++i) {
-                        var error = $root.perftools.profiles.Label.verify(message.label[i]);
+                        var error = $root.perftools.profiles.Label.verify(message.label[i], long + 1);
                         if (error)
                             return "label." + error;
                     }
@@ -1254,9 +1334,15 @@ $root.perftools = (function() {
              * @param {Object.<string,*>} object Plain object
              * @returns {perftools.profiles.Sample} Sample
              */
-            Sample.fromObject = function fromObject(object) {
+            Sample.fromObject = function fromObject(object, long) {
                 if (object instanceof $root.perftools.profiles.Sample)
                     return object;
+                if (!$util.isObject(object))
+                    throw TypeError(".perftools.profiles.Sample: object expected");
+                if (long === undefined)
+                    long = 0;
+                if (long > $util.recursionLimit)
+                    throw Error("maximum nesting depth exceeded");
                 var message = new $root.perftools.profiles.Sample();
                 if (object.locationId) {
                     if (!Array.isArray(object.locationId))
@@ -1264,7 +1350,7 @@ $root.perftools = (function() {
                     message.locationId = [];
                     for (var i = 0; i < object.locationId.length; ++i)
                         if ($util.Long)
-                            (message.locationId[i] = $util.Long.fromValue(object.locationId[i])).unsigned = true;
+                            message.locationId[i] = $util.Long.fromValue(object.locationId[i], true);
                         else if (typeof object.locationId[i] === "string")
                             message.locationId[i] = parseInt(object.locationId[i], 10);
                         else if (typeof object.locationId[i] === "number")
@@ -1278,7 +1364,7 @@ $root.perftools = (function() {
                     message.value = [];
                     for (var i = 0; i < object.value.length; ++i)
                         if ($util.Long)
-                            (message.value[i] = $util.Long.fromValue(object.value[i])).unsigned = false;
+                            message.value[i] = $util.Long.fromValue(object.value[i], false);
                         else if (typeof object.value[i] === "string")
                             message.value[i] = parseInt(object.value[i], 10);
                         else if (typeof object.value[i] === "number")
@@ -1291,9 +1377,9 @@ $root.perftools = (function() {
                         throw TypeError(".perftools.profiles.Sample.label: array expected");
                     message.label = [];
                     for (var i = 0; i < object.label.length; ++i) {
-                        if (typeof object.label[i] !== "object")
+                        if (!$util.isObject(object.label[i]))
                             throw TypeError(".perftools.profiles.Sample.label: object expected");
-                        message.label[i] = $root.perftools.profiles.Label.fromObject(object.label[i]);
+                        message.label[i] = $root.perftools.profiles.Label.fromObject(object.label[i], long + 1);
                     }
                 }
                 return message;
@@ -1308,9 +1394,13 @@ $root.perftools = (function() {
              * @param {$protobuf.IConversionOptions} [options] Conversion options
              * @returns {Object.<string,*>} Plain object
              */
-            Sample.toObject = function toObject(message, options) {
+            Sample.toObject = function toObject(message, options, q) {
                 if (!options)
                     options = {};
+                if (q === undefined)
+                    q = 0;
+                if (q > $util.recursionLimit)
+                    throw Error("max depth exceeded");
                 var object = {};
                 if (options.arrays || options.defaults) {
                     object.locationId = [];
@@ -1320,7 +1410,9 @@ $root.perftools = (function() {
                 if (message.locationId && message.locationId.length) {
                     object.locationId = [];
                     for (var j = 0; j < message.locationId.length; ++j)
-                        if (typeof message.locationId[j] === "number")
+                        if (typeof BigInt !== "undefined" && options.longs === BigInt)
+                            object.locationId[j] = typeof message.locationId[j] === "number" ? BigInt(message.locationId[j]) : $util.Long.fromBits(message.locationId[j].low >>> 0, message.locationId[j].high >>> 0, true).toBigInt();
+                        else if (typeof message.locationId[j] === "number")
                             object.locationId[j] = options.longs === String ? String(message.locationId[j]) : message.locationId[j];
                         else
                             object.locationId[j] = options.longs === String ? $util.Long.prototype.toString.call(message.locationId[j]) : options.longs === Number ? new $util.LongBits(message.locationId[j].low >>> 0, message.locationId[j].high >>> 0).toNumber(true) : message.locationId[j];
@@ -1328,7 +1420,9 @@ $root.perftools = (function() {
                 if (message.value && message.value.length) {
                     object.value = [];
                     for (var j = 0; j < message.value.length; ++j)
-                        if (typeof message.value[j] === "number")
+                        if (typeof BigInt !== "undefined" && options.longs === BigInt)
+                            object.value[j] = typeof message.value[j] === "number" ? BigInt(message.value[j]) : $util.Long.fromBits(message.value[j].low >>> 0, message.value[j].high >>> 0, false).toBigInt();
+                        else if (typeof message.value[j] === "number")
                             object.value[j] = options.longs === String ? String(message.value[j]) : message.value[j];
                         else
                             object.value[j] = options.longs === String ? $util.Long.prototype.toString.call(message.value[j]) : options.longs === Number ? new $util.LongBits(message.value[j].low >>> 0, message.value[j].high >>> 0).toNumber() : message.value[j];
@@ -1336,7 +1430,7 @@ $root.perftools = (function() {
                 if (message.label && message.label.length) {
                     object.label = [];
                     for (var j = 0; j < message.label.length; ++j)
-                        object.label[j] = $root.perftools.profiles.Label.toObject(message.label[j], options);
+                        object.label[j] = $root.perftools.profiles.Label.toObject(message.label[j], options, q + 1);
                 }
                 return object;
             };
@@ -1393,7 +1487,7 @@ $root.perftools = (function() {
             function Label(properties) {
                 if (properties)
                     for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                        if (properties[keys[i]] != null)
+                        if (properties[keys[i]] != null && keys[i] !== "__proto__")
                             this[keys[i]] = properties[keys[i]];
             }
 
@@ -1450,9 +1544,13 @@ $root.perftools = (function() {
              * @param {$protobuf.Writer} [writer] Writer to encode to
              * @returns {$protobuf.Writer} Writer
              */
-            Label.encode = function encode(message, writer) {
+            Label.encode = function encode(message, writer, q) {
                 if (!writer)
                     writer = $Writer.create();
+                if (q === undefined)
+                    q = 0;
+                if (q > $util.recursionLimit)
+                    throw Error("max depth exceeded");
                 if (message.key != null && Object.hasOwnProperty.call(message, "key"))
                     writer.uint32(/* id 1, wireType 0 =*/8).int64(message.key);
                 if (message.str != null && Object.hasOwnProperty.call(message, "str"))
@@ -1488,12 +1586,18 @@ $root.perftools = (function() {
              * @throws {Error} If the payload is not a reader or valid buffer
              * @throws {$protobuf.util.ProtocolError} If required fields are missing
              */
-            Label.decode = function decode(reader, length) {
+            Label.decode = function decode(reader, length, error, long) {
                 if (!(reader instanceof $Reader))
                     reader = $Reader.create(reader);
+                if (long === undefined)
+                    long = 0;
+                if (long > $Reader.recursionLimit)
+                    throw Error("maximum nesting depth exceeded");
                 var end = length === undefined ? reader.len : reader.pos + length, message = new $root.perftools.profiles.Label();
                 while (reader.pos < end) {
                     var tag = reader.uint32();
+                    if (tag === error)
+                        break;
                     switch (tag >>> 3) {
                     case 1: {
                             message.key = reader.int64();
@@ -1512,7 +1616,7 @@ $root.perftools = (function() {
                             break;
                         }
                     default:
-                        reader.skipType(tag & 7);
+                        reader.skipType(tag & 7, long);
                         break;
                     }
                 }
@@ -1543,19 +1647,23 @@ $root.perftools = (function() {
              * @param {Object.<string,*>} message Plain object to verify
              * @returns {string|null} `null` if valid, otherwise the reason why it is not
              */
-            Label.verify = function verify(message) {
+            Label.verify = function verify(message, long) {
                 if (typeof message !== "object" || message === null)
                     return "object expected";
-                if (message.key != null && message.hasOwnProperty("key"))
+                if (long === undefined)
+                    long = 0;
+                if (long > $util.recursionLimit)
+                    return "maximum nesting depth exceeded";
+                if (message.key != null && Object.hasOwnProperty.call(message, "key"))
                     if (!$util.isInteger(message.key) && !(message.key && $util.isInteger(message.key.low) && $util.isInteger(message.key.high)))
                         return "key: integer|Long expected";
-                if (message.str != null && message.hasOwnProperty("str"))
+                if (message.str != null && Object.hasOwnProperty.call(message, "str"))
                     if (!$util.isInteger(message.str) && !(message.str && $util.isInteger(message.str.low) && $util.isInteger(message.str.high)))
                         return "str: integer|Long expected";
-                if (message.num != null && message.hasOwnProperty("num"))
+                if (message.num != null && Object.hasOwnProperty.call(message, "num"))
                     if (!$util.isInteger(message.num) && !(message.num && $util.isInteger(message.num.low) && $util.isInteger(message.num.high)))
                         return "num: integer|Long expected";
-                if (message.numUnit != null && message.hasOwnProperty("numUnit"))
+                if (message.numUnit != null && Object.hasOwnProperty.call(message, "numUnit"))
                     if (!$util.isInteger(message.numUnit) && !(message.numUnit && $util.isInteger(message.numUnit.low) && $util.isInteger(message.numUnit.high)))
                         return "numUnit: integer|Long expected";
                 return null;
@@ -1569,13 +1677,19 @@ $root.perftools = (function() {
              * @param {Object.<string,*>} object Plain object
              * @returns {perftools.profiles.Label} Label
              */
-            Label.fromObject = function fromObject(object) {
+            Label.fromObject = function fromObject(object, long) {
                 if (object instanceof $root.perftools.profiles.Label)
                     return object;
+                if (!$util.isObject(object))
+                    throw TypeError(".perftools.profiles.Label: object expected");
+                if (long === undefined)
+                    long = 0;
+                if (long > $util.recursionLimit)
+                    throw Error("maximum nesting depth exceeded");
                 var message = new $root.perftools.profiles.Label();
                 if (object.key != null)
                     if ($util.Long)
-                        (message.key = $util.Long.fromValue(object.key)).unsigned = false;
+                        message.key = $util.Long.fromValue(object.key, false);
                     else if (typeof object.key === "string")
                         message.key = parseInt(object.key, 10);
                     else if (typeof object.key === "number")
@@ -1584,7 +1698,7 @@ $root.perftools = (function() {
                         message.key = new $util.LongBits(object.key.low >>> 0, object.key.high >>> 0).toNumber();
                 if (object.str != null)
                     if ($util.Long)
-                        (message.str = $util.Long.fromValue(object.str)).unsigned = false;
+                        message.str = $util.Long.fromValue(object.str, false);
                     else if (typeof object.str === "string")
                         message.str = parseInt(object.str, 10);
                     else if (typeof object.str === "number")
@@ -1593,7 +1707,7 @@ $root.perftools = (function() {
                         message.str = new $util.LongBits(object.str.low >>> 0, object.str.high >>> 0).toNumber();
                 if (object.num != null)
                     if ($util.Long)
-                        (message.num = $util.Long.fromValue(object.num)).unsigned = false;
+                        message.num = $util.Long.fromValue(object.num, false);
                     else if (typeof object.num === "string")
                         message.num = parseInt(object.num, 10);
                     else if (typeof object.num === "number")
@@ -1602,7 +1716,7 @@ $root.perftools = (function() {
                         message.num = new $util.LongBits(object.num.low >>> 0, object.num.high >>> 0).toNumber();
                 if (object.numUnit != null)
                     if ($util.Long)
-                        (message.numUnit = $util.Long.fromValue(object.numUnit)).unsigned = false;
+                        message.numUnit = $util.Long.fromValue(object.numUnit, false);
                     else if (typeof object.numUnit === "string")
                         message.numUnit = parseInt(object.numUnit, 10);
                     else if (typeof object.numUnit === "number")
@@ -1621,49 +1735,61 @@ $root.perftools = (function() {
              * @param {$protobuf.IConversionOptions} [options] Conversion options
              * @returns {Object.<string,*>} Plain object
              */
-            Label.toObject = function toObject(message, options) {
+            Label.toObject = function toObject(message, options, q) {
                 if (!options)
                     options = {};
+                if (q === undefined)
+                    q = 0;
+                if (q > $util.recursionLimit)
+                    throw Error("max depth exceeded");
                 var object = {};
                 if (options.defaults) {
                     if ($util.Long) {
                         var long = new $util.Long(0, 0, false);
-                        object.key = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
+                        object.key = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : typeof BigInt !== "undefined" && options.longs === BigInt ? long.toBigInt() : long;
                     } else
-                        object.key = options.longs === String ? "0" : 0;
+                        object.key = options.longs === String ? "0" : typeof BigInt !== "undefined" && options.longs === BigInt ? BigInt("0") : 0;
                     if ($util.Long) {
                         var long = new $util.Long(0, 0, false);
-                        object.str = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
+                        object.str = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : typeof BigInt !== "undefined" && options.longs === BigInt ? long.toBigInt() : long;
                     } else
-                        object.str = options.longs === String ? "0" : 0;
+                        object.str = options.longs === String ? "0" : typeof BigInt !== "undefined" && options.longs === BigInt ? BigInt("0") : 0;
                     if ($util.Long) {
                         var long = new $util.Long(0, 0, false);
-                        object.num = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
+                        object.num = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : typeof BigInt !== "undefined" && options.longs === BigInt ? long.toBigInt() : long;
                     } else
-                        object.num = options.longs === String ? "0" : 0;
+                        object.num = options.longs === String ? "0" : typeof BigInt !== "undefined" && options.longs === BigInt ? BigInt("0") : 0;
                     if ($util.Long) {
                         var long = new $util.Long(0, 0, false);
-                        object.numUnit = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
+                        object.numUnit = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : typeof BigInt !== "undefined" && options.longs === BigInt ? long.toBigInt() : long;
                     } else
-                        object.numUnit = options.longs === String ? "0" : 0;
+                        object.numUnit = options.longs === String ? "0" : typeof BigInt !== "undefined" && options.longs === BigInt ? BigInt("0") : 0;
                 }
-                if (message.key != null && message.hasOwnProperty("key"))
-                    if (typeof message.key === "number")
+                if (message.key != null && Object.hasOwnProperty.call(message, "key"))
+                    if (typeof BigInt !== "undefined" && options.longs === BigInt)
+                        object.key = typeof message.key === "number" ? BigInt(message.key) : $util.Long.fromBits(message.key.low >>> 0, message.key.high >>> 0, false).toBigInt();
+                    else if (typeof message.key === "number")
                         object.key = options.longs === String ? String(message.key) : message.key;
                     else
                         object.key = options.longs === String ? $util.Long.prototype.toString.call(message.key) : options.longs === Number ? new $util.LongBits(message.key.low >>> 0, message.key.high >>> 0).toNumber() : message.key;
-                if (message.str != null && message.hasOwnProperty("str"))
-                    if (typeof message.str === "number")
+                if (message.str != null && Object.hasOwnProperty.call(message, "str"))
+                    if (typeof BigInt !== "undefined" && options.longs === BigInt)
+                        object.str = typeof message.str === "number" ? BigInt(message.str) : $util.Long.fromBits(message.str.low >>> 0, message.str.high >>> 0, false).toBigInt();
+                    else if (typeof message.str === "number")
                         object.str = options.longs === String ? String(message.str) : message.str;
                     else
                         object.str = options.longs === String ? $util.Long.prototype.toString.call(message.str) : options.longs === Number ? new $util.LongBits(message.str.low >>> 0, message.str.high >>> 0).toNumber() : message.str;
-                if (message.num != null && message.hasOwnProperty("num"))
-                    if (typeof message.num === "number")
+                if (message.num != null && Object.hasOwnProperty.call(message, "num"))
+                    if (typeof BigInt !== "undefined" && options.longs === BigInt)
+                        object.num = typeof message.num === "number" ? BigInt(message.num) : $util.Long.fromBits(message.num.low >>> 0, message.num.high >>> 0, false).toBigInt();
+                    else if (typeof message.num === "number")
                         object.num = options.longs === String ? String(message.num) : message.num;
                     else
                         object.num = options.longs === String ? $util.Long.prototype.toString.call(message.num) : options.longs === Number ? new $util.LongBits(message.num.low >>> 0, message.num.high >>> 0).toNumber() : message.num;
-                if (message.numUnit != null && message.hasOwnProperty("numUnit"))
-                    if (typeof message.numUnit === "number")
+                if (message.numUnit != null && Object.hasOwnProperty.call(message, "numUnit"))
+                    if (typeof BigInt !== "undefined" && options.longs === BigInt)
+                        object.numUnit = typeof message.numUnit === "number" ? BigInt(message.numUnit) : $util.Long.fromBits(message.numUnit.low >>> 0, message.numUnit.high >>> 0, false).toBigInt();
+                    else if (typeof message.numUnit === "number")
                         object.numUnit = options.longs === String ? String(message.numUnit) : message.numUnit;
                     else
                         object.numUnit = options.longs === String ? $util.Long.prototype.toString.call(message.numUnit) : options.longs === Number ? new $util.LongBits(message.numUnit.low >>> 0, message.numUnit.high >>> 0).toNumber() : message.numUnit;
@@ -1728,7 +1854,7 @@ $root.perftools = (function() {
             function Mapping(properties) {
                 if (properties)
                     for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                        if (properties[keys[i]] != null)
+                        if (properties[keys[i]] != null && keys[i] !== "__proto__")
                             this[keys[i]] = properties[keys[i]];
             }
 
@@ -1833,9 +1959,13 @@ $root.perftools = (function() {
              * @param {$protobuf.Writer} [writer] Writer to encode to
              * @returns {$protobuf.Writer} Writer
              */
-            Mapping.encode = function encode(message, writer) {
+            Mapping.encode = function encode(message, writer, q) {
                 if (!writer)
                     writer = $Writer.create();
+                if (q === undefined)
+                    q = 0;
+                if (q > $util.recursionLimit)
+                    throw Error("max depth exceeded");
                 if (message.id != null && Object.hasOwnProperty.call(message, "id"))
                     writer.uint32(/* id 1, wireType 0 =*/8).uint64(message.id);
                 if (message.memoryStart != null && Object.hasOwnProperty.call(message, "memoryStart"))
@@ -1883,12 +2013,18 @@ $root.perftools = (function() {
              * @throws {Error} If the payload is not a reader or valid buffer
              * @throws {$protobuf.util.ProtocolError} If required fields are missing
              */
-            Mapping.decode = function decode(reader, length) {
+            Mapping.decode = function decode(reader, length, error, long) {
                 if (!(reader instanceof $Reader))
                     reader = $Reader.create(reader);
+                if (long === undefined)
+                    long = 0;
+                if (long > $Reader.recursionLimit)
+                    throw Error("maximum nesting depth exceeded");
                 var end = length === undefined ? reader.len : reader.pos + length, message = new $root.perftools.profiles.Mapping();
                 while (reader.pos < end) {
                     var tag = reader.uint32();
+                    if (tag === error)
+                        break;
                     switch (tag >>> 3) {
                     case 1: {
                             message.id = reader.uint64();
@@ -1931,7 +2067,7 @@ $root.perftools = (function() {
                             break;
                         }
                     default:
-                        reader.skipType(tag & 7);
+                        reader.skipType(tag & 7, long);
                         break;
                     }
                 }
@@ -1962,37 +2098,41 @@ $root.perftools = (function() {
              * @param {Object.<string,*>} message Plain object to verify
              * @returns {string|null} `null` if valid, otherwise the reason why it is not
              */
-            Mapping.verify = function verify(message) {
+            Mapping.verify = function verify(message, long) {
                 if (typeof message !== "object" || message === null)
                     return "object expected";
-                if (message.id != null && message.hasOwnProperty("id"))
+                if (long === undefined)
+                    long = 0;
+                if (long > $util.recursionLimit)
+                    return "maximum nesting depth exceeded";
+                if (message.id != null && Object.hasOwnProperty.call(message, "id"))
                     if (!$util.isInteger(message.id) && !(message.id && $util.isInteger(message.id.low) && $util.isInteger(message.id.high)))
                         return "id: integer|Long expected";
-                if (message.memoryStart != null && message.hasOwnProperty("memoryStart"))
+                if (message.memoryStart != null && Object.hasOwnProperty.call(message, "memoryStart"))
                     if (!$util.isInteger(message.memoryStart) && !(message.memoryStart && $util.isInteger(message.memoryStart.low) && $util.isInteger(message.memoryStart.high)))
                         return "memoryStart: integer|Long expected";
-                if (message.memoryLimit != null && message.hasOwnProperty("memoryLimit"))
+                if (message.memoryLimit != null && Object.hasOwnProperty.call(message, "memoryLimit"))
                     if (!$util.isInteger(message.memoryLimit) && !(message.memoryLimit && $util.isInteger(message.memoryLimit.low) && $util.isInteger(message.memoryLimit.high)))
                         return "memoryLimit: integer|Long expected";
-                if (message.fileOffset != null && message.hasOwnProperty("fileOffset"))
+                if (message.fileOffset != null && Object.hasOwnProperty.call(message, "fileOffset"))
                     if (!$util.isInteger(message.fileOffset) && !(message.fileOffset && $util.isInteger(message.fileOffset.low) && $util.isInteger(message.fileOffset.high)))
                         return "fileOffset: integer|Long expected";
-                if (message.filename != null && message.hasOwnProperty("filename"))
+                if (message.filename != null && Object.hasOwnProperty.call(message, "filename"))
                     if (!$util.isInteger(message.filename) && !(message.filename && $util.isInteger(message.filename.low) && $util.isInteger(message.filename.high)))
                         return "filename: integer|Long expected";
-                if (message.buildId != null && message.hasOwnProperty("buildId"))
+                if (message.buildId != null && Object.hasOwnProperty.call(message, "buildId"))
                     if (!$util.isInteger(message.buildId) && !(message.buildId && $util.isInteger(message.buildId.low) && $util.isInteger(message.buildId.high)))
                         return "buildId: integer|Long expected";
-                if (message.hasFunctions != null && message.hasOwnProperty("hasFunctions"))
+                if (message.hasFunctions != null && Object.hasOwnProperty.call(message, "hasFunctions"))
                     if (typeof message.hasFunctions !== "boolean")
                         return "hasFunctions: boolean expected";
-                if (message.hasFilenames != null && message.hasOwnProperty("hasFilenames"))
+                if (message.hasFilenames != null && Object.hasOwnProperty.call(message, "hasFilenames"))
                     if (typeof message.hasFilenames !== "boolean")
                         return "hasFilenames: boolean expected";
-                if (message.hasLineNumbers != null && message.hasOwnProperty("hasLineNumbers"))
+                if (message.hasLineNumbers != null && Object.hasOwnProperty.call(message, "hasLineNumbers"))
                     if (typeof message.hasLineNumbers !== "boolean")
                         return "hasLineNumbers: boolean expected";
-                if (message.hasInlineFrames != null && message.hasOwnProperty("hasInlineFrames"))
+                if (message.hasInlineFrames != null && Object.hasOwnProperty.call(message, "hasInlineFrames"))
                     if (typeof message.hasInlineFrames !== "boolean")
                         return "hasInlineFrames: boolean expected";
                 return null;
@@ -2006,13 +2146,19 @@ $root.perftools = (function() {
              * @param {Object.<string,*>} object Plain object
              * @returns {perftools.profiles.Mapping} Mapping
              */
-            Mapping.fromObject = function fromObject(object) {
+            Mapping.fromObject = function fromObject(object, long) {
                 if (object instanceof $root.perftools.profiles.Mapping)
                     return object;
+                if (!$util.isObject(object))
+                    throw TypeError(".perftools.profiles.Mapping: object expected");
+                if (long === undefined)
+                    long = 0;
+                if (long > $util.recursionLimit)
+                    throw Error("maximum nesting depth exceeded");
                 var message = new $root.perftools.profiles.Mapping();
                 if (object.id != null)
                     if ($util.Long)
-                        (message.id = $util.Long.fromValue(object.id)).unsigned = true;
+                        message.id = $util.Long.fromValue(object.id, true);
                     else if (typeof object.id === "string")
                         message.id = parseInt(object.id, 10);
                     else if (typeof object.id === "number")
@@ -2021,7 +2167,7 @@ $root.perftools = (function() {
                         message.id = new $util.LongBits(object.id.low >>> 0, object.id.high >>> 0).toNumber(true);
                 if (object.memoryStart != null)
                     if ($util.Long)
-                        (message.memoryStart = $util.Long.fromValue(object.memoryStart)).unsigned = true;
+                        message.memoryStart = $util.Long.fromValue(object.memoryStart, true);
                     else if (typeof object.memoryStart === "string")
                         message.memoryStart = parseInt(object.memoryStart, 10);
                     else if (typeof object.memoryStart === "number")
@@ -2030,7 +2176,7 @@ $root.perftools = (function() {
                         message.memoryStart = new $util.LongBits(object.memoryStart.low >>> 0, object.memoryStart.high >>> 0).toNumber(true);
                 if (object.memoryLimit != null)
                     if ($util.Long)
-                        (message.memoryLimit = $util.Long.fromValue(object.memoryLimit)).unsigned = true;
+                        message.memoryLimit = $util.Long.fromValue(object.memoryLimit, true);
                     else if (typeof object.memoryLimit === "string")
                         message.memoryLimit = parseInt(object.memoryLimit, 10);
                     else if (typeof object.memoryLimit === "number")
@@ -2039,7 +2185,7 @@ $root.perftools = (function() {
                         message.memoryLimit = new $util.LongBits(object.memoryLimit.low >>> 0, object.memoryLimit.high >>> 0).toNumber(true);
                 if (object.fileOffset != null)
                     if ($util.Long)
-                        (message.fileOffset = $util.Long.fromValue(object.fileOffset)).unsigned = true;
+                        message.fileOffset = $util.Long.fromValue(object.fileOffset, true);
                     else if (typeof object.fileOffset === "string")
                         message.fileOffset = parseInt(object.fileOffset, 10);
                     else if (typeof object.fileOffset === "number")
@@ -2048,7 +2194,7 @@ $root.perftools = (function() {
                         message.fileOffset = new $util.LongBits(object.fileOffset.low >>> 0, object.fileOffset.high >>> 0).toNumber(true);
                 if (object.filename != null)
                     if ($util.Long)
-                        (message.filename = $util.Long.fromValue(object.filename)).unsigned = false;
+                        message.filename = $util.Long.fromValue(object.filename, false);
                     else if (typeof object.filename === "string")
                         message.filename = parseInt(object.filename, 10);
                     else if (typeof object.filename === "number")
@@ -2057,7 +2203,7 @@ $root.perftools = (function() {
                         message.filename = new $util.LongBits(object.filename.low >>> 0, object.filename.high >>> 0).toNumber();
                 if (object.buildId != null)
                     if ($util.Long)
-                        (message.buildId = $util.Long.fromValue(object.buildId)).unsigned = false;
+                        message.buildId = $util.Long.fromValue(object.buildId, false);
                     else if (typeof object.buildId === "string")
                         message.buildId = parseInt(object.buildId, 10);
                     else if (typeof object.buildId === "number")
@@ -2084,83 +2230,99 @@ $root.perftools = (function() {
              * @param {$protobuf.IConversionOptions} [options] Conversion options
              * @returns {Object.<string,*>} Plain object
              */
-            Mapping.toObject = function toObject(message, options) {
+            Mapping.toObject = function toObject(message, options, q) {
                 if (!options)
                     options = {};
+                if (q === undefined)
+                    q = 0;
+                if (q > $util.recursionLimit)
+                    throw Error("max depth exceeded");
                 var object = {};
                 if (options.defaults) {
                     if ($util.Long) {
                         var long = new $util.Long(0, 0, true);
-                        object.id = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
+                        object.id = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : typeof BigInt !== "undefined" && options.longs === BigInt ? long.toBigInt() : long;
                     } else
-                        object.id = options.longs === String ? "0" : 0;
+                        object.id = options.longs === String ? "0" : typeof BigInt !== "undefined" && options.longs === BigInt ? BigInt("0") : 0;
                     if ($util.Long) {
                         var long = new $util.Long(0, 0, true);
-                        object.memoryStart = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
+                        object.memoryStart = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : typeof BigInt !== "undefined" && options.longs === BigInt ? long.toBigInt() : long;
                     } else
-                        object.memoryStart = options.longs === String ? "0" : 0;
+                        object.memoryStart = options.longs === String ? "0" : typeof BigInt !== "undefined" && options.longs === BigInt ? BigInt("0") : 0;
                     if ($util.Long) {
                         var long = new $util.Long(0, 0, true);
-                        object.memoryLimit = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
+                        object.memoryLimit = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : typeof BigInt !== "undefined" && options.longs === BigInt ? long.toBigInt() : long;
                     } else
-                        object.memoryLimit = options.longs === String ? "0" : 0;
+                        object.memoryLimit = options.longs === String ? "0" : typeof BigInt !== "undefined" && options.longs === BigInt ? BigInt("0") : 0;
                     if ($util.Long) {
                         var long = new $util.Long(0, 0, true);
-                        object.fileOffset = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
+                        object.fileOffset = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : typeof BigInt !== "undefined" && options.longs === BigInt ? long.toBigInt() : long;
                     } else
-                        object.fileOffset = options.longs === String ? "0" : 0;
+                        object.fileOffset = options.longs === String ? "0" : typeof BigInt !== "undefined" && options.longs === BigInt ? BigInt("0") : 0;
                     if ($util.Long) {
                         var long = new $util.Long(0, 0, false);
-                        object.filename = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
+                        object.filename = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : typeof BigInt !== "undefined" && options.longs === BigInt ? long.toBigInt() : long;
                     } else
-                        object.filename = options.longs === String ? "0" : 0;
+                        object.filename = options.longs === String ? "0" : typeof BigInt !== "undefined" && options.longs === BigInt ? BigInt("0") : 0;
                     if ($util.Long) {
                         var long = new $util.Long(0, 0, false);
-                        object.buildId = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
+                        object.buildId = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : typeof BigInt !== "undefined" && options.longs === BigInt ? long.toBigInt() : long;
                     } else
-                        object.buildId = options.longs === String ? "0" : 0;
+                        object.buildId = options.longs === String ? "0" : typeof BigInt !== "undefined" && options.longs === BigInt ? BigInt("0") : 0;
                     object.hasFunctions = false;
                     object.hasFilenames = false;
                     object.hasLineNumbers = false;
                     object.hasInlineFrames = false;
                 }
-                if (message.id != null && message.hasOwnProperty("id"))
-                    if (typeof message.id === "number")
+                if (message.id != null && Object.hasOwnProperty.call(message, "id"))
+                    if (typeof BigInt !== "undefined" && options.longs === BigInt)
+                        object.id = typeof message.id === "number" ? BigInt(message.id) : $util.Long.fromBits(message.id.low >>> 0, message.id.high >>> 0, true).toBigInt();
+                    else if (typeof message.id === "number")
                         object.id = options.longs === String ? String(message.id) : message.id;
                     else
                         object.id = options.longs === String ? $util.Long.prototype.toString.call(message.id) : options.longs === Number ? new $util.LongBits(message.id.low >>> 0, message.id.high >>> 0).toNumber(true) : message.id;
-                if (message.memoryStart != null && message.hasOwnProperty("memoryStart"))
-                    if (typeof message.memoryStart === "number")
+                if (message.memoryStart != null && Object.hasOwnProperty.call(message, "memoryStart"))
+                    if (typeof BigInt !== "undefined" && options.longs === BigInt)
+                        object.memoryStart = typeof message.memoryStart === "number" ? BigInt(message.memoryStart) : $util.Long.fromBits(message.memoryStart.low >>> 0, message.memoryStart.high >>> 0, true).toBigInt();
+                    else if (typeof message.memoryStart === "number")
                         object.memoryStart = options.longs === String ? String(message.memoryStart) : message.memoryStart;
                     else
                         object.memoryStart = options.longs === String ? $util.Long.prototype.toString.call(message.memoryStart) : options.longs === Number ? new $util.LongBits(message.memoryStart.low >>> 0, message.memoryStart.high >>> 0).toNumber(true) : message.memoryStart;
-                if (message.memoryLimit != null && message.hasOwnProperty("memoryLimit"))
-                    if (typeof message.memoryLimit === "number")
+                if (message.memoryLimit != null && Object.hasOwnProperty.call(message, "memoryLimit"))
+                    if (typeof BigInt !== "undefined" && options.longs === BigInt)
+                        object.memoryLimit = typeof message.memoryLimit === "number" ? BigInt(message.memoryLimit) : $util.Long.fromBits(message.memoryLimit.low >>> 0, message.memoryLimit.high >>> 0, true).toBigInt();
+                    else if (typeof message.memoryLimit === "number")
                         object.memoryLimit = options.longs === String ? String(message.memoryLimit) : message.memoryLimit;
                     else
                         object.memoryLimit = options.longs === String ? $util.Long.prototype.toString.call(message.memoryLimit) : options.longs === Number ? new $util.LongBits(message.memoryLimit.low >>> 0, message.memoryLimit.high >>> 0).toNumber(true) : message.memoryLimit;
-                if (message.fileOffset != null && message.hasOwnProperty("fileOffset"))
-                    if (typeof message.fileOffset === "number")
+                if (message.fileOffset != null && Object.hasOwnProperty.call(message, "fileOffset"))
+                    if (typeof BigInt !== "undefined" && options.longs === BigInt)
+                        object.fileOffset = typeof message.fileOffset === "number" ? BigInt(message.fileOffset) : $util.Long.fromBits(message.fileOffset.low >>> 0, message.fileOffset.high >>> 0, true).toBigInt();
+                    else if (typeof message.fileOffset === "number")
                         object.fileOffset = options.longs === String ? String(message.fileOffset) : message.fileOffset;
                     else
                         object.fileOffset = options.longs === String ? $util.Long.prototype.toString.call(message.fileOffset) : options.longs === Number ? new $util.LongBits(message.fileOffset.low >>> 0, message.fileOffset.high >>> 0).toNumber(true) : message.fileOffset;
-                if (message.filename != null && message.hasOwnProperty("filename"))
-                    if (typeof message.filename === "number")
+                if (message.filename != null && Object.hasOwnProperty.call(message, "filename"))
+                    if (typeof BigInt !== "undefined" && options.longs === BigInt)
+                        object.filename = typeof message.filename === "number" ? BigInt(message.filename) : $util.Long.fromBits(message.filename.low >>> 0, message.filename.high >>> 0, false).toBigInt();
+                    else if (typeof message.filename === "number")
                         object.filename = options.longs === String ? String(message.filename) : message.filename;
                     else
                         object.filename = options.longs === String ? $util.Long.prototype.toString.call(message.filename) : options.longs === Number ? new $util.LongBits(message.filename.low >>> 0, message.filename.high >>> 0).toNumber() : message.filename;
-                if (message.buildId != null && message.hasOwnProperty("buildId"))
-                    if (typeof message.buildId === "number")
+                if (message.buildId != null && Object.hasOwnProperty.call(message, "buildId"))
+                    if (typeof BigInt !== "undefined" && options.longs === BigInt)
+                        object.buildId = typeof message.buildId === "number" ? BigInt(message.buildId) : $util.Long.fromBits(message.buildId.low >>> 0, message.buildId.high >>> 0, false).toBigInt();
+                    else if (typeof message.buildId === "number")
                         object.buildId = options.longs === String ? String(message.buildId) : message.buildId;
                     else
                         object.buildId = options.longs === String ? $util.Long.prototype.toString.call(message.buildId) : options.longs === Number ? new $util.LongBits(message.buildId.low >>> 0, message.buildId.high >>> 0).toNumber() : message.buildId;
-                if (message.hasFunctions != null && message.hasOwnProperty("hasFunctions"))
+                if (message.hasFunctions != null && Object.hasOwnProperty.call(message, "hasFunctions"))
                     object.hasFunctions = message.hasFunctions;
-                if (message.hasFilenames != null && message.hasOwnProperty("hasFilenames"))
+                if (message.hasFilenames != null && Object.hasOwnProperty.call(message, "hasFilenames"))
                     object.hasFilenames = message.hasFilenames;
-                if (message.hasLineNumbers != null && message.hasOwnProperty("hasLineNumbers"))
+                if (message.hasLineNumbers != null && Object.hasOwnProperty.call(message, "hasLineNumbers"))
                     object.hasLineNumbers = message.hasLineNumbers;
-                if (message.hasInlineFrames != null && message.hasOwnProperty("hasInlineFrames"))
+                if (message.hasInlineFrames != null && Object.hasOwnProperty.call(message, "hasInlineFrames"))
                     object.hasInlineFrames = message.hasInlineFrames;
                 return object;
             };
@@ -2218,7 +2380,7 @@ $root.perftools = (function() {
                 this.line = [];
                 if (properties)
                     for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                        if (properties[keys[i]] != null)
+                        if (properties[keys[i]] != null && keys[i] !== "__proto__")
                             this[keys[i]] = properties[keys[i]];
             }
 
@@ -2275,9 +2437,13 @@ $root.perftools = (function() {
              * @param {$protobuf.Writer} [writer] Writer to encode to
              * @returns {$protobuf.Writer} Writer
              */
-            Location.encode = function encode(message, writer) {
+            Location.encode = function encode(message, writer, q) {
                 if (!writer)
                     writer = $Writer.create();
+                if (q === undefined)
+                    q = 0;
+                if (q > $util.recursionLimit)
+                    throw Error("max depth exceeded");
                 if (message.id != null && Object.hasOwnProperty.call(message, "id"))
                     writer.uint32(/* id 1, wireType 0 =*/8).uint64(message.id);
                 if (message.mappingId != null && Object.hasOwnProperty.call(message, "mappingId"))
@@ -2286,7 +2452,7 @@ $root.perftools = (function() {
                     writer.uint32(/* id 3, wireType 0 =*/24).uint64(message.address);
                 if (message.line != null && message.line.length)
                     for (var i = 0; i < message.line.length; ++i)
-                        $root.perftools.profiles.Line.encode(message.line[i], writer.uint32(/* id 4, wireType 2 =*/34).fork()).ldelim();
+                        $root.perftools.profiles.Line.encode(message.line[i], writer.uint32(/* id 4, wireType 2 =*/34).fork(), q + 1).ldelim();
                 return writer;
             };
 
@@ -2314,12 +2480,18 @@ $root.perftools = (function() {
              * @throws {Error} If the payload is not a reader or valid buffer
              * @throws {$protobuf.util.ProtocolError} If required fields are missing
              */
-            Location.decode = function decode(reader, length) {
+            Location.decode = function decode(reader, length, error, long) {
                 if (!(reader instanceof $Reader))
                     reader = $Reader.create(reader);
+                if (long === undefined)
+                    long = 0;
+                if (long > $Reader.recursionLimit)
+                    throw Error("maximum nesting depth exceeded");
                 var end = length === undefined ? reader.len : reader.pos + length, message = new $root.perftools.profiles.Location();
                 while (reader.pos < end) {
                     var tag = reader.uint32();
+                    if (tag === error)
+                        break;
                     switch (tag >>> 3) {
                     case 1: {
                             message.id = reader.uint64();
@@ -2336,11 +2508,11 @@ $root.perftools = (function() {
                     case 4: {
                             if (!(message.line && message.line.length))
                                 message.line = [];
-                            message.line.push($root.perftools.profiles.Line.decode(reader, reader.uint32()));
+                            message.line.push($root.perftools.profiles.Line.decode(reader, reader.uint32(), undefined, long + 1));
                             break;
                         }
                     default:
-                        reader.skipType(tag & 7);
+                        reader.skipType(tag & 7, long);
                         break;
                     }
                 }
@@ -2371,23 +2543,27 @@ $root.perftools = (function() {
              * @param {Object.<string,*>} message Plain object to verify
              * @returns {string|null} `null` if valid, otherwise the reason why it is not
              */
-            Location.verify = function verify(message) {
+            Location.verify = function verify(message, long) {
                 if (typeof message !== "object" || message === null)
                     return "object expected";
-                if (message.id != null && message.hasOwnProperty("id"))
+                if (long === undefined)
+                    long = 0;
+                if (long > $util.recursionLimit)
+                    return "maximum nesting depth exceeded";
+                if (message.id != null && Object.hasOwnProperty.call(message, "id"))
                     if (!$util.isInteger(message.id) && !(message.id && $util.isInteger(message.id.low) && $util.isInteger(message.id.high)))
                         return "id: integer|Long expected";
-                if (message.mappingId != null && message.hasOwnProperty("mappingId"))
+                if (message.mappingId != null && Object.hasOwnProperty.call(message, "mappingId"))
                     if (!$util.isInteger(message.mappingId) && !(message.mappingId && $util.isInteger(message.mappingId.low) && $util.isInteger(message.mappingId.high)))
                         return "mappingId: integer|Long expected";
-                if (message.address != null && message.hasOwnProperty("address"))
+                if (message.address != null && Object.hasOwnProperty.call(message, "address"))
                     if (!$util.isInteger(message.address) && !(message.address && $util.isInteger(message.address.low) && $util.isInteger(message.address.high)))
                         return "address: integer|Long expected";
-                if (message.line != null && message.hasOwnProperty("line")) {
+                if (message.line != null && Object.hasOwnProperty.call(message, "line")) {
                     if (!Array.isArray(message.line))
                         return "line: array expected";
                     for (var i = 0; i < message.line.length; ++i) {
-                        var error = $root.perftools.profiles.Line.verify(message.line[i]);
+                        var error = $root.perftools.profiles.Line.verify(message.line[i], long + 1);
                         if (error)
                             return "line." + error;
                     }
@@ -2403,13 +2579,19 @@ $root.perftools = (function() {
              * @param {Object.<string,*>} object Plain object
              * @returns {perftools.profiles.Location} Location
              */
-            Location.fromObject = function fromObject(object) {
+            Location.fromObject = function fromObject(object, long) {
                 if (object instanceof $root.perftools.profiles.Location)
                     return object;
+                if (!$util.isObject(object))
+                    throw TypeError(".perftools.profiles.Location: object expected");
+                if (long === undefined)
+                    long = 0;
+                if (long > $util.recursionLimit)
+                    throw Error("maximum nesting depth exceeded");
                 var message = new $root.perftools.profiles.Location();
                 if (object.id != null)
                     if ($util.Long)
-                        (message.id = $util.Long.fromValue(object.id)).unsigned = true;
+                        message.id = $util.Long.fromValue(object.id, true);
                     else if (typeof object.id === "string")
                         message.id = parseInt(object.id, 10);
                     else if (typeof object.id === "number")
@@ -2418,7 +2600,7 @@ $root.perftools = (function() {
                         message.id = new $util.LongBits(object.id.low >>> 0, object.id.high >>> 0).toNumber(true);
                 if (object.mappingId != null)
                     if ($util.Long)
-                        (message.mappingId = $util.Long.fromValue(object.mappingId)).unsigned = true;
+                        message.mappingId = $util.Long.fromValue(object.mappingId, true);
                     else if (typeof object.mappingId === "string")
                         message.mappingId = parseInt(object.mappingId, 10);
                     else if (typeof object.mappingId === "number")
@@ -2427,7 +2609,7 @@ $root.perftools = (function() {
                         message.mappingId = new $util.LongBits(object.mappingId.low >>> 0, object.mappingId.high >>> 0).toNumber(true);
                 if (object.address != null)
                     if ($util.Long)
-                        (message.address = $util.Long.fromValue(object.address)).unsigned = true;
+                        message.address = $util.Long.fromValue(object.address, true);
                     else if (typeof object.address === "string")
                         message.address = parseInt(object.address, 10);
                     else if (typeof object.address === "number")
@@ -2439,9 +2621,9 @@ $root.perftools = (function() {
                         throw TypeError(".perftools.profiles.Location.line: array expected");
                     message.line = [];
                     for (var i = 0; i < object.line.length; ++i) {
-                        if (typeof object.line[i] !== "object")
+                        if (!$util.isObject(object.line[i]))
                             throw TypeError(".perftools.profiles.Location.line: object expected");
-                        message.line[i] = $root.perftools.profiles.Line.fromObject(object.line[i]);
+                        message.line[i] = $root.perftools.profiles.Line.fromObject(object.line[i], long + 1);
                     }
                 }
                 return message;
@@ -2456,48 +2638,58 @@ $root.perftools = (function() {
              * @param {$protobuf.IConversionOptions} [options] Conversion options
              * @returns {Object.<string,*>} Plain object
              */
-            Location.toObject = function toObject(message, options) {
+            Location.toObject = function toObject(message, options, q) {
                 if (!options)
                     options = {};
+                if (q === undefined)
+                    q = 0;
+                if (q > $util.recursionLimit)
+                    throw Error("max depth exceeded");
                 var object = {};
                 if (options.arrays || options.defaults)
                     object.line = [];
                 if (options.defaults) {
                     if ($util.Long) {
                         var long = new $util.Long(0, 0, true);
-                        object.id = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
+                        object.id = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : typeof BigInt !== "undefined" && options.longs === BigInt ? long.toBigInt() : long;
                     } else
-                        object.id = options.longs === String ? "0" : 0;
+                        object.id = options.longs === String ? "0" : typeof BigInt !== "undefined" && options.longs === BigInt ? BigInt("0") : 0;
                     if ($util.Long) {
                         var long = new $util.Long(0, 0, true);
-                        object.mappingId = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
+                        object.mappingId = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : typeof BigInt !== "undefined" && options.longs === BigInt ? long.toBigInt() : long;
                     } else
-                        object.mappingId = options.longs === String ? "0" : 0;
+                        object.mappingId = options.longs === String ? "0" : typeof BigInt !== "undefined" && options.longs === BigInt ? BigInt("0") : 0;
                     if ($util.Long) {
                         var long = new $util.Long(0, 0, true);
-                        object.address = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
+                        object.address = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : typeof BigInt !== "undefined" && options.longs === BigInt ? long.toBigInt() : long;
                     } else
-                        object.address = options.longs === String ? "0" : 0;
+                        object.address = options.longs === String ? "0" : typeof BigInt !== "undefined" && options.longs === BigInt ? BigInt("0") : 0;
                 }
-                if (message.id != null && message.hasOwnProperty("id"))
-                    if (typeof message.id === "number")
+                if (message.id != null && Object.hasOwnProperty.call(message, "id"))
+                    if (typeof BigInt !== "undefined" && options.longs === BigInt)
+                        object.id = typeof message.id === "number" ? BigInt(message.id) : $util.Long.fromBits(message.id.low >>> 0, message.id.high >>> 0, true).toBigInt();
+                    else if (typeof message.id === "number")
                         object.id = options.longs === String ? String(message.id) : message.id;
                     else
                         object.id = options.longs === String ? $util.Long.prototype.toString.call(message.id) : options.longs === Number ? new $util.LongBits(message.id.low >>> 0, message.id.high >>> 0).toNumber(true) : message.id;
-                if (message.mappingId != null && message.hasOwnProperty("mappingId"))
-                    if (typeof message.mappingId === "number")
+                if (message.mappingId != null && Object.hasOwnProperty.call(message, "mappingId"))
+                    if (typeof BigInt !== "undefined" && options.longs === BigInt)
+                        object.mappingId = typeof message.mappingId === "number" ? BigInt(message.mappingId) : $util.Long.fromBits(message.mappingId.low >>> 0, message.mappingId.high >>> 0, true).toBigInt();
+                    else if (typeof message.mappingId === "number")
                         object.mappingId = options.longs === String ? String(message.mappingId) : message.mappingId;
                     else
                         object.mappingId = options.longs === String ? $util.Long.prototype.toString.call(message.mappingId) : options.longs === Number ? new $util.LongBits(message.mappingId.low >>> 0, message.mappingId.high >>> 0).toNumber(true) : message.mappingId;
-                if (message.address != null && message.hasOwnProperty("address"))
-                    if (typeof message.address === "number")
+                if (message.address != null && Object.hasOwnProperty.call(message, "address"))
+                    if (typeof BigInt !== "undefined" && options.longs === BigInt)
+                        object.address = typeof message.address === "number" ? BigInt(message.address) : $util.Long.fromBits(message.address.low >>> 0, message.address.high >>> 0, true).toBigInt();
+                    else if (typeof message.address === "number")
                         object.address = options.longs === String ? String(message.address) : message.address;
                     else
                         object.address = options.longs === String ? $util.Long.prototype.toString.call(message.address) : options.longs === Number ? new $util.LongBits(message.address.low >>> 0, message.address.high >>> 0).toNumber(true) : message.address;
                 if (message.line && message.line.length) {
                     object.line = [];
                     for (var j = 0; j < message.line.length; ++j)
-                        object.line[j] = $root.perftools.profiles.Line.toObject(message.line[j], options);
+                        object.line[j] = $root.perftools.profiles.Line.toObject(message.line[j], options, q + 1);
                 }
                 return object;
             };
@@ -2552,7 +2744,7 @@ $root.perftools = (function() {
             function Line(properties) {
                 if (properties)
                     for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                        if (properties[keys[i]] != null)
+                        if (properties[keys[i]] != null && keys[i] !== "__proto__")
                             this[keys[i]] = properties[keys[i]];
             }
 
@@ -2593,9 +2785,13 @@ $root.perftools = (function() {
              * @param {$protobuf.Writer} [writer] Writer to encode to
              * @returns {$protobuf.Writer} Writer
              */
-            Line.encode = function encode(message, writer) {
+            Line.encode = function encode(message, writer, q) {
                 if (!writer)
                     writer = $Writer.create();
+                if (q === undefined)
+                    q = 0;
+                if (q > $util.recursionLimit)
+                    throw Error("max depth exceeded");
                 if (message.functionId != null && Object.hasOwnProperty.call(message, "functionId"))
                     writer.uint32(/* id 1, wireType 0 =*/8).uint64(message.functionId);
                 if (message.line != null && Object.hasOwnProperty.call(message, "line"))
@@ -2627,12 +2823,18 @@ $root.perftools = (function() {
              * @throws {Error} If the payload is not a reader or valid buffer
              * @throws {$protobuf.util.ProtocolError} If required fields are missing
              */
-            Line.decode = function decode(reader, length) {
+            Line.decode = function decode(reader, length, error, long) {
                 if (!(reader instanceof $Reader))
                     reader = $Reader.create(reader);
+                if (long === undefined)
+                    long = 0;
+                if (long > $Reader.recursionLimit)
+                    throw Error("maximum nesting depth exceeded");
                 var end = length === undefined ? reader.len : reader.pos + length, message = new $root.perftools.profiles.Line();
                 while (reader.pos < end) {
                     var tag = reader.uint32();
+                    if (tag === error)
+                        break;
                     switch (tag >>> 3) {
                     case 1: {
                             message.functionId = reader.uint64();
@@ -2643,7 +2845,7 @@ $root.perftools = (function() {
                             break;
                         }
                     default:
-                        reader.skipType(tag & 7);
+                        reader.skipType(tag & 7, long);
                         break;
                     }
                 }
@@ -2674,13 +2876,17 @@ $root.perftools = (function() {
              * @param {Object.<string,*>} message Plain object to verify
              * @returns {string|null} `null` if valid, otherwise the reason why it is not
              */
-            Line.verify = function verify(message) {
+            Line.verify = function verify(message, long) {
                 if (typeof message !== "object" || message === null)
                     return "object expected";
-                if (message.functionId != null && message.hasOwnProperty("functionId"))
+                if (long === undefined)
+                    long = 0;
+                if (long > $util.recursionLimit)
+                    return "maximum nesting depth exceeded";
+                if (message.functionId != null && Object.hasOwnProperty.call(message, "functionId"))
                     if (!$util.isInteger(message.functionId) && !(message.functionId && $util.isInteger(message.functionId.low) && $util.isInteger(message.functionId.high)))
                         return "functionId: integer|Long expected";
-                if (message.line != null && message.hasOwnProperty("line"))
+                if (message.line != null && Object.hasOwnProperty.call(message, "line"))
                     if (!$util.isInteger(message.line) && !(message.line && $util.isInteger(message.line.low) && $util.isInteger(message.line.high)))
                         return "line: integer|Long expected";
                 return null;
@@ -2694,13 +2900,19 @@ $root.perftools = (function() {
              * @param {Object.<string,*>} object Plain object
              * @returns {perftools.profiles.Line} Line
              */
-            Line.fromObject = function fromObject(object) {
+            Line.fromObject = function fromObject(object, long) {
                 if (object instanceof $root.perftools.profiles.Line)
                     return object;
+                if (!$util.isObject(object))
+                    throw TypeError(".perftools.profiles.Line: object expected");
+                if (long === undefined)
+                    long = 0;
+                if (long > $util.recursionLimit)
+                    throw Error("maximum nesting depth exceeded");
                 var message = new $root.perftools.profiles.Line();
                 if (object.functionId != null)
                     if ($util.Long)
-                        (message.functionId = $util.Long.fromValue(object.functionId)).unsigned = true;
+                        message.functionId = $util.Long.fromValue(object.functionId, true);
                     else if (typeof object.functionId === "string")
                         message.functionId = parseInt(object.functionId, 10);
                     else if (typeof object.functionId === "number")
@@ -2709,7 +2921,7 @@ $root.perftools = (function() {
                         message.functionId = new $util.LongBits(object.functionId.low >>> 0, object.functionId.high >>> 0).toNumber(true);
                 if (object.line != null)
                     if ($util.Long)
-                        (message.line = $util.Long.fromValue(object.line)).unsigned = false;
+                        message.line = $util.Long.fromValue(object.line, false);
                     else if (typeof object.line === "string")
                         message.line = parseInt(object.line, 10);
                     else if (typeof object.line === "number")
@@ -2728,29 +2940,37 @@ $root.perftools = (function() {
              * @param {$protobuf.IConversionOptions} [options] Conversion options
              * @returns {Object.<string,*>} Plain object
              */
-            Line.toObject = function toObject(message, options) {
+            Line.toObject = function toObject(message, options, q) {
                 if (!options)
                     options = {};
+                if (q === undefined)
+                    q = 0;
+                if (q > $util.recursionLimit)
+                    throw Error("max depth exceeded");
                 var object = {};
                 if (options.defaults) {
                     if ($util.Long) {
                         var long = new $util.Long(0, 0, true);
-                        object.functionId = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
+                        object.functionId = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : typeof BigInt !== "undefined" && options.longs === BigInt ? long.toBigInt() : long;
                     } else
-                        object.functionId = options.longs === String ? "0" : 0;
+                        object.functionId = options.longs === String ? "0" : typeof BigInt !== "undefined" && options.longs === BigInt ? BigInt("0") : 0;
                     if ($util.Long) {
                         var long = new $util.Long(0, 0, false);
-                        object.line = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
+                        object.line = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : typeof BigInt !== "undefined" && options.longs === BigInt ? long.toBigInt() : long;
                     } else
-                        object.line = options.longs === String ? "0" : 0;
+                        object.line = options.longs === String ? "0" : typeof BigInt !== "undefined" && options.longs === BigInt ? BigInt("0") : 0;
                 }
-                if (message.functionId != null && message.hasOwnProperty("functionId"))
-                    if (typeof message.functionId === "number")
+                if (message.functionId != null && Object.hasOwnProperty.call(message, "functionId"))
+                    if (typeof BigInt !== "undefined" && options.longs === BigInt)
+                        object.functionId = typeof message.functionId === "number" ? BigInt(message.functionId) : $util.Long.fromBits(message.functionId.low >>> 0, message.functionId.high >>> 0, true).toBigInt();
+                    else if (typeof message.functionId === "number")
                         object.functionId = options.longs === String ? String(message.functionId) : message.functionId;
                     else
                         object.functionId = options.longs === String ? $util.Long.prototype.toString.call(message.functionId) : options.longs === Number ? new $util.LongBits(message.functionId.low >>> 0, message.functionId.high >>> 0).toNumber(true) : message.functionId;
-                if (message.line != null && message.hasOwnProperty("line"))
-                    if (typeof message.line === "number")
+                if (message.line != null && Object.hasOwnProperty.call(message, "line"))
+                    if (typeof BigInt !== "undefined" && options.longs === BigInt)
+                        object.line = typeof message.line === "number" ? BigInt(message.line) : $util.Long.fromBits(message.line.low >>> 0, message.line.high >>> 0, false).toBigInt();
+                    else if (typeof message.line === "number")
                         object.line = options.longs === String ? String(message.line) : message.line;
                     else
                         object.line = options.longs === String ? $util.Long.prototype.toString.call(message.line) : options.longs === Number ? new $util.LongBits(message.line.low >>> 0, message.line.high >>> 0).toNumber() : message.line;
@@ -2810,7 +3030,7 @@ $root.perftools = (function() {
             function Function(properties) {
                 if (properties)
                     for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                        if (properties[keys[i]] != null)
+                        if (properties[keys[i]] != null && keys[i] !== "__proto__")
                             this[keys[i]] = properties[keys[i]];
             }
 
@@ -2875,9 +3095,13 @@ $root.perftools = (function() {
              * @param {$protobuf.Writer} [writer] Writer to encode to
              * @returns {$protobuf.Writer} Writer
              */
-            Function.encode = function encode(message, writer) {
+            Function.encode = function encode(message, writer, q) {
                 if (!writer)
                     writer = $Writer.create();
+                if (q === undefined)
+                    q = 0;
+                if (q > $util.recursionLimit)
+                    throw Error("max depth exceeded");
                 if (message.id != null && Object.hasOwnProperty.call(message, "id"))
                     writer.uint32(/* id 1, wireType 0 =*/8).uint64(message.id);
                 if (message.name != null && Object.hasOwnProperty.call(message, "name"))
@@ -2915,12 +3139,18 @@ $root.perftools = (function() {
              * @throws {Error} If the payload is not a reader or valid buffer
              * @throws {$protobuf.util.ProtocolError} If required fields are missing
              */
-            Function.decode = function decode(reader, length) {
+            Function.decode = function decode(reader, length, error, long) {
                 if (!(reader instanceof $Reader))
                     reader = $Reader.create(reader);
+                if (long === undefined)
+                    long = 0;
+                if (long > $Reader.recursionLimit)
+                    throw Error("maximum nesting depth exceeded");
                 var end = length === undefined ? reader.len : reader.pos + length, message = new $root.perftools.profiles.Function();
                 while (reader.pos < end) {
                     var tag = reader.uint32();
+                    if (tag === error)
+                        break;
                     switch (tag >>> 3) {
                     case 1: {
                             message.id = reader.uint64();
@@ -2943,7 +3173,7 @@ $root.perftools = (function() {
                             break;
                         }
                     default:
-                        reader.skipType(tag & 7);
+                        reader.skipType(tag & 7, long);
                         break;
                     }
                 }
@@ -2974,22 +3204,26 @@ $root.perftools = (function() {
              * @param {Object.<string,*>} message Plain object to verify
              * @returns {string|null} `null` if valid, otherwise the reason why it is not
              */
-            Function.verify = function verify(message) {
+            Function.verify = function verify(message, long) {
                 if (typeof message !== "object" || message === null)
                     return "object expected";
-                if (message.id != null && message.hasOwnProperty("id"))
+                if (long === undefined)
+                    long = 0;
+                if (long > $util.recursionLimit)
+                    return "maximum nesting depth exceeded";
+                if (message.id != null && Object.hasOwnProperty.call(message, "id"))
                     if (!$util.isInteger(message.id) && !(message.id && $util.isInteger(message.id.low) && $util.isInteger(message.id.high)))
                         return "id: integer|Long expected";
-                if (message.name != null && message.hasOwnProperty("name"))
+                if (message.name != null && Object.hasOwnProperty.call(message, "name"))
                     if (!$util.isInteger(message.name) && !(message.name && $util.isInteger(message.name.low) && $util.isInteger(message.name.high)))
                         return "name: integer|Long expected";
-                if (message.systemName != null && message.hasOwnProperty("systemName"))
+                if (message.systemName != null && Object.hasOwnProperty.call(message, "systemName"))
                     if (!$util.isInteger(message.systemName) && !(message.systemName && $util.isInteger(message.systemName.low) && $util.isInteger(message.systemName.high)))
                         return "systemName: integer|Long expected";
-                if (message.filename != null && message.hasOwnProperty("filename"))
+                if (message.filename != null && Object.hasOwnProperty.call(message, "filename"))
                     if (!$util.isInteger(message.filename) && !(message.filename && $util.isInteger(message.filename.low) && $util.isInteger(message.filename.high)))
                         return "filename: integer|Long expected";
-                if (message.startLine != null && message.hasOwnProperty("startLine"))
+                if (message.startLine != null && Object.hasOwnProperty.call(message, "startLine"))
                     if (!$util.isInteger(message.startLine) && !(message.startLine && $util.isInteger(message.startLine.low) && $util.isInteger(message.startLine.high)))
                         return "startLine: integer|Long expected";
                 return null;
@@ -3003,13 +3237,19 @@ $root.perftools = (function() {
              * @param {Object.<string,*>} object Plain object
              * @returns {perftools.profiles.Function} Function
              */
-            Function.fromObject = function fromObject(object) {
+            Function.fromObject = function fromObject(object, long) {
                 if (object instanceof $root.perftools.profiles.Function)
                     return object;
+                if (!$util.isObject(object))
+                    throw TypeError(".perftools.profiles.Function: object expected");
+                if (long === undefined)
+                    long = 0;
+                if (long > $util.recursionLimit)
+                    throw Error("maximum nesting depth exceeded");
                 var message = new $root.perftools.profiles.Function();
                 if (object.id != null)
                     if ($util.Long)
-                        (message.id = $util.Long.fromValue(object.id)).unsigned = true;
+                        message.id = $util.Long.fromValue(object.id, true);
                     else if (typeof object.id === "string")
                         message.id = parseInt(object.id, 10);
                     else if (typeof object.id === "number")
@@ -3018,7 +3258,7 @@ $root.perftools = (function() {
                         message.id = new $util.LongBits(object.id.low >>> 0, object.id.high >>> 0).toNumber(true);
                 if (object.name != null)
                     if ($util.Long)
-                        (message.name = $util.Long.fromValue(object.name)).unsigned = false;
+                        message.name = $util.Long.fromValue(object.name, false);
                     else if (typeof object.name === "string")
                         message.name = parseInt(object.name, 10);
                     else if (typeof object.name === "number")
@@ -3027,7 +3267,7 @@ $root.perftools = (function() {
                         message.name = new $util.LongBits(object.name.low >>> 0, object.name.high >>> 0).toNumber();
                 if (object.systemName != null)
                     if ($util.Long)
-                        (message.systemName = $util.Long.fromValue(object.systemName)).unsigned = false;
+                        message.systemName = $util.Long.fromValue(object.systemName, false);
                     else if (typeof object.systemName === "string")
                         message.systemName = parseInt(object.systemName, 10);
                     else if (typeof object.systemName === "number")
@@ -3036,7 +3276,7 @@ $root.perftools = (function() {
                         message.systemName = new $util.LongBits(object.systemName.low >>> 0, object.systemName.high >>> 0).toNumber();
                 if (object.filename != null)
                     if ($util.Long)
-                        (message.filename = $util.Long.fromValue(object.filename)).unsigned = false;
+                        message.filename = $util.Long.fromValue(object.filename, false);
                     else if (typeof object.filename === "string")
                         message.filename = parseInt(object.filename, 10);
                     else if (typeof object.filename === "number")
@@ -3045,7 +3285,7 @@ $root.perftools = (function() {
                         message.filename = new $util.LongBits(object.filename.low >>> 0, object.filename.high >>> 0).toNumber();
                 if (object.startLine != null)
                     if ($util.Long)
-                        (message.startLine = $util.Long.fromValue(object.startLine)).unsigned = false;
+                        message.startLine = $util.Long.fromValue(object.startLine, false);
                     else if (typeof object.startLine === "string")
                         message.startLine = parseInt(object.startLine, 10);
                     else if (typeof object.startLine === "number")
@@ -3064,59 +3304,73 @@ $root.perftools = (function() {
              * @param {$protobuf.IConversionOptions} [options] Conversion options
              * @returns {Object.<string,*>} Plain object
              */
-            Function.toObject = function toObject(message, options) {
+            Function.toObject = function toObject(message, options, q) {
                 if (!options)
                     options = {};
+                if (q === undefined)
+                    q = 0;
+                if (q > $util.recursionLimit)
+                    throw Error("max depth exceeded");
                 var object = {};
                 if (options.defaults) {
                     if ($util.Long) {
                         var long = new $util.Long(0, 0, true);
-                        object.id = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
+                        object.id = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : typeof BigInt !== "undefined" && options.longs === BigInt ? long.toBigInt() : long;
                     } else
-                        object.id = options.longs === String ? "0" : 0;
+                        object.id = options.longs === String ? "0" : typeof BigInt !== "undefined" && options.longs === BigInt ? BigInt("0") : 0;
                     if ($util.Long) {
                         var long = new $util.Long(0, 0, false);
-                        object.name = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
+                        object.name = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : typeof BigInt !== "undefined" && options.longs === BigInt ? long.toBigInt() : long;
                     } else
-                        object.name = options.longs === String ? "0" : 0;
+                        object.name = options.longs === String ? "0" : typeof BigInt !== "undefined" && options.longs === BigInt ? BigInt("0") : 0;
                     if ($util.Long) {
                         var long = new $util.Long(0, 0, false);
-                        object.systemName = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
+                        object.systemName = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : typeof BigInt !== "undefined" && options.longs === BigInt ? long.toBigInt() : long;
                     } else
-                        object.systemName = options.longs === String ? "0" : 0;
+                        object.systemName = options.longs === String ? "0" : typeof BigInt !== "undefined" && options.longs === BigInt ? BigInt("0") : 0;
                     if ($util.Long) {
                         var long = new $util.Long(0, 0, false);
-                        object.filename = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
+                        object.filename = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : typeof BigInt !== "undefined" && options.longs === BigInt ? long.toBigInt() : long;
                     } else
-                        object.filename = options.longs === String ? "0" : 0;
+                        object.filename = options.longs === String ? "0" : typeof BigInt !== "undefined" && options.longs === BigInt ? BigInt("0") : 0;
                     if ($util.Long) {
                         var long = new $util.Long(0, 0, false);
-                        object.startLine = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
+                        object.startLine = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : typeof BigInt !== "undefined" && options.longs === BigInt ? long.toBigInt() : long;
                     } else
-                        object.startLine = options.longs === String ? "0" : 0;
+                        object.startLine = options.longs === String ? "0" : typeof BigInt !== "undefined" && options.longs === BigInt ? BigInt("0") : 0;
                 }
-                if (message.id != null && message.hasOwnProperty("id"))
-                    if (typeof message.id === "number")
+                if (message.id != null && Object.hasOwnProperty.call(message, "id"))
+                    if (typeof BigInt !== "undefined" && options.longs === BigInt)
+                        object.id = typeof message.id === "number" ? BigInt(message.id) : $util.Long.fromBits(message.id.low >>> 0, message.id.high >>> 0, true).toBigInt();
+                    else if (typeof message.id === "number")
                         object.id = options.longs === String ? String(message.id) : message.id;
                     else
                         object.id = options.longs === String ? $util.Long.prototype.toString.call(message.id) : options.longs === Number ? new $util.LongBits(message.id.low >>> 0, message.id.high >>> 0).toNumber(true) : message.id;
-                if (message.name != null && message.hasOwnProperty("name"))
-                    if (typeof message.name === "number")
+                if (message.name != null && Object.hasOwnProperty.call(message, "name"))
+                    if (typeof BigInt !== "undefined" && options.longs === BigInt)
+                        object.name = typeof message.name === "number" ? BigInt(message.name) : $util.Long.fromBits(message.name.low >>> 0, message.name.high >>> 0, false).toBigInt();
+                    else if (typeof message.name === "number")
                         object.name = options.longs === String ? String(message.name) : message.name;
                     else
                         object.name = options.longs === String ? $util.Long.prototype.toString.call(message.name) : options.longs === Number ? new $util.LongBits(message.name.low >>> 0, message.name.high >>> 0).toNumber() : message.name;
-                if (message.systemName != null && message.hasOwnProperty("systemName"))
-                    if (typeof message.systemName === "number")
+                if (message.systemName != null && Object.hasOwnProperty.call(message, "systemName"))
+                    if (typeof BigInt !== "undefined" && options.longs === BigInt)
+                        object.systemName = typeof message.systemName === "number" ? BigInt(message.systemName) : $util.Long.fromBits(message.systemName.low >>> 0, message.systemName.high >>> 0, false).toBigInt();
+                    else if (typeof message.systemName === "number")
                         object.systemName = options.longs === String ? String(message.systemName) : message.systemName;
                     else
                         object.systemName = options.longs === String ? $util.Long.prototype.toString.call(message.systemName) : options.longs === Number ? new $util.LongBits(message.systemName.low >>> 0, message.systemName.high >>> 0).toNumber() : message.systemName;
-                if (message.filename != null && message.hasOwnProperty("filename"))
-                    if (typeof message.filename === "number")
+                if (message.filename != null && Object.hasOwnProperty.call(message, "filename"))
+                    if (typeof BigInt !== "undefined" && options.longs === BigInt)
+                        object.filename = typeof message.filename === "number" ? BigInt(message.filename) : $util.Long.fromBits(message.filename.low >>> 0, message.filename.high >>> 0, false).toBigInt();
+                    else if (typeof message.filename === "number")
                         object.filename = options.longs === String ? String(message.filename) : message.filename;
                     else
                         object.filename = options.longs === String ? $util.Long.prototype.toString.call(message.filename) : options.longs === Number ? new $util.LongBits(message.filename.low >>> 0, message.filename.high >>> 0).toNumber() : message.filename;
-                if (message.startLine != null && message.hasOwnProperty("startLine"))
-                    if (typeof message.startLine === "number")
+                if (message.startLine != null && Object.hasOwnProperty.call(message, "startLine"))
+                    if (typeof BigInt !== "undefined" && options.longs === BigInt)
+                        object.startLine = typeof message.startLine === "number" ? BigInt(message.startLine) : $util.Long.fromBits(message.startLine.low >>> 0, message.startLine.high >>> 0, false).toBigInt();
+                    else if (typeof message.startLine === "number")
                         object.startLine = options.longs === String ? String(message.startLine) : message.startLine;
                     else
                         object.startLine = options.longs === String ? $util.Long.prototype.toString.call(message.startLine) : options.longs === Number ? new $util.LongBits(message.startLine.low >>> 0, message.startLine.high >>> 0).toNumber() : message.startLine;
