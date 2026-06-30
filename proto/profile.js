@@ -262,7 +262,7 @@ $root.perftools = (function() {
              * @returns {$protobuf.Writer} Writer
              */
             Profile.encodeDelimited = function encodeDelimited(message, writer) {
-                return this.encode(message, writer).ldelim();
+                return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
             };
 
             /**
@@ -900,7 +900,7 @@ $root.perftools = (function() {
              * @returns {$protobuf.Writer} Writer
              */
             ValueType.encodeDelimited = function encodeDelimited(message, writer) {
-                return this.encode(message, writer).ldelim();
+                return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
             };
 
             /**
@@ -1206,7 +1206,7 @@ $root.perftools = (function() {
              * @returns {$protobuf.Writer} Writer
              */
             Sample.encodeDelimited = function encodeDelimited(message, writer) {
-                return this.encode(message, writer).ldelim();
+                return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
             };
 
             /**
@@ -1572,7 +1572,7 @@ $root.perftools = (function() {
              * @returns {$protobuf.Writer} Writer
              */
             Label.encodeDelimited = function encodeDelimited(message, writer) {
-                return this.encode(message, writer).ldelim();
+                return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
             };
 
             /**
@@ -1999,7 +1999,7 @@ $root.perftools = (function() {
              * @returns {$protobuf.Writer} Writer
              */
             Mapping.encodeDelimited = function encodeDelimited(message, writer) {
-                return this.encode(message, writer).ldelim();
+                return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
             };
 
             /**
@@ -2466,7 +2466,7 @@ $root.perftools = (function() {
              * @returns {$protobuf.Writer} Writer
              */
             Location.encodeDelimited = function encodeDelimited(message, writer) {
-                return this.encode(message, writer).ldelim();
+                return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
             };
 
             /**
@@ -2809,7 +2809,7 @@ $root.perftools = (function() {
              * @returns {$protobuf.Writer} Writer
              */
             Line.encodeDelimited = function encodeDelimited(message, writer) {
-                return this.encode(message, writer).ldelim();
+                return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
             };
 
             /**
@@ -3125,7 +3125,7 @@ $root.perftools = (function() {
              * @returns {$protobuf.Writer} Writer
              */
             Function.encodeDelimited = function encodeDelimited(message, writer) {
-                return this.encode(message, writer).ldelim();
+                return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
             };
 
             /**
