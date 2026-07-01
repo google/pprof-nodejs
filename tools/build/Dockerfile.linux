@@ -5,4 +5,4 @@
 
 # node:20-bookworm images has dependencies required to build pre-built binaries 
 # already installed.
-FROM node:20-bookworm
+FROM node:24-bookworm
