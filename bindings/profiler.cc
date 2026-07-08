@@ -89,8 +89,18 @@ NAN_METHOD(StopSamplingHeapProfiler) {
 // Signature:
 // getAllocationProfile(): AllocationProfileNode
 NAN_METHOD(GetAllocationProfile) {
-  std::unique_ptr<v8::AllocationProfile> profile(
-      info.GetIsolate()->GetHeapProfiler()->GetAllocationProfile());
+  const int kMaxPollCycles = 100;
+  const int kPollIntervalUs = 50000; // 50 ms
+
+  std::unique_ptr<v8::AllocationProfile> profile;
+  for (int i = 0; i < kMaxPollCycles; ++i) {
+    profile.reset(info.GetIsolate()->GetHeapProfiler()->GetAllocationProfile());
+    if (profile->GetRootNode()->allocations.size() > 0) {
+      break;
+    }
+    uv_sleep(kPollIntervalUs / 1000);
+  }
+
   AllocationProfile::Node* root = profile->GetRootNode();
   info.GetReturnValue().Set(TranslateAllocationProfile(root));
 }
